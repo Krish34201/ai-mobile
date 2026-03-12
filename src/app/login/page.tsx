@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect } from 'react'
@@ -38,13 +39,22 @@ export default function LoginPage() {
     e.preventDefault()
     
     const cleanUsername = username.trim()
-    const cleanLicense = licenseKey.trim()
+    const cleanLicense = licenseKey.trim().toUpperCase()
 
     if (!cleanUsername || !cleanLicense) {
       toast({
         variant: "destructive",
         title: "Access Denied",
         description: "Please provide a valid Username and License Key."
+      })
+      return
+    }
+
+    if (cleanLicense.length !== 12) {
+       toast({
+        variant: "destructive",
+        title: "Invalid License",
+        description: "Standard license keys must be exactly 12 alphanumeric characters."
       })
       return
     }
@@ -119,7 +129,7 @@ export default function LoginPage() {
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-primary transition-colors" />
                   <Input 
                     type="text" 
-                    placeholder="operator_01"
+                    placeholder="Enter your username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className="bg-black/40 border-white/5 h-12 pl-12 rounded-xl focus:border-primary/50 transition-all text-white font-code"
@@ -133,7 +143,7 @@ export default function LoginPage() {
                   <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-primary transition-colors" />
                   <Input 
                     type="text" 
-                    placeholder="XXXX-XXXX-XXXX-XXXX"
+                    placeholder="12-CHARACTER-KEY"
                     value={licenseKey}
                     onChange={(e) => setLicenseKey(e.target.value)}
                     className="bg-black/40 border-white/5 h-12 pl-12 rounded-xl focus:border-primary/50 transition-all text-white font-code uppercase"
