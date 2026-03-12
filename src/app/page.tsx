@@ -26,7 +26,9 @@ import {
   Eye,
   EyeOff,
   Trash2,
-  AlertTriangle
+  AlertTriangle,
+  Type,
+  Palette
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SnakeBorderCard } from '@/components/ui/snake-border-card'
@@ -60,6 +62,14 @@ const SERVERS = [
   { id: 'node-me-east', name: 'MIDDLE EAST', region: 'Dubai, UAE', latency: '85ms', status: 'active', load: 38 },
   { id: 'node-oc-sydney', name: 'OCEANIA', region: 'Sydney, Australia', latency: '190ms', status: 'active', load: 29 },
   { id: 'node-arctic-north', name: 'ARCTIC NORTH', region: 'Reykjavik, Iceland', latency: '45ms', status: 'active', load: 8 },
+]
+
+const SEED_COLORS = [
+  { name: 'Classic Silver', class: 'text-white/80' },
+  { name: 'Neural Violet', class: 'text-primary' },
+  { name: 'Matrix Green', class: 'text-green-400' },
+  { name: 'Cyber Cyan', class: 'text-cyan-400' },
+  { name: 'Gold Amber', class: 'text-amber-400' },
 ]
 
 interface FoundWallet {
@@ -97,9 +107,10 @@ export default function AiCryptoDashboard() {
   const [systemTime, setSystemTime] = useState<string | null>(null)
   const [hardwareCores, setHardwareCores] = useState<number>(0)
   const [selectedServerId, setSelectedServerId] = useState('node-na-east')
-  const [activeProtocols, setActiveProtocols] = useState<string[]>(['autonomous', 'mesh-relay'])
   
-  // Memory Management States
+  // Customization States
+  const [seedPhraseColor, setSeedPhraseColor] = useState('text-white/80')
+  const [consoleFontSize, setConsoleFontSize] = useState([11])
   const [isAutoMemoryEnabled, setIsAutoMemoryEnabled] = useState(true)
   const [lastPurgeTime, setLastPurgeTime] = useState<string | null>(null)
   
@@ -126,7 +137,7 @@ export default function AiCryptoDashboard() {
         timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
         type
       }
-      return [newEntry, ...prev].slice(0, 50) // Reduced buffer for performance
+      return [newEntry, ...prev].slice(0, 50) 
     })
   }, [])
 
@@ -252,8 +263,8 @@ export default function AiCryptoDashboard() {
         addLog(`WORKER THREADS: ${hardwareCores || 8}`, "info")
 
         // Smooth sequential generation loop with AI Search Speed Boost
-        const baseInterval = Math.max(1, 50 - (systemIntensity[0] * 0.45));
-        const aiBoostMultiplier = isAiSearchConnected ? 0.6 : 1.0; // 40% reduction in delay if AI connected
+        const baseInterval = Math.max(1, 40 - (systemIntensity[0] * 0.35));
+        const aiBoostMultiplier = isAiSearchConnected ? 0.5 : 1.0; 
         const finalInterval = baseInterval * aiBoostMultiplier;
         
         aiFetchInterval = setInterval(() => {
@@ -486,10 +497,14 @@ export default function AiCryptoDashboard() {
                     </div>
                     
                     <SnakeBorderCard processing={isInterrogating} className="flex-1 min-h-0 overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)]">
-                      <div className="h-full p-6 font-code text-[11px] overflow-hidden flex flex-col relative bg-black/60">
-                        <div ref={scrollRef} className="flex-1 overflow-y-auto terminal-scrollbar space-y-2 z-10 flex flex-col-reverse">
+                      <div className="h-full p-6 font-code overflow-hidden flex flex-col relative bg-black/60">
+                        <div 
+                          ref={scrollRef} 
+                          className="flex-1 overflow-y-auto terminal-scrollbar space-y-2 z-10 flex flex-col-reverse"
+                          style={{ fontSize: `${consoleFontSize[0]}px` }}
+                        >
                           {logs.length === 0 && !isInterrogating && (
-                            <div className="h-full flex items-center justify-center text-gray-700 uppercase tracking-widest font-black">
+                            <div className="h-full flex items-center justify-center text-gray-700 uppercase tracking-widest font-black text-xs">
                               Scan Engine Ready
                             </div>
                           )}
@@ -502,7 +517,7 @@ export default function AiCryptoDashboard() {
                                 log.type === 'warning' ? 'text-yellow-400' :
                                 log.type === 'error' ? 'text-red-400' : 
                                 log.type === 'system' ? 'text-cyan-400 font-medium' :
-                                log.type === 'ai' ? 'text-white/80 font-medium tracking-tight' : 'text-gray-500'
+                                log.type === 'ai' ? cn(seedPhraseColor, "font-medium tracking-tight") : 'text-gray-500'
                               )}>
                                 {log.message}
                               </span>
@@ -743,55 +758,111 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'settings' && (
-                <div className="max-w-3xl mx-auto w-full glass-panel rounded-2xl p-10 border-white/5 animate-in zoom-in-95 duration-500">
-                  <h3 className="text-xl font-black uppercase tracking-[0.2em] mb-8 border-b border-white/5 pb-4">System Configurations</h3>
-                  
-                  <div className="space-y-10">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm font-bold text-white uppercase tracking-widest">Processing Intensity</label>
-                        <span className="text-xs font-code text-primary">{systemIntensity[0]}%</span>
+                <div className="max-w-4xl mx-auto w-full flex flex-col gap-8 animate-in zoom-in-95 duration-500">
+                  <div className="glass-panel rounded-2xl p-10 border-white/5">
+                    <h3 className="text-xl font-black uppercase tracking-[0.2em] mb-8 border-b border-white/5 pb-4">Engine Protocols</h3>
+                    <div className="space-y-10">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <label className="text-sm font-bold text-white uppercase tracking-widest">Processing Intensity</label>
+                          <span className="text-xs font-code text-primary">{systemIntensity[0]}%</span>
+                        </div>
+                        <Slider 
+                          value={systemIntensity} 
+                          onValueChange={setSystemIntensity} 
+                          max={100} 
+                          step={1} 
+                          disabled={isInterrogating}
+                          className="cursor-pointer"
+                        />
+                        <p className="text-[10px] text-gray-500 uppercase leading-relaxed">
+                          Detected Threads: {hardwareCores || 8}. High intensity increases PPS throughput but may impact system responsiveness.
+                        </p>
                       </div>
-                      <Slider 
-                        value={systemIntensity} 
-                        onValueChange={setSystemIntensity} 
-                        max={100} 
-                        step={1} 
-                        disabled={isInterrogating}
-                        className="cursor-pointer"
-                      />
-                      <p className="text-[10px] text-gray-500 uppercase leading-relaxed">
-                        Detected Threads: {hardwareCores || 8}. High intensity increases PPS throughput but may impact system responsiveness.
-                      </p>
-                    </div>
 
-                    <div className="space-y-6 pt-4">
-                      <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Memory & Buffer Protocol</h4>
-                      <div className="grid grid-cols-1 gap-4">
-                         <div className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors">
-                            <div className="space-y-1">
-                              <p className="text-[11px] font-bold text-white uppercase tracking-wider">Auto-Purge (5 Minutes)</p>
-                              <p className="text-[9px] text-gray-600 uppercase">Clear terminal history automatically to prevent memory leaks.</p>
-                            </div>
-                            <Switch 
-                              checked={isAutoMemoryEnabled}
-                              onCheckedChange={setIsAutoMemoryEnabled}
-                            />
-                         </div>
-                         <div className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors">
-                            <div className="space-y-1">
-                              <p className="text-[11px] font-bold text-white uppercase tracking-wider">Manual Cache Flush</p>
-                              <p className="text-[9px] text-gray-600 uppercase">Last executed: {lastPurgeTime || "None"}</p>
-                            </div>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={clearMemory}
-                              className="h-8 text-[9px] uppercase font-bold border-primary/20 text-primary hover:bg-primary/10"
+                      <div className="space-y-6 pt-4">
+                        <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Memory & Buffer Protocol</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           <div className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors">
+                              <div className="space-y-1">
+                                <p className="text-[11px] font-bold text-white uppercase tracking-wider">Auto-Purge (5m)</p>
+                                <p className="text-[9px] text-gray-600 uppercase">Clear terminal history automatically.</p>
+                              </div>
+                              <Switch 
+                                checked={isAutoMemoryEnabled}
+                                onCheckedChange={setIsAutoMemoryEnabled}
+                              />
+                           </div>
+                           <div className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors">
+                              <div className="space-y-1">
+                                <p className="text-[11px] font-bold text-white uppercase tracking-wider">Manual Purge</p>
+                                <p className="text-[9px] text-gray-600 uppercase">Last: {lastPurgeTime || "None"}</p>
+                              </div>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={clearMemory}
+                                className="h-8 text-[9px] uppercase font-bold border-primary/20 text-primary hover:bg-primary/10"
+                              >
+                                Flush
+                              </Button>
+                           </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="glass-panel rounded-2xl p-10 border-white/5">
+                    <h3 className="text-xl font-black uppercase tracking-[0.2em] mb-8 border-b border-white/5 pb-4">Console Customization</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-2 mb-2">
+                           <Palette className="w-4 h-4 text-primary" />
+                           <h4 className="text-[10px] font-black text-white/60 uppercase tracking-widest">Seed Phrase Color</h4>
+                        </div>
+                        <div className="grid grid-cols-1 gap-3">
+                          {SEED_COLORS.map((color) => (
+                            <button
+                              key={color.name}
+                              onClick={() => setSeedPhraseColor(color.class)}
+                              className={cn(
+                                "flex items-center justify-between p-3 rounded-lg border text-left transition-all",
+                                seedPhraseColor === color.class ? "bg-primary/10 border-primary/40" : "bg-white/[0.02] border-white/5 hover:border-white/20"
+                              )}
                             >
-                              Flush Now
-                            </Button>
-                         </div>
+                              <span className="text-[10px] font-bold text-gray-400 uppercase">{color.name}</span>
+                              <div className={cn("w-3 h-3 rounded-full", color.class.split(' ')[0])} />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-8">
+                        <div className="flex items-center gap-2 mb-2">
+                           <Type className="w-4 h-4 text-primary" />
+                           <h4 className="text-[10px] font-black text-white/60 uppercase tracking-widest">Console Typography</h4>
+                        </div>
+                        <div className="space-y-6">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Font Size</label>
+                            <span className="text-xs font-code text-primary">{consoleFontSize[0]}px</span>
+                          </div>
+                          <Slider 
+                            value={consoleFontSize} 
+                            onValueChange={setConsoleFontSize} 
+                            min={8} 
+                            max={16} 
+                            step={1} 
+                            className="cursor-pointer"
+                          />
+                        </div>
+
+                        <div className="p-5 rounded-xl bg-black/40 border border-white/5">
+                           <p className="text-[9px] font-bold text-gray-600 uppercase mb-3">Live Preview:</p>
+                           <div className="font-code" style={{ fontSize: `${consoleFontSize[0]}px` }}>
+                             <p className={cn(seedPhraseColor, "uppercase tracking-tight")}>tree river flower mountain forest branch leaf stone wood path sky water</p>
+                           </div>
+                        </div>
                       </div>
                     </div>
                   </div>
