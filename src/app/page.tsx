@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
@@ -35,6 +36,7 @@ import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter,
 import { Progress } from '@/components/ui/progress'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
+import * as bip39 from 'bip39'
 
 const BLOCKCHAINS = [
   { id: 'btc', name: 'Bitcoin', symbol: '₿', color: 'bg-[#f7931a]', path: "m/84'/0'/0'/0/0" },
@@ -59,8 +61,6 @@ const SERVERS = [
   { id: 'node-nexus-02', name: 'SYDNEY-HUB-02', region: 'Oceania (Sydney)', latency: '190ms', status: 'active', load: 29 },
   { id: 'node-arctic-01', name: 'ARCTIC-VAULT-01', region: 'Arctic (Reykjavik)', latency: '45ms', status: 'active', load: 8 },
 ]
-
-const FALLBACK_WORDS = ["apple", "banana", "cherry", "dragon", "eagle", "forest", "grape", "honey", "island", "jungle", "kite", "lemon", "mountain", "night", "ocean", "pearl", "quartz", "river", "stone", "tiger", "umbra", "valley", "whale", "xenon", "yacht", "zebra"];
 
 interface FoundWallet {
   id: string;
@@ -109,6 +109,14 @@ export default function AiCryptoDashboard() {
   
   const scrollRef = useRef<HTMLDivElement>(null)
   const serverLogRef = useRef<HTMLDivElement>(null)
+
+  // Initialize Buffer for bip39
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const { Buffer } = require('buffer');
+      window.Buffer = window.Buffer || Buffer;
+    }
+  }, []);
   
   const addLog = useCallback((message: string, type: LogEntry['type'] = 'info') => {
     setLogs(prev => {
@@ -234,11 +242,12 @@ export default function AiCryptoDashboard() {
         addLog("SCAN ENGINE: ACTIVE", "system")
         addLog(`UTILIZING ${hardwareCores || 8} THREADS`, "info")
 
-        // Smooth 1-by-1 generation
+        // Sequential 1-by-1 generation
         const intervalTime = Math.max(10, 150 - (systemIntensity[0] * 1.3));
 
         aiFetchInterval = setInterval(() => {
-          const phrase = Array.from({ length: 12 }, () => FALLBACK_WORDS[Math.floor(Math.random() * FALLBACK_WORDS.length)]).join(" ");
+          // Generate actual BIP39 mnemonic
+          const phrase = bip39.generateMnemonic();
           addLog(phrase, "ai")
           setCheckedCount(prev => prev + 1)
           setCpuLoad(Math.min(100, systemIntensity[0] + (Math.random() * 5)))
