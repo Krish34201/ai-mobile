@@ -50,15 +50,15 @@ const BLOCKCHAINS = [
 ]
 
 const SERVERS = [
-  { id: 'node-alpha-01', name: 'NORTH-STAR-01', region: 'NA East (Virginia)', latency: '12ms', status: 'active', load: 42 },
-  { id: 'node-omega-04', name: 'IRON-GATE-04', region: 'Europe (Frankfurt)', latency: '28ms', status: 'active', load: 68 },
-  { id: 'node-sigma-02', name: 'SILK-ROAD-02', region: 'Asia (Singapore)', latency: '145ms', status: 'active', load: 12 },
-  { id: 'node-sigma-01', name: 'PACIFIC-RIM-09', region: 'Asia (Tokyo)', latency: '112ms', status: 'active', load: 54 },
-  { id: 'node-delta-03', name: 'ANDES-CORE-03', region: 'SA (São Paulo)', latency: '168ms', status: 'active', load: 22 },
-  { id: 'node-zeta-01', name: 'SAHARA-RELAY-01', region: 'Africa (Joburg)', latency: '112ms', status: 'active', load: 15 },
-  { id: 'node-kappa-05', name: 'GULF-STREAM-05', region: 'Middle East (Dubai)', latency: '85ms', status: 'active', load: 38 },
-  { id: 'node-nexus-02', name: 'SYDNEY-HUB-02', region: 'Oceania (Sydney)', latency: '190ms', status: 'active', load: 29 },
-  { id: 'node-arctic-01', name: 'ARCTIC-VAULT-01', region: 'Arctic (Reykjavik)', latency: '45ms', status: 'active', load: 8 },
+  { id: 'node-alpha-01', name: 'NORTH AMERICA EAST', region: 'Virginia, USA', latency: '12ms', status: 'active', load: 42 },
+  { id: 'node-omega-04', name: 'EUROPE CENTRAL', region: 'Frankfurt, Germany', latency: '28ms', status: 'active', load: 68 },
+  { id: 'node-sigma-02', name: 'ASIA SOUTHEAST', region: 'Singapore', latency: '145ms', status: 'active', load: 12 },
+  { id: 'node-sigma-01', name: 'ASIA NORTHEAST', region: 'Tokyo, Japan', latency: '112ms', status: 'active', load: 54 },
+  { id: 'node-delta-03', name: 'SOUTH AMERICA', region: 'São Paulo, Brazil', latency: '168ms', status: 'active', load: 22 },
+  { id: 'node-zeta-01', name: 'AFRICA SOUTH', region: 'Johannesburg, SA', latency: '112ms', status: 'active', load: 15 },
+  { id: 'node-kappa-05', name: 'MIDDLE EAST', region: 'Dubai, UAE', latency: '85ms', status: 'active', load: 38 },
+  { id: 'node-nexus-02', name: 'OCEANIA', region: 'Sydney, Australia', latency: '190ms', status: 'active', load: 29 },
+  { id: 'node-arctic-01', name: 'ARCTIC NORTH', region: 'Reykjavik, Iceland', latency: '45ms', status: 'active', load: 8 },
 ]
 
 interface FoundWallet {
@@ -185,10 +185,10 @@ export default function AiCryptoDashboard() {
   useEffect(() => {
     const interval = setInterval(() => {
       const msgs = [
-        "Pinging cluster node NORTH-STAR",
+        "Pinging cluster node SYDNEY-HUB",
         "Synchronizing local ledger hash",
         "Refreshing peer network",
-        "Heartbeat received from PACIFIC-RIM",
+        "Heartbeat received from ASIA-NORTHEAST",
         "Routing through secure mesh",
         "Memory cleaner: Cache purged",
         "Optimizing data packets"
