@@ -203,17 +203,16 @@ export default function AiCryptoDashboard() {
         addLog("SCAN ENGINE: ACTIVE", "system")
         addLog(`UTILIZING ${hardwareCores || 8} THREADS`, "info")
 
-        aiFetchInterval = setInterval(async () => {
-          const phrasesInBatch = Math.floor((systemIntensity[0] / 10)) + 1;
-          
-          for (let i = 0; i < phrasesInBatch; i++) {
-            const phrase = Array.from({ length: 12 }, () => FALLBACK_WORDS[Math.floor(Math.random() * FALLBACK_WORDS.length)]).join(" ");
-            addLog(phrase, "ai")
-            setCheckedCount(prev => prev + 1)
-          }
-          
+        // Smooth 1-by-1 generation
+        // Calculate interval based on intensity (faster intensity = shorter interval)
+        const intervalTime = Math.max(10, 150 - (systemIntensity[0] * 1.3));
+
+        aiFetchInterval = setInterval(() => {
+          const phrase = Array.from({ length: 12 }, () => FALLBACK_WORDS[Math.floor(Math.random() * FALLBACK_WORDS.length)]).join(" ");
+          addLog(phrase, "ai")
+          setCheckedCount(prev => prev + 1)
           setCpuLoad(Math.min(100, systemIntensity[0] + (Math.random() * 5)))
-        }, 100)
+        }, intervalTime)
       }, 2500)
     } else {
       setCpuLoad(0)
@@ -223,7 +222,7 @@ export default function AiCryptoDashboard() {
       if (aiFetchInterval) clearInterval(aiFetchInterval)
       if (bootTimeout) clearTimeout(bootTimeout)
     }
-  }, [isInterrogating, addLog, toast, systemIntensity, activeBlockchains, hardwareCores])
+  }, [isInterrogating, addLog, systemIntensity, hardwareCores])
 
   const toggleBlockchain = (id: string) => {
     if (isInterrogating) return
