@@ -11,8 +11,7 @@ import {
   Zap,
   User,
   Loader2,
-  Key,
-  AlertCircle
+  Key
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
