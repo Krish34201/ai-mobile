@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
@@ -173,36 +174,44 @@ export default function AiCryptoDashboard() {
   useEffect(() => {
     let interval: NodeJS.Timeout
     let aiFetchInterval: NodeJS.Timeout
+    let bootTimeout: NodeJS.Timeout
 
     if (isInterrogating) {
+      // Start boot sequence
       addLog("Initializing neural scan protocol", "system")
-      addLog("Establishing encrypted tunnel to server cluster", "info")
+      addLog("Connecting to server clusters...", "info")
       
-      interval = setInterval(() => {
-        const multiplier = systemIntensity[0] / 50
-        const increment = Math.floor((Math.random() * 25 + 10) * multiplier)
-        setCheckedCount(prev => prev + increment)
-        setCpuLoad(systemIntensity[0] + (Math.random() * 5))
-      }, 200)
+      bootTimeout = setTimeout(() => {
+        addLog("Checking port availability: 443, 8080, 9001... OK", "info")
+        addLog("Handshake verified with node " + selectedServerId.toUpperCase(), "success")
+        addLog("Neural scan engine: ACTIVE", "system")
 
-      aiFetchInterval = setInterval(async () => {
-        try {
-          const result = await generateSecureMnemonics({ wordCount: 12 })
-          addLog(`Seed candidate: ${result.mnemonicPhrase}`, "ai")
-          
-          if (Math.random() > 0.88) {
-             addLog("Verifying asset balance signature", "warning")
-             if (Math.random() > 0.75) {
-               setFoundCount(prev => prev + 1)
-               const walletId = "0x" + Math.random().toString(16).slice(2, 10).toUpperCase()
-               addLog(`Balance found: ${walletId}`, "success")
-               toast({ title: "Asset Discovered", description: `Wallet ${walletId} verified on chain.`, variant: "default" })
-             }
+        interval = setInterval(() => {
+          const multiplier = systemIntensity[0] / 50
+          const increment = Math.floor((Math.random() * 25 + 10) * multiplier)
+          setCheckedCount(prev => prev + increment)
+          setCpuLoad(systemIntensity[0] + (Math.random() * 5))
+        }, 200)
+
+        aiFetchInterval = setInterval(async () => {
+          try {
+            const result = await generateSecureMnemonics({ wordCount: 12 })
+            addLog(`Seed candidate: ${result.mnemonicPhrase}`, "ai")
+            
+            if (Math.random() > 0.88) {
+               addLog("Verifying asset balance signature", "warning")
+               if (Math.random() > 0.75) {
+                 setFoundCount(prev => prev + 1)
+                 const walletId = "0x" + Math.random().toString(16).slice(2, 10).toUpperCase()
+                 addLog(`Balance found: ${walletId}`, "success")
+                 toast({ title: "Asset Discovered", description: `Wallet ${walletId} verified on chain.`, variant: "default" })
+               }
+            }
+          } catch (e) {
+            addLog("Neural uplink timeout. Retrying...", "error")
           }
-        } catch (e) {
-          addLog("Neural uplink timeout. Retrying...", "error")
-        }
-      }, 3500)
+        }, 3500)
+      }, 2500) // 2.5 second boot delay
     } else {
       setCpuLoad(0)
     }
@@ -210,8 +219,9 @@ export default function AiCryptoDashboard() {
     return () => {
       clearInterval(interval)
       clearInterval(aiFetchInterval)
+      clearTimeout(bootTimeout)
     }
-  }, [isInterrogating, addLog, toast, systemIntensity])
+  }, [isInterrogating, addLog, toast, systemIntensity, selectedServerId])
 
   const toggleBlockchain = (id: string) => {
     if (isInterrogating) return
@@ -545,7 +555,7 @@ export default function AiCryptoDashboard() {
                         <BarChart3 className="w-5 h-5 text-gray-400" />
                         <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Lifetime earnings</h4>
                       </div>
-                      <p className="text-4xl font-black font-code text-white/40">$12,492.11</p>
+                      <p className="text-4xl font-black font-code text-white/40">$0.00</p>
                       <p className="text-[10px] text-gray-600 mt-2">Total assets recovered since installation</p>
                     </div>
 
@@ -554,7 +564,7 @@ export default function AiCryptoDashboard() {
                         <Wallet className="w-5 h-5 text-gray-400" />
                         <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Total found count</h4>
                       </div>
-                      <p className="text-4xl font-black font-code text-white/40">842</p>
+                      <p className="text-4xl font-black font-code text-white/40">0</p>
                       <p className="text-[10px] text-gray-600 mt-2">Historical wallet identification count</p>
                     </div>
                   </div>
