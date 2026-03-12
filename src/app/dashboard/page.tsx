@@ -41,7 +41,7 @@ import { Button } from '@/components/ui/button'
 import { SnakeBorderCard } from '@/components/ui/snake-border-card'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
-import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent } from '@/components/ui/sidebar'
+import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarSidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent } from '@/components/ui/sidebar'
 import { Progress } from '@/components/ui/progress'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
@@ -68,6 +68,12 @@ const CryptoIcon = ({ id, className }: { id: string, className?: string }) => {
           <path d="M4.032 6.551l3.364-3.334h16.604l-3.364 3.334H4.032zm16.604 14.115H4.032l3.364-3.334h16.604l-3.364 3.334zm0-7.058H4.032l3.364-3.334h16.604l-3.364 3.334z"/>
         </svg>
       )
+    case 'bnb':
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+          <path d="M16.624 13.92L12 18.544l-4.624-4.624-1.52 1.52L12 21.584l6.144-6.144-1.52-1.52zM16.624 10.08L18.144 8.56 12 2.416 5.856 8.56l1.52 1.52L12 5.456l4.624 4.624zM21.584 12l-3.04-3.04-1.52 1.52L18.544 12l-1.52 1.52 1.52 1.52L21.584 12zM5.456 12l-3.04-3.04-1.52 1.52L2.416 12l-1.52 1.52 1.52 1.52L5.456 12zM14.992 12L12 14.992 9.008 12 12 9.008 14.992 12z"/>
+        </svg>
+      )
     case 'trx':
       return (
         <svg viewBox="0 0 24 24" className={className} fill="currentColor">
@@ -83,25 +89,25 @@ const CryptoIcon = ({ id, className }: { id: string, className?: string }) => {
     case 'ltc':
       return (
         <svg viewBox="0 0 24 24" className={className} fill="currentColor">
-          <path d="M14.062 19.344l1.219-4.844h-3.406l1.25-4.906h3.406l1.25-5H12.5l-1.25 4.906H7.812l-1.25 5h3.438l-1.25 4.844h-5v5h20v-5h-9.688z"/>
+          <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm4.188 17.5h-8.312l1.01-3.623 5.432-1.524 1.137-4.103-5.432 1.524.71-2.524h3.14l1.138-4.102h-7.388l-4.187 15h11.751l1.01-4.148z"/>
         </svg>
       )
     case 'matic':
       return (
         <svg viewBox="0 0 24 24" className={className} fill="currentColor">
-          <path d="M16.5 13.5l-4.5 2.6-4.5-2.6V8.3l4.5-2.6 4.5 2.6v5.2zm4.5-7.8l-9-5.2-9 5.2v10.4l9 5.2 9-5.2V5.7z"/>
+          <path d="M12 12.33l-1.16-.67V9l2.32 1.34l2.32-1.34L13.16 7.67L12 8.33l-1.16-.67l2.32-1.34l2.32 1.34l2.32-1.34V4.33l-4.64-2.67l-4.64 2.67v5.34l4.64 2.67l-1.16.67V15l-2.32-1.34l-2.32 1.34l2.32 1.34L12 15.67l1.16.67l-2.32 1.34l-2.32-1.34l-2.32 1.34v1.34l4.64 2.67l4.64-2.67v-5.34l-4.64-2.67z"/>
         </svg>
       )
     case 'usdt':
       return (
         <svg viewBox="0 0 24 24" className={className} fill="currentColor">
-          <path d="M18.063 7.828c.11 0 .21-.01.3-.03-.02-.27-.17-.5-.41-.63-.37-.21-.85-.31-1.39-.31H7.438c-.54 0-1.02.1-1.39.31-.24.13-.39.36-.41.63.09.02.19.03.3.03h12.125zM12 9.531c-3.13 0-5.88-.34-7.5-.81v4.38c0 .35.21.66.54.81 1.4.63 3.9 1.13 6.96 1.13s5.56-.5 6.96-1.13c.33-.15.54-.46.54-.81V8.72c-1.62.47-4.37.811-7.5.811zM12 0c-6.63 0-12 5.37-12 12s5.37 12 12 12 12-5.37 12-12-5.37-12-12-12zm6.2 15.63c-1.37.62-3.41 1.05-6.2 1.05s-4.83-.43-6.2-1.05c-.83-.37-1.35-1.14-1.35-2.01V7.53c0-.87.52-1.64 1.35-2.01.88-.4 2.15-.74 3.61-.92V2.54h5.18v2.06c1.46.18 2.73.52 3.61.92.83.37 1.35 1.14 1.35 2.01v6.09c0 .87-.52 1.64-1.35 2.01z"/>
+          <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm4.062 11.25h-2.187v4.688h-3.75v-4.688h-2.187v-2.812h8.125v2.812z"/>
         </svg>
       )
     case 'usdc':
       return (
         <svg viewBox="0 0 24 24" className={className} fill="currentColor">
-          <path d="M12 0c-6.63 0-12 5.37-12 12s5.37 12 12 12 12-5.37 12-12-5.37-12-12-12zm0 21c-4.97 0-9-4.03-9-9s4.03-9 9-9 9 4.03 9 9-4.03 9-9 9zm2.4-11.4c-.6-.4-1.4-.6-2.4-.6s-1.8.2-2.4.6c-.6.4-1 1-1 1.8h2c0-.4.2-.6.4-.8s.6-.2 1-.2 1 .1 1.4.4c.4.3.6.7.6 1.2s-.2.9-.6 1.2c-.4.3-1 .5-1.8.7l-1.4.3c-.8.2-1.4.5-1.8.9s-.6.9-.6 1.5c0 .8.4 1.4 1 1.8.6.4 1.4.6 2.4.6s1.8-.2 2.4-.6c.6-.4 1-1 1-1.8h-2c0 .4-.2.6-.4.8s-.6.2-1 .2-1-.1-1.4-.4c-.4-.3-.6-.7-.6-1.2s.2-.9.6-1.2c.4-.3 1-.5 1.8-.7l1.4-.3c.8-.2 1.4-.5 1.8-.9s.6-.9.6-1.5c0-.8-.4-1.4-1-1.8z"/>
+          <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm4.062 13.5c0 1.242-1.008 2.25-2.25 2.25h-1.812v1.5h-1.5v-1.5h-1.813c-1.242 0-2.25-1.008-2.25-2.25h1.5c0 .414.336.75.75.75h3.375c.414 0 .75-.336.75-.75s-.336-.75-.75-.75h-2.25c-1.242 0-2.25-1.008-2.25-2.25s1.008-2.25 2.25-2.25h1.813v-1.5h1.5v1.5h1.812c1.242 0 2.25 1.008 2.25 2.25h-1.5c0-.414-.336-.75-.75-.75h-3.375c-.414 0-.75.336-.75.75s.336.75.75.75h2.25c1.242 0 2.25 1.008 2.25 2.25z"/>
         </svg>
       )
     default:
@@ -113,12 +119,13 @@ const BLOCKCHAINS = [
   { id: 'btc', name: 'Bitcoin', symbol: '₿', color: 'bg-[#f7931a]', path: "m/84'/0'/0'/0/0" },
   { id: 'eth', name: 'Ethereum', symbol: 'Ξ', color: 'bg-[#627eea]', path: "m/44'/60'/0'/0/0" },
   { id: 'sol', name: 'Solana', symbol: 'S', color: 'bg-[#14f195]', path: "m/44'/501'/0'/0'" },
+  { id: 'bnb', name: 'BNB Chain', symbol: 'B', color: 'bg-[#F3BA2F]', path: "m/44'/714'/0'/0/0" },
   { id: 'trx', name: 'Tron', symbol: 'T', color: 'bg-[#ff0013]', path: "m/44'/195'/0'/0/0" },
   { id: 'xrp', name: 'Ripple', symbol: 'X', color: 'bg-[#23292f]', path: "m/44'/144'/0'/0/0" },
   { id: 'ltc', name: 'Litecoin', symbol: 'Ł', color: 'bg-[#345d9d]', path: "m/44'/2'/0'/0/0" },
   { id: 'matic', name: 'Polygon', symbol: 'P', color: 'bg-[#8247e5]', path: "m/44'/60'/0'/0/0" },
   { id: 'usdt', name: 'Tether', symbol: '₮', color: 'bg-[#26a17b]', path: "m/44'/60'/0'/0/0" },
-  { id: 'usdc', name: 'USD Coin', symbol: 'U', color: 'bg-[#2775ca]', path: "m/44'/60'/0'/0/0" },
+  { id: 'usdc', name: 'USDC', symbol: 'U', color: 'bg-[#2775ca]', path: "m/44'/60'/0'/0/0" },
 ]
 
 const SERVERS = [
