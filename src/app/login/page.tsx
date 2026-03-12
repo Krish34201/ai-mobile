@@ -53,7 +53,8 @@ export default function LoginPage() {
           title: "Handshake Verified",
           description: `Neural link established for ${values.username}. Welcome, Operator.`
         })
-        router.push('/dashboard')
+        // Use window.location.href to force a full reload and ensure cookies are picked up by server components
+        window.location.href = '/dashboard'
       } else {
         toast({
           variant: "destructive",
