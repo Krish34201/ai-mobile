@@ -365,7 +365,12 @@ export default function AiCryptoDashboard() {
   }, [addServerLog]);
 
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    if (scrollRef.current) {
+        scrollRef.current.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
     if (serverLogRef.current) serverLogRef.current.scrollTop = 0;
   }, [logs, serverLogs]);
 
@@ -413,19 +418,26 @@ export default function AiCryptoDashboard() {
 
         const coreFactor = allocatedCores[0] / hardwareCores;
         const intensityFactor = systemIntensity[0] / 100;
+        const aiBoost = isAiSearchConnected ? 3.5 : 1.0;
         
-        const baseInterval = 100;
-        const speedBoost = 1000 * intensityFactor * coreFactor;
-        const aiBoost = isAiSearchConnected ? 2.5 : 1.0;
-        
-        const finalDelay = Math.max(1, (baseInterval / (1 + (speedBoost / 50))) / aiBoost);
-        
+        // Decoupled loop: Batch process for high throughput while maintaining smooth UI updates
         aiFetchInterval = setInterval(() => {
-          const phrase = bip39.generateMnemonic();
-          addLog(phrase, "ai")
-          setCheckedCount(prev => prev + 1)
+          // Calculate batch size based on system specs
+          const batchSize = Math.ceil(intensityFactor * 25 * coreFactor * aiBoost);
+          
+          // Background "processing"
+          for(let i = 0; i < batchSize; i++) {
+              bip39.generateMnemonic(); // Simulated load
+          }
+
+          // Visual Update (only one visual entry to keep log smooth)
+          const visualPhrase = bip39.generateMnemonic();
+          addLog(visualPhrase, "ai")
+          
+          // Actual throughput counter (increased more)
+          setCheckedCount(prev => prev + batchSize)
           setCpuLoad(Math.min(100, (systemIntensity[0] * coreFactor) + (Math.random() * 5)))
-        }, finalDelay)
+        }, 80) // Fixed 80ms tick for smooth visual flow
       }
 
       bootSequence()
@@ -491,6 +503,9 @@ export default function AiCryptoDashboard() {
           .animate-gradient {
             background-size: 200% 200%;
             animation: gradient 3s ease infinite;
+          }
+          .terminal-line {
+            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
           }
         `}</style>
 
@@ -678,15 +693,15 @@ export default function AiCryptoDashboard() {
                             </div>
                           )}
                           {logs.map((log) => (
-                            <div key={log.id} className="flex gap-4 leading-normal animate-in fade-in slide-in-from-left-1 duration-150">
+                            <div key={log.id} className="terminal-line flex gap-4 leading-normal animate-in fade-in slide-in-from-bottom-2 duration-700 ease-out">
                               <span className="text-white/10 shrink-0 select-none">[{log.timestamp}]</span>
                               <span className={cn(
-                                "break-all uppercase",
+                                "break-all uppercase tracking-tight",
                                 log.type === 'success' ? 'text-green-400 font-bold' :
                                 log.type === 'warning' ? 'text-yellow-400' :
                                 log.type === 'error' ? 'text-red-400' : 
                                 log.type === 'system' ? 'text-cyan-400 font-medium' :
-                                log.type === 'ai' ? cn(seedPhraseColor, "font-medium tracking-tight") : 'text-gray-500'
+                                log.type === 'ai' ? cn(seedPhraseColor, "font-medium") : 'text-gray-500'
                               )}>
                                 {log.message}
                               </span>
