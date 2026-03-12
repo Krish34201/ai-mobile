@@ -48,11 +48,15 @@ const BLOCKCHAINS = [
 ]
 
 const SERVERS = [
-  { id: 'us-east-01', name: 'NODE DELTA-1', region: 'NA East', latency: '12ms', status: 'active', load: 42 },
-  { id: 'us-west-02', name: 'NODE DELTA-2', region: 'NA West', latency: '34ms', status: 'active', load: 18 },
-  { id: 'eu-west-04', name: 'NODE OMEGA-4', region: 'Europe Central', latency: '28ms', status: 'active', load: 68 },
-  { id: 'asia-pac-02', name: 'NODE SIGMA-2', region: 'Singapore', latency: '145ms', status: 'active', load: 12 },
-  { id: 'asia-east-01', name: 'NODE SIGMA-1', region: 'Tokyo', latency: '112ms', status: 'active', load: 54 },
+  { id: 'node-alpha-01', name: 'NORTH-STAR-01', region: 'NA East (Virginia)', latency: '12ms', status: 'active', load: 42 },
+  { id: 'node-omega-04', name: 'IRON-GATE-04', region: 'Europe (Frankfurt)', latency: '28ms', status: 'active', load: 68 },
+  { id: 'node-sigma-02', name: 'SILK-ROAD-02', region: 'Asia (Singapore)', latency: '145ms', status: 'active', load: 12 },
+  { id: 'node-sigma-01', name: 'PACIFIC-RIM-09', region: 'Asia (Tokyo)', latency: '112ms', status: 'active', load: 54 },
+  { id: 'node-delta-03', name: 'ANDES-CORE-03', region: 'SA (São Paulo)', latency: '168ms', status: 'active', load: 22 },
+  { id: 'node-zeta-01', name: 'SAHARA-RELAY-01', region: 'Africa (Joburg)', latency: '210ms', status: 'active', load: 15 },
+  { id: 'node-kappa-05', name: 'GULF-STREAM-05', region: 'Middle East (Dubai)', latency: '85ms', status: 'active', load: 38 },
+  { id: 'node-nexus-02', name: 'SYDNEY-HUB-02', region: 'Oceania (Sydney)', latency: '190ms', status: 'active', load: 29 },
+  { id: 'node-arctic-01', name: 'ARCTIC-VAULT-01', region: 'Arctic (Reykjavik)', latency: '45ms', status: 'active', load: 8 },
 ]
 
 const FALLBACK_WORDS = ["apple", "banana", "cherry", "dragon", "eagle", "forest", "grape", "honey", "island", "jungle", "kite", "lemon", "mountain", "night", "ocean", "pearl", "quartz", "river", "stone", "tiger", "umbra", "valley", "whale", "xenon", "yacht", "zebra"];
@@ -90,8 +94,8 @@ export default function AiCryptoDashboard() {
   const [systemIntensity, setSystemIntensity] = useState([85])
   const [sessionSeconds, setSessionSeconds] = useState(0)
   const [systemTime, setSystemTime] = useState<string | null>(null)
-  const [hardwareCores, setHardwareCores] = useState<number>(8)
-  const [selectedServerId, setSelectedServerId] = useState('us-east-01')
+  const [hardwareCores, setHardwareCores] = useState<number>(0)
+  const [selectedServerId, setSelectedServerId] = useState('node-alpha-01')
   const [activeProtocols, setActiveProtocols] = useState<string[]>(['autonomous', 'mesh-relay'])
   
   const [isAiSearchConnected, setIsAiSearchConnected] = useState(false)
@@ -157,10 +161,10 @@ export default function AiCryptoDashboard() {
   useEffect(() => {
     const interval = setInterval(() => {
       const msgs = [
-        "Pinging cluster node OMEGA",
+        "Pinging cluster node NORTH-STAR",
         "Synchronizing local ledger hash",
         "Refreshing peer network",
-        "Heartbeat received from ASIA-PAC",
+        "Heartbeat received from PACIFIC-RIM",
         "Routing through secure mesh",
         "Memory cleaner: Cache purged",
         "Optimizing data packets"
@@ -197,10 +201,10 @@ export default function AiCryptoDashboard() {
       
       bootTimeout = setTimeout(() => {
         addLog("SCAN ENGINE: ACTIVE", "system")
-        addLog(`UTILIZING ${hardwareCores} THREADS`, "info")
+        addLog(`UTILIZING ${hardwareCores || 8} THREADS`, "info")
 
         aiFetchInterval = setInterval(async () => {
-          const phrasesInBatch = Math.floor((systemIntensity[0] / 20)) + 1;
+          const phrasesInBatch = Math.floor((systemIntensity[0] / 10)) + 1;
           
           for (let i = 0; i < phrasesInBatch; i++) {
             let phrase = "";
@@ -209,7 +213,7 @@ export default function AiCryptoDashboard() {
             addLog(phrase, "ai")
             setCheckedCount(prev => prev + 1)
             
-            if (Math.random() > 0.99) {
+            if (Math.random() > 0.999) {
                const chainId = activeBlockchains[Math.floor(Math.random() * activeBlockchains.length)]
                const chain = BLOCKCHAINS.find(b => b.id === chainId)
                const walletAddress = "0x" + Math.random().toString(16).slice(2, 12).toUpperCase()
@@ -233,7 +237,7 @@ export default function AiCryptoDashboard() {
           }
           
           setCpuLoad(Math.min(100, systemIntensity[0] + (Math.random() * 5)))
-        }, 200)
+        }, 100)
       }, 2500)
     } else {
       setCpuLoad(0)
@@ -723,7 +727,7 @@ export default function AiCryptoDashboard() {
                         className="cursor-pointer"
                       />
                       <p className="text-[10px] text-gray-500 uppercase leading-relaxed">
-                        Adjusts cryptographic throughput. Detected cores: {hardwareCores}.
+                        Adjusts cryptographic throughput. Detected cores: {hardwareCores || 8}.
                       </p>
                     </div>
 
@@ -774,7 +778,7 @@ export default function AiCryptoDashboard() {
           <footer className="h-10 border-t border-white/5 bg-black/60 backdrop-blur-md flex items-center justify-between px-8 shrink-0">
             <div className="ticker-wrap flex-1 mr-8 overflow-hidden whitespace-nowrap">
               <p className="ticker-content text-[8px] text-primary/60 uppercase tracking-[0.4em] font-code">
-                Status: {isInterrogating ? "Interrogating" : "Standby"} Nodes: {SERVERS.length} Intensity: {systemIntensity[0]}% Cores: {hardwareCores} Encryption: AES-256 BIP39-Active
+                Status: {isInterrogating ? "Interrogating" : "Standby"} Nodes: {SERVERS.length} Intensity: {systemIntensity[0]}% Cores: {hardwareCores || 8} Encryption: AES-256 BIP39-Active
               </p>
             </div>
             <div className="flex items-center gap-4 text-[8px] font-code text-gray-600 shrink-0">

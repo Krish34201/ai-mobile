@@ -34,11 +34,11 @@
   body {
     @apply bg-[#050507] text-foreground font-body antialiased selection:bg-primary/30 overflow-hidden relative;
     background-image: 
-      radial-gradient(circle at 85% 15%, rgba(173, 79, 230, 0.12), transparent 40%),
-      radial-gradient(circle at 15% 85%, rgba(168, 85, 247, 0.1), transparent 45%),
-      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-      linear-gradient(135deg, #050507, #0b0b12, #11111a);
+      radial-gradient(circle at 85% 15%, rgba(173, 79, 230, 0.08), transparent 40%),
+      radial-gradient(circle at 15% 85%, rgba(168, 85, 247, 0.06), transparent 45%),
+      linear-gradient(rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+      linear-gradient(135deg, #050507, #0b0b12, #050507);
     background-size: 100% 100%, 100% 100%, 80px 80px, 80px 80px, 100% 100%;
     background-attachment: fixed;
   }
@@ -47,7 +47,7 @@
     content: '';
     position: fixed;
     inset: 0;
-    box-shadow: inset 0 0 250px rgba(0, 0, 0, 0.8);
+    box-shadow: inset 0 0 250px rgba(0, 0, 0, 0.9);
     pointer-events: none;
     z-index: -1;
   }
