@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
@@ -254,20 +253,13 @@ export default function AiCryptoDashboard() {
         addLog(`UTILIZING ${hardwareCores || 8} THREADS`, "info")
 
         // Start high-velocity generation
-        // Sequential 1-by-1 increment as requested
         const intervalTime = Math.max(1, 80 - (systemIntensity[0] * 0.75));
         
         aiFetchInterval = setInterval(() => {
           // Generate actual BIP39 mnemonic
           const phrase = bip39.generateMnemonic();
-          
-          // Display raw phrase smoothly
           addLog(phrase, "ai")
-          
-          // Sequential 1-by-1 increment
           setCheckedCount(prev => prev + 1)
-          
-          // Dynamic CPU load simulation
           setCpuLoad(Math.min(100, systemIntensity[0] + (Math.random() * 3)))
         }, intervalTime)
       }
@@ -525,7 +517,7 @@ export default function AiCryptoDashboard() {
                       <Radio className="w-4 h-4 text-primary" />
                       <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-white/60">AI Search</h3>
                     </div>
-                    <div className="flex-1 glass-panel rounded-2xl p-6 flex flex-col min-h-0 overflow-hidden space-y-6">
+                    <div className="flex-1 glass-panel rounded-2xl p-6 flex flex-col min-h-0 overflow-hidden">
                        {!isAiSearchConnected ? (
                          <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
                            <Globe className={cn("w-12 h-12 mb-4", isAiSearchConnecting ? "text-primary animate-pulse" : "text-gray-800")} />
@@ -554,30 +546,47 @@ export default function AiCryptoDashboard() {
                            )}
                          </div>
                        ) : (
-                         <div className="space-y-4">
-                            <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5">
-                              <span className="text-[9px] font-bold text-gray-500 uppercase">Status</span>
-                              <span className="text-[9px] font-bold uppercase text-green-500">Connected</span>
-                            </div>
-                            <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5">
-                              <span className="text-[9px] font-bold text-gray-500 uppercase">Neural Uplink</span>
-                              <Wifi className="w-3 h-3 text-primary" />
+                         <div className="flex flex-col h-full space-y-6">
+                            <div className="space-y-3 shrink-0">
+                              <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Status</span>
+                                <span className="text-[10px] font-black uppercase text-green-500 tracking-widest">Connected</span>
+                              </div>
+                              <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Neural Uplink</span>
+                                <Wifi className="w-4 h-4 text-primary animate-pulse" />
+                              </div>
                             </div>
                             
-                            <div className="pt-8 flex flex-col items-center text-center">
-                              <Share2 className={cn("w-12 h-12 mb-4", isInterrogating ? "text-primary animate-pulse" : "text-primary/40")} />
-                              <p className="text-[9px] text-gray-500 uppercase tracking-widest font-bold">
+                            <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
+                              <div className="relative mb-6">
+                                <Share2 className={cn("w-20 h-20 transition-all duration-700", isInterrogating ? "text-primary animate-pulse drop-shadow-[0_0_15px_rgba(173,79,230,0.5)]" : "text-primary/20")} />
+                                {isInterrogating && (
+                                  <div className="absolute inset-0 bg-primary/10 rounded-full animate-ping opacity-20" />
+                                )}
+                              </div>
+                              <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-8">
                                 {isInterrogating ? "Broadcasting packets" : "Neural tunnel ready"}
                               </p>
-                              <div className="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-lg w-full">
-                                <p className="text-[8px] font-code text-primary uppercase text-left leading-tight">
-                                  Heuristic filtering: ACTIVE<br/>
-                                  Entropy injection: ENABLED<br/>
-                                  Mesh priority: HIGH
-                                </p>
+                              
+                              <div className="w-full p-5 bg-black/40 border border-primary/20 rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.4)]">
+                                <div className="space-y-3 text-left">
+                                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                                    <span className="text-[9px] font-code text-primary/60 uppercase">Heuristic Filtering</span>
+                                    <span className="text-[9px] font-code text-primary font-bold">ACTIVE</span>
+                                  </div>
+                                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                                    <span className="text-[9px] font-code text-primary/60 uppercase">Entropy Injection</span>
+                                    <span className="text-[9px] font-code text-primary font-bold">ENABLED</span>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[9px] font-code text-primary/60 uppercase">Mesh Priority</span>
+                                    <span className="text-[9px] font-code text-primary font-bold">HIGH</span>
+                                  </div>
+                                </div>
                               </div>
+                            </div>
                          </div>
-                       </div>
                        )}
                     </div>
                   </div>
