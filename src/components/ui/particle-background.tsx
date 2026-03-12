@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useEffect, useState, useMemo } from "react"
@@ -7,14 +6,13 @@ import { loadSlim } from "@tsparticles/slim"
 import type { Container, ISourceOptions } from "@tsparticles/engine"
 
 /**
- * @fileOverview Full-screen animated particle background using tsParticles.
- * Creates a "blockchain network" effect with dots and interactive glowing connections.
+ * @fileOverview Professional-grade blockchain network particle background.
+ * Optimized for performance with subtle glowing connections and interactive "grab" effect.
  */
 
 export function ParticleBackground() {
   const [init, setInit] = useState(false)
 
-  // Initialize the particles engine once
   useEffect(() => {
     initParticlesEngine(async (engine) => {
       await loadSlim(engine)
@@ -23,11 +21,6 @@ export function ParticleBackground() {
     })
   }, [])
 
-  const particlesLoaded = async (container?: Container): Promise<void> => {
-    // Optional: add logic when particles are loaded
-  }
-
-  // Memoize options to prevent unnecessary re-renders
   const options: ISourceOptions = useMemo(
     () => ({
       fullScreen: {
@@ -36,7 +29,7 @@ export function ParticleBackground() {
       },
       background: {
         color: {
-          value: "transparent", // Background color #0a0a0a is handled by body CSS
+          value: "transparent",
         },
       },
       fpsLimit: 60,
@@ -48,10 +41,10 @@ export function ParticleBackground() {
           },
           onHover: {
             enable: true,
-            mode: "grab", // Creates connections to the mouse
+            mode: "grab",
             parallax: {
               enable: true,
-              force: 60,
+              force: 20,
               smooth: 10,
             },
           },
@@ -64,15 +57,11 @@ export function ParticleBackground() {
             quantity: 4,
           },
           grab: {
-            distance: 200,
+            distance: 140,
             links: {
               opacity: 0.8,
               color: "#4facfe",
             },
-          },
-          repulse: {
-            distance: 100,
-            duration: 0.4,
           },
         },
       },
@@ -82,14 +71,14 @@ export function ParticleBackground() {
         },
         links: {
           color: "#4facfe",
-          distance: 150,
+          distance: 140,
           enable: true,
-          opacity: 0.3,
+          opacity: 0.35,
           width: 1,
           shadow: {
             enable: true,
-            blur: 5,
-            color: "#00ffff",
+            blur: 8,
+            color: "#4facfe",
           },
         },
         move: {
@@ -99,7 +88,7 @@ export function ParticleBackground() {
             default: "out",
           },
           random: false,
-          speed: 0.8,
+          speed: 0.5,
           straight: false,
         },
         number: {
@@ -107,10 +96,10 @@ export function ParticleBackground() {
             enable: true,
             area: 800,
           },
-          value: 80,
+          value: 70,
         },
         opacity: {
-          value: 0.5,
+          value: 0.6,
         },
         shape: {
           type: "circle",
@@ -128,7 +117,6 @@ export function ParticleBackground() {
     return (
       <Particles
         id="tsparticles"
-        particlesLoaded={particlesLoaded}
         options={options}
         className="fixed inset-0 pointer-events-none z-0"
       />

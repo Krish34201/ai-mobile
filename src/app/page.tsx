@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
@@ -21,7 +20,8 @@ import {
   History,
   AlertTriangle,
   Server,
-  Zap
+  Zap,
+  Network
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ParticleBackground } from '@/components/ui/particle-background'
@@ -45,7 +45,7 @@ interface LogEntry {
   id: string;
   message: string;
   timestamp: string;
-  type: 'info' | 'success' | 'warning' | 'error' | 'ai';
+  type: 'info' | 'success' | 'warning' | 'error' | 'ai' | 'system';
 }
 
 export default function Dashboard() {
@@ -67,36 +67,49 @@ export default function Dashboard() {
         timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
         type
       }
-      // Truncate logs to 100 entries to prevent stretching and memory issues
       return [newEntry, ...prev].slice(0, 100)
     })
   }, [])
 
-  // Auto-scroll effect for the terminal
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = 0 // Since we display newest first, we keep it at top
+      scrollRef.current.scrollTop = 0 
     }
   }, [logs])
 
   useEffect(() => {
     let interval: NodeJS.Timeout
     let aiFetchInterval: NodeJS.Timeout
+    let bootInterval: NodeJS.Timeout
 
     if (isInterrogating) {
+      // Professional AI Boot sequence simulation
+      const bootSequence = [
+        { msg: "INITIALIZING NEURAL ENGINE CORE...", type: 'system' as const },
+        { msg: "ESTABLISHING SECURE TUNNEL VIA P2P MESH...", type: 'system' as const },
+        { msg: "MAPPING BLOCKCHAIN NODE TOPOLOGY...", type: 'info' as const },
+        { msg: "NEURAL PROBE ACTIVE - COMMENCING SCAN...", type: 'success' as const }
+      ]
+      
+      bootSequence.forEach((step, idx) => {
+        setTimeout(() => addLog(step.msg, step.type), idx * 600)
+      })
+
       interval = setInterval(() => {
         const increment = Math.floor(Math.random() * 25) + 10
         setCheckedCount(prev => prev + increment)
-        setCurrentEntropy(60 + Math.random() * 40)
-        setCpuLoad(85 + Math.random() * 10)
+        setCurrentEntropy(75 + Math.random() * 20)
+        setCpuLoad(80 + Math.random() * 15)
         
         const dummyPrefix = "0x" + Math.random().toString(16).slice(2, 12).toUpperCase()
-        addLog(`SCANNING HEX_VECTOR: ${dummyPrefix}... [NULL_BALANCE]`, 'info')
+        if (Math.random() > 0.4) {
+          addLog(`SCANNING HEX_VECTOR: ${dummyPrefix}... [NULL_BALANCE]`, 'info')
+        }
 
         if (Math.random() > 0.98) {
-          addLog(`ANOMALY DETECTED AT ${dummyPrefix.slice(0, 8)}`, 'warning')
+          addLog(`NETWORK ANOMALY DETECTED AT ${dummyPrefix.slice(0, 8)}`, 'warning')
         }
-      }, 150)
+      }, 200)
 
       aiFetchInterval = setInterval(async () => {
         try {
@@ -105,11 +118,11 @@ export default function Dashboard() {
           
           addLog(`NEURAL CANDIDATE RECOVERED: ${result.mnemonicPhrase}`, "success")
           
-          if (Math.random() > 0.92) {
+          if (Math.random() > 0.9) {
              addLog("VALIDATING CHECKSUM ON NEURAL VECTOR...", "warning")
              addLog("INTERROGATING DERIVATION PATH m/44'/60'/0'/0/0...", "info")
              
-             if (Math.random() > 0.85) {
+             if (Math.random() > 0.8) {
                setFoundCount(prev => prev + 1)
                addLog("!!! ASSET SIGNATURE MATCHED !!!", "success")
                toast({
@@ -122,12 +135,13 @@ export default function Dashboard() {
         } catch (e) {
           addLog("UPLINK INTERRUPTED: RE-ESTABLISHING NEURAL HANDSHAKE...", "error")
         }
-      }, 4000)
+      }, 5000)
     }
 
     return () => {
       clearInterval(interval)
       clearInterval(aiFetchInterval)
+      clearInterval(bootInterval)
     }
   }, [isInterrogating, addLog, toast])
 
@@ -145,8 +159,6 @@ export default function Dashboard() {
     }
     setIsInterrogating(true)
     addLog("SYSTEM INITIALIZATION SEQUENCE STARTED", "success")
-    addLog(`LOADING RPC CLUSTERS FOR: ${activeBlockchains.join(', ')}`, "info")
-    addLog("AES-256 HANDSHAKE ESTABLISHED WITH GLOBAL NODES", "info")
   }
 
   const stopInterrogation = () => {
@@ -162,10 +174,10 @@ export default function Dashboard() {
         <ParticleBackground />
 
         {/* Sidebar */}
-        <Sidebar className="border-r border-white/5 bg-[#0a0a0a]/90 backdrop-blur-2xl">
+        <Sidebar className="border-r border-white/5 bg-[#0a0a0a]/80 backdrop-blur-2xl">
           <SidebarHeader className="p-6 border-b border-white/5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shadow-[0_0_15px_rgba(173,79,230,0.5)]">
+              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shadow-[0_0_20px_rgba(173,79,230,0.5)]">
                 <Cpu className="w-6 h-6 text-black" />
               </div>
               <div>
@@ -182,13 +194,13 @@ export default function Dashboard() {
                 {[
                   { icon: LayoutDashboard, label: 'Neural Dashboard', active: true },
                   { icon: History, label: 'Vault History' },
-                  { icon: Globe, label: 'Node Network' },
+                  { icon: Network, label: 'Node Network' },
                   { icon: Server, label: 'RPC Clusters' },
                 ].map((item, idx) => (
                   <SidebarMenuItem key={idx}>
                     <SidebarMenuButton isActive={item.active} className={cn(
                       "transition-all duration-200 h-10 px-4 rounded-lg",
-                      item.active ? "bg-primary/10 text-primary border border-primary/20" : "text-gray-500 hover:text-white hover:bg-white/5"
+                      item.active ? "bg-primary/10 text-primary border border-primary/20 shadow-[0_0_10px_rgba(173,79,230,0.1)]" : "text-gray-500 hover:text-white hover:bg-white/5"
                     )}>
                       <item.icon className="w-4 h-4" />
                       <span className="font-bold text-xs uppercase tracking-tighter">{item.label}</span>
@@ -218,7 +230,7 @@ export default function Dashboard() {
                 </div>
 
                 <div className="pt-4 flex items-center gap-3">
-                  <div className={cn("w-2 h-2 rounded-full", isInterrogating ? "bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500")} />
+                  <div className={cn("w-2 h-2 rounded-full", isInterrogating ? "bg-green-500 animate-pulse shadow-[0_0_12px_rgba(34,197,94,0.6)]" : "bg-red-500")} />
                   <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
                     {isInterrogating ? "Kernel Active" : "Kernel Standby"}
                   </span>
@@ -236,9 +248,9 @@ export default function Dashboard() {
         </Sidebar>
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col min-w-0 bg-[#050505]">
+        <main className="flex-1 flex flex-col min-w-0 bg-transparent">
           {/* Top Bar */}
-          <header className="h-16 border-b border-white/5 bg-[#0a0a0a]/50 backdrop-blur-md flex items-center justify-between px-8 z-20 shrink-0">
+          <header className="h-16 border-b border-white/5 bg-black/40 backdrop-blur-xl flex items-center justify-between px-8 z-20 shrink-0">
             <div className="flex items-center gap-8">
                <div className="flex items-center gap-3">
                  <Activity className={cn("w-4 h-4", isInterrogating ? "text-primary animate-pulse" : "text-gray-700")} />
@@ -294,10 +306,10 @@ export default function Dashboard() {
                             key={chain.id}
                             onClick={() => toggleBlockchain(chain.id)}
                             className={cn(
-                              "relative p-3 rounded-lg border cursor-pointer transition-all duration-300",
+                              "relative p-3 rounded-lg border cursor-pointer transition-all duration-300 glass-panel",
                               isActive 
-                                ? "bg-primary/5 border-primary/30 shadow-[0_0_15px_rgba(173,79,230,0.1)]" 
-                                : "bg-white/5 border-white/5 opacity-30 grayscale",
+                                ? "border-primary/40 shadow-[0_0_20px_rgba(173,79,230,0.1)]" 
+                                : "opacity-30 grayscale",
                               isInterrogating && "cursor-not-allowed"
                             )}
                           >
@@ -317,7 +329,7 @@ export default function Dashboard() {
                   </section>
 
                   {/* Summary Telemetry */}
-                  <div className="flex-1 bg-white/5 border border-white/5 rounded-2xl p-6 flex flex-col justify-between overflow-hidden">
+                  <div className="flex-1 glass-panel rounded-2xl p-6 flex flex-col justify-between overflow-hidden">
                     <div className="space-y-6">
                       <div className="space-y-1">
                         <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Network Flow</p>
@@ -358,8 +370,8 @@ export default function Dashboard() {
                     </div>
                   </div>
                   
-                  <SnakeBorderCard processing={isInterrogating} className="flex-1 min-h-0 overflow-hidden">
-                    <div className="h-full bg-black/95 p-4 font-code text-[11px] overflow-hidden flex flex-col relative">
+                  <SnakeBorderCard processing={isInterrogating} className="flex-1 min-h-0 overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)]">
+                    <div className="h-full p-4 font-code text-[11px] overflow-hidden flex flex-col relative">
                       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(#ffffff03_1px,transparent_1px)] [background-size:20px_20px] opacity-20" />
                       
                       <div 
@@ -374,6 +386,7 @@ export default function Dashboard() {
                               log.type === 'success' ? 'text-green-400 font-bold' :
                               log.type === 'warning' ? 'text-yellow-400' :
                               log.type === 'error' ? 'text-red-400' : 
+                              log.type === 'system' ? 'text-cyan-400 font-medium' :
                               log.type === 'ai' ? 'text-primary font-black uppercase tracking-wider' : 'text-gray-500'
                             )}>
                               {log.type === 'ai' && <Zap className="inline w-3 h-3 mr-2" />}
@@ -400,7 +413,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                   
-                  <div className="flex-1 bg-white/5 border border-white/5 rounded-2xl p-6 flex flex-col min-h-0 overflow-hidden">
+                  <div className="flex-1 glass-panel rounded-2xl p-6 flex flex-col min-h-0 overflow-hidden">
                      {foundCount === 0 ? (
                        <div className="h-full flex flex-col items-center justify-center text-center opacity-30">
                          <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
@@ -461,8 +474,13 @@ export default function Dashboard() {
                 <Button 
                   onClick={startInterrogation}
                   disabled={isInterrogating}
-                  className="bg-primary hover:bg-primary/95 text-black h-14 px-20 rounded-xl font-black text-xs uppercase tracking-[0.2em] shadow-[0_0_40px_rgba(173,79,230,0.2)] transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-10"
+                  className={cn(
+                    "relative h-14 px-20 rounded-xl font-black text-xs uppercase tracking-[0.2em] transition-all active:scale-95 disabled:opacity-10 overflow-hidden group/btn",
+                    "bg-gradient-to-r from-[#AD4FE6] to-[#2937A3] text-white shadow-[0_0_30px_rgba(173,79,230,0.3)] hover:shadow-[0_0_50px_rgba(173,79,230,0.5)]",
+                    !isInterrogating && "animate-pulse-subtle"
+                  )}
                 >
+                  <div className="absolute inset-0 bg-white/10 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
                   {isInterrogating ? (
                     <div className="flex items-center gap-3">
                       <RefreshCcw className="w-4 h-4 animate-spin" />
@@ -479,13 +497,15 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <footer className="h-10 border-t border-white/5 bg-black/80 backdrop-blur-md flex items-center justify-between px-8 shrink-0">
-            <p className="text-[8px] text-gray-700 uppercase tracking-[0.5em] font-code">
-              NEURO_ENGINE_STATUS: ONLINE // ENCRYPTION: SECURE // NODES: 8,421_NODES_IDENTIFIED
-            </p>
-            <div className="flex items-center gap-4 text-[8px] font-code text-gray-800">
-               <span>LATENCY: 14ms</span>
-               <span>UPTIME: 99.9%</span>
+          <footer className="h-10 border-t border-white/5 bg-black/60 backdrop-blur-md flex items-center justify-between px-8 shrink-0 overflow-hidden">
+            <div className="ticker-wrap flex-1 mr-8">
+              <p className="ticker-content text-[8px] text-primary/60 uppercase tracking-[0.4em] font-code">
+                NEURAL_ENGINE_STATUS: {isInterrogating ? "ACTIVE" : "ONLINE"} // BLOCKCHAIN_NODES: 8,421 CONNECTED // AI_MODEL: GEMINI_2.5_FLASH // ENCRYPTION: AES-256-GCM // LATENCY: 14ms // UPTIME: 99.9%
+              </p>
+            </div>
+            <div className="flex items-center gap-4 text-[8px] font-code text-gray-600 shrink-0">
+               <span className="flex items-center gap-1"><div className="w-1 h-1 rounded-full bg-green-500" /> SECURE_UPLINK</span>
+               <span>v4.8.0-STABLE</span>
             </div>
           </footer>
         </main>

@@ -32,7 +32,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-[#050505] text-foreground font-body antialiased selection:bg-primary/30;
+    @apply bg-[#050505] text-foreground font-body antialiased selection:bg-primary/30 overflow-hidden;
   }
 }
 
@@ -52,9 +52,21 @@
     scrollbar-color: rgba(173, 79, 230, 0.2) transparent;
   }
 
+  .glass-panel {
+    @apply bg-white/[0.02] backdrop-blur-xl border border-white/[0.05] shadow-[0_8px_32px_0_rgba(0,0,0,0.8)];
+  }
+
+  .glow-border-primary {
+    @apply border-primary/20 shadow-[0_0_15px_rgba(173,79,230,0.1)];
+  }
+
+  .glow-text-primary {
+    @apply text-primary drop-shadow-[0_0_8px_rgba(173,79,230,0.5)];
+  }
+
   /* Snake Border Animation */
   .snake-border-container {
-    @apply relative overflow-hidden rounded-xl bg-[#0a0a0a] border border-white/5;
+    @apply relative overflow-hidden rounded-xl bg-black/40 border border-white/5;
   }
 
   .snake-border-animation {
@@ -68,13 +80,36 @@
   }
 
   .snake-border-content {
-    @apply relative m-[1px] rounded-xl bg-[#0d0d0d] z-10;
+    @apply relative m-[1px] rounded-xl bg-black/80 z-10 backdrop-blur-md;
+  }
+
+  .animate-pulse-subtle {
+    animation: pulse-subtle 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .ticker-wrap {
+    @apply overflow-hidden whitespace-nowrap;
+  }
+
+  .ticker-content {
+    @apply inline-block;
+    animation: ticker 30s linear infinite;
   }
 }
 
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+
+@keyframes ticker {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
 }
 
 .font-code {
