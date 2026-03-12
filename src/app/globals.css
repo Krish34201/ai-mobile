@@ -32,7 +32,24 @@
     @apply border-border;
   }
   body {
-    @apply bg-[#050505] text-foreground font-body antialiased selection:bg-primary/30 overflow-hidden;
+    @apply bg-[#050507] text-foreground font-body antialiased selection:bg-primary/30 overflow-hidden relative;
+    background-image: 
+      radial-gradient(circle at 85% 15%, rgba(79, 172, 254, 0.12), transparent 40%),
+      radial-gradient(circle at 15% 85%, rgba(168, 85, 247, 0.1), transparent 45%),
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(135deg, #050507, #0b0b12, #11111a);
+    background-size: 100% 100%, 100% 100%, 80px 80px, 80px 80px, 100% 100%;
+    background-attachment: fixed;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    box-shadow: inset 0 0 250px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+    z-index: -1;
   }
 }
 
@@ -53,7 +70,7 @@
   }
 
   .glass-panel {
-    @apply bg-white/[0.02] backdrop-blur-xl border border-white/[0.05] shadow-[0_8px_32px_0_rgba(0,0,0,0.8)];
+    @apply bg-[#0f0f16]/75 backdrop-blur-md border border-white/[0.06] shadow-[0_8px_32px_0_rgba(0,0,0,0.8)];
   }
 
   .glow-border-primary {
@@ -66,7 +83,7 @@
 
   /* Snake Border Animation */
   .snake-border-container {
-    @apply relative overflow-hidden rounded-xl bg-black/40 border border-white/5;
+    @apply relative overflow-hidden rounded-xl bg-[#0f0f16]/40 border border-white/5;
   }
 
   .snake-border-animation {
@@ -80,7 +97,7 @@
   }
 
   .snake-border-content {
-    @apply relative m-[1px] rounded-xl bg-black/80 z-10 backdrop-blur-md;
+    @apply relative m-[1px] rounded-xl bg-[#0f0f16]/90 z-10 backdrop-blur-md;
   }
 
   .animate-pulse-subtle {
