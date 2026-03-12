@@ -207,7 +207,7 @@ export default function AiCryptoDashboard() {
 
   const toggleProtocol = (id: string) => {
     setActiveProtocols(prev => 
-      prev.includes(id) ? prev.filter(p => p !== id) : [...p, id]
+      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
     )
   }
 
