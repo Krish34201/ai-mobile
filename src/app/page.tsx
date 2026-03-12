@@ -82,6 +82,11 @@ export default function AiCryptoDashboard() {
   const [selectedServerId, setSelectedServerId] = useState('us-east-01')
   const [activeProtocols, setActiveProtocols] = useState<string[]>(['autonomous'])
   
+  // AI Search states
+  const [isAiSearchConnected, setIsAiSearchConnected] = useState(false)
+  const [isAiSearchConnecting, setIsAiSearchConnecting] = useState(false)
+  const [aiSearchLogs, setAiSearchLogs] = useState<string[]>([])
+  
   const scrollRef = useRef<HTMLDivElement>(null)
   const serverLogRef = useRef<HTMLDivElement>(null)
   
@@ -103,6 +108,29 @@ export default function AiCryptoDashboard() {
       ...prev
     ].slice(0, 50))
   }, [])
+
+  const connectAiSearch = async () => {
+    if (isAiSearchConnecting || isAiSearchConnected) return
+    setIsAiSearchConnecting(true)
+    setAiSearchLogs([])
+    
+    const steps = [
+      "Initializing Tor circuit...",
+      "Establishing secure ports...",
+      "Resolving onion descriptors...",
+      "Neural mesh handshake initiated...",
+      "Handshake complete. Tunnel secure."
+    ]
+
+    for (let i = 0; i < steps.length; i++) {
+      await new Promise(resolve => setTimeout(resolve, 1100))
+      setAiSearchLogs(prev => [...prev, steps[i]])
+    }
+    
+    setIsAiSearchConnecting(false)
+    setIsAiSearchConnected(true)
+    toast({ title: "AI Search Connected", description: "Neural mesh tunnel established via Tor." })
+  }
 
   useEffect(() => {
     const updateTime = () => setSystemTime(new Date().toLocaleTimeString('en-GB', { hour12: false }));
@@ -246,19 +274,18 @@ export default function AiCryptoDashboard() {
                   { icon: Cloud, label: 'Server', id: 'server' },
                   { icon: Settings, label: 'Settings', id: 'settings' },
                 ].map((item) => (
-                  <SidebarMenuItem key={item.id}>
-                    <SidebarMenuButton 
-                      isActive={activeTab === item.id} 
-                      onClick={() => setActiveTab(item.id as TabType)}
-                      className={cn(
-                        "transition-all duration-200 h-10 px-4 rounded-lg",
-                        activeTab === item.id ? "bg-primary/10 text-primary border border-primary/20" : "text-gray-500 hover:text-white hover:bg-white/5"
-                      )}
-                    >
-                      <item.icon className="w-4 h-4" />
-                      <span className="font-bold text-xs uppercase tracking-tighter">{item.label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  <SidebarMenuButton 
+                    key={item.id} 
+                    isActive={activeTab === item.id} 
+                    onClick={() => setActiveTab(item.id as TabType)}
+                    className={cn(
+                      "transition-all duration-200 h-10 px-4 rounded-lg",
+                      activeTab === item.id ? "bg-primary/10 text-primary border border-primary/20" : "text-gray-500 hover:text-white hover:bg-white/5"
+                    )}
+                  >
+                    <item.icon className="w-4 h-4" />
+                    <span className="font-bold text-xs uppercase tracking-tighter">{item.label}</span>
+                  </SidebarMenuButton>
                 ))}
               </SidebarMenu>
             </SidebarGroup>
@@ -322,7 +349,7 @@ export default function AiCryptoDashboard() {
 
             <div className="flex items-center gap-4">
               <div className="flex flex-col items-end">
-                <span className="text-[9px] font-code text-gray-600 uppercase">Current Time</span>
+                <span className="text-[9px] font-code text-gray-600 uppercase">System Time</span>
                 <span className="text-xs font-code text-white/80">{systemTime || "00:00:00"}</span>
               </div>
             </div>
@@ -442,33 +469,60 @@ export default function AiCryptoDashboard() {
                       <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-white/60">AI Search</h3>
                     </div>
                     <div className="flex-1 glass-panel rounded-2xl p-6 flex flex-col min-h-0 overflow-hidden space-y-6">
-                       <div className="space-y-4">
-                         <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5">
-                           <span className="text-[9px] font-bold text-gray-500 uppercase">Connect Status</span>
-                           <span className={cn("text-[9px] font-bold uppercase", isInterrogating ? "text-green-500" : "text-gray-600")}>
-                             {isInterrogating ? "Synchronized" : "Disconnected"}
-                           </span>
+                       {!isAiSearchConnected ? (
+                         <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
+                           <Globe className={cn("w-12 h-12 mb-4", isAiSearchConnecting ? "text-primary animate-pulse" : "text-gray-800")} />
+                           <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-2">
+                             {isAiSearchConnecting ? "Connecting to tor" : "AI Search standby"}
+                           </h4>
+                           <p className="text-[10px] text-gray-600 uppercase mb-6 leading-relaxed">
+                             Neural mesh uplink required for asset broadcast.
+                           </p>
+                           <Button 
+                             onClick={connectAiSearch} 
+                             disabled={isAiSearchConnecting}
+                             className="w-full bg-primary/10 border border-primary/20 text-primary font-black text-[10px] uppercase hover:bg-primary/20 transition-all h-10"
+                           >
+                             {isAiSearchConnecting ? "Negotiating Ports..." : "Connect Ai Search"}
+                           </Button>
+                           
+                           {aiSearchLogs.length > 0 && (
+                             <div className="mt-6 w-full text-left font-code text-[9px] space-y-1 border-t border-white/5 pt-4">
+                               {aiSearchLogs.map((l, i) => (
+                                 <div key={i} className="text-primary/60 animate-in slide-in-from-bottom-1 duration-300">
+                                   &gt; {l}
+                                 </div>
+                               ))}
+                             </div>
+                           )}
                          </div>
-                         <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5">
-                           <span className="text-[9px] font-bold text-gray-500 uppercase">Neural Uplink</span>
-                           <Wifi className={cn("w-3 h-3", isInterrogating ? "text-primary" : "text-gray-800")} />
+                       ) : (
+                         <div className="space-y-4">
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5">
+                              <span className="text-[9px] font-bold text-gray-500 uppercase">Connect Status</span>
+                              <span className="text-[9px] font-bold uppercase text-green-500">Connected</span>
+                            </div>
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5">
+                              <span className="text-[9px] font-bold text-gray-500 uppercase">Neural Uplink</span>
+                              <Wifi className="w-3 h-3 text-primary" />
+                            </div>
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5">
+                              <span className="text-[9px] font-bold text-gray-500 uppercase">Entropy Source</span>
+                              <span className="text-[9px] font-bold text-white uppercase">Neural Cloud v2</span>
+                            </div>
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5">
+                              <span className="text-[9px] font-bold text-gray-500 uppercase">Probe Level</span>
+                              <Radio className={cn("w-3 h-3 text-primary", isInterrogating && "animate-pulse")} />
+                            </div>
+                            
+                            <div className="pt-8 flex flex-col items-center text-center">
+                              <Share2 className={cn("w-12 h-12 mb-4", isInterrogating ? "text-primary animate-pulse" : "text-primary/40")} />
+                              <p className="text-[9px] text-gray-500 uppercase tracking-widest font-bold">
+                                {isInterrogating ? "Broadcasting discovery packets" : "Tunnel ready for scan"}
+                              </p>
+                            </div>
                          </div>
-                         <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5">
-                           <span className="text-[9px] font-bold text-gray-500 uppercase">Entropy Source</span>
-                           <span className="text-[9px] font-bold text-white uppercase">Neural Cloud v2</span>
-                         </div>
-                         <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5">
-                           <span className="text-[9px] font-bold text-gray-500 uppercase">Probe Level</span>
-                           <Radio className={cn("w-3 h-3", isInterrogating ? "text-primary animate-pulse" : "text-gray-800")} />
-                         </div>
-                       </div>
-                       
-                       <div className="flex-1 flex flex-col items-center justify-center text-center">
-                          <Share2 className={cn("w-12 h-12 mb-4 transition-colors", isInterrogating ? "text-primary" : "text-gray-800")} />
-                          <p className="text-[9px] text-gray-600 uppercase tracking-widest font-bold">
-                            {isInterrogating ? "Broadcasting discovery packets" : "AI Search on standby"}
-                          </p>
-                       </div>
+                       )}
                     </div>
                   </div>
                 </div>
