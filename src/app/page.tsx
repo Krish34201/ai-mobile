@@ -28,7 +28,8 @@ import {
   Trash2,
   AlertTriangle,
   Type,
-  Palette
+  Palette,
+  Unplug
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SnakeBorderCard } from '@/components/ui/snake-border-card'
@@ -180,6 +181,15 @@ export default function AiCryptoDashboard() {
     setIsAiSearchConnecting(false)
     setIsAiSearchConnected(true)
     toast({ title: "Neural Core Linked", description: "Heuristic search mode enabled." })
+  }
+
+  const disconnectAiSearch = () => {
+    setIsAiSearchConnected(false)
+    setAiSearchLogs([])
+    toast({
+      title: "Neural Core Severed",
+      description: "Heuristic search mode disabled. Engine speed normalized."
+    })
   }
 
   // Handle Hydration and Cores detection
@@ -598,6 +608,15 @@ export default function AiCryptoDashboard() {
                                   </div>
                                 </div>
                               </div>
+
+                              <Button 
+                                onClick={disconnectAiSearch} 
+                                disabled={isInterrogating}
+                                variant="outline"
+                                className="w-full mt-6 border-red-500/20 text-red-500/60 hover:text-red-500 hover:bg-red-500/10 font-black text-[10px] uppercase transition-all h-8"
+                              >
+                                <Unplug className="w-3 h-3 mr-2" /> Disconnect AI Search
+                              </Button>
                             </div>
                          </div>
                        )}
