@@ -11,19 +11,22 @@ import {
   Fingerprint,
   Zap,
   Globe,
-  Loader2
+  Loader2,
+  Key
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SnakeBorderCard } from '@/components/ui/snake-border-card'
 import { useToast } from '@/hooks/use-toast'
+import { db } from '@/firebase/config'
+import { doc, getDoc } from 'firebase/firestore'
 
 export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [licenseKey, setLicenseKey] = useState('')
 
   useEffect(() => {
     // Check if already logged in
@@ -36,29 +39,55 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!email || !password) {
+    if (!email || !licenseKey) {
       toast({
         variant: "destructive",
         title: "Access Denied",
-        description: "Please provide valid operator credentials."
+        description: "Please provide valid operator ID and license key."
       })
       return
     }
 
     setIsLoading(true)
 
-    // Simulate neural handshake
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    try {
+      // 1. Verify License Key in Firestore
+      // We assume your collection is named 'licenses' and the doc ID is the license key
+      const licenseRef = doc(db, 'licenses', licenseKey.trim());
+      const licenseSnap = await getDoc(licenseRef);
 
-    // Mock successful login
-    localStorage.setItem('ai_crypto_auth_token', 'authorized_session_v4')
-    
-    toast({
-      title: "Handshake Verified",
-      description: "Neural link established. Welcome, Operator."
-    })
-    
-    router.push('/')
+      if (!licenseSnap.exists()) {
+        throw new Error("License key not found in central registry.");
+      }
+
+      const licenseData = licenseSnap.data();
+      
+      if (licenseData.status !== 'active') {
+        throw new Error("This license is currently suspended or expired.");
+      }
+
+      // 2. Simulate Neural Handshake for visual effect
+      await new Promise(resolve => setTimeout(resolve, 1500))
+
+      // 3. Mock successful session authorization
+      localStorage.setItem('ai_crypto_auth_token', 'authorized_session_v4')
+      localStorage.setItem('ai_crypto_operator_id', email)
+      
+      toast({
+        title: "Handshake Verified",
+        description: `Neural link established for ${email}. Welcome, Operator.`
+      })
+      
+      router.push('/')
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Failed",
+        description: error.message || "Could not verify credentials."
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -99,15 +128,15 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">Security Keyphrase</label>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">License Key</label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-primary transition-colors" />
+                  <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-primary transition-colors" />
                   <Input 
-                    type="password" 
-                    placeholder="••••••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="bg-black/40 border-white/5 h-12 pl-12 rounded-xl focus:border-primary/50 transition-all text-white font-code"
+                    type="text" 
+                    placeholder="XXXX-XXXX-XXXX-XXXX"
+                    value={licenseKey}
+                    onChange={(e) => setLicenseKey(e.target.value)}
+                    className="bg-black/40 border-white/5 h-12 pl-12 rounded-xl focus:border-primary/50 transition-all text-white font-code uppercase"
                   />
                 </div>
               </div>
