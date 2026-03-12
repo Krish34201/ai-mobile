@@ -29,7 +29,8 @@ import {
   AlertTriangle,
   Type,
   Palette,
-  Unplug
+  Unplug,
+  Layers
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SnakeBorderCard } from '@/components/ui/snake-border-card'
@@ -71,6 +72,7 @@ const SEED_COLORS = [
   { name: 'Matrix Green', class: 'text-green-400' },
   { name: 'Cyber Cyan', class: 'text-cyan-400' },
   { name: 'Gold Amber', class: 'text-amber-400' },
+  { name: 'Cyber RGB', class: 'bg-gradient-to-r from-red-500 via-green-500 to-blue-500 bg-clip-text text-transparent animate-gradient' },
 ]
 
 interface FoundWallet {
@@ -106,7 +108,8 @@ export default function AiCryptoDashboard() {
   const [systemIntensity, setSystemIntensity] = useState([85])
   const [sessionSeconds, setSessionSeconds] = useState(0)
   const [systemTime, setSystemTime] = useState<string | null>(null)
-  const [hardwareCores, setHardwareCores] = useState<number>(0)
+  const [hardwareCores, setHardwareCores] = useState<number>(8)
+  const [allocatedCores, setAllocatedCores] = useState([4])
   const [selectedServerId, setSelectedServerId] = useState('node-na-east')
   
   // Customization States
@@ -197,7 +200,9 @@ export default function AiCryptoDashboard() {
     const updateTime = () => setSystemTime(new Date().toLocaleTimeString('en-GB', { hour12: false }));
     updateTime();
     if (typeof window !== 'undefined') {
-      setHardwareCores(navigator.hardwareConcurrency || 8);
+      const cores = navigator.hardwareConcurrency || 8;
+      setHardwareCores(cores);
+      setAllocatedCores([Math.floor(cores / 2)]);
     }
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
@@ -257,32 +262,41 @@ export default function AiCryptoDashboard() {
         setCheckedCount(0)
         
         addLog("ESTABLISHING SECURE HANDSHAKE...", "system")
-        await new Promise(resolve => setTimeout(resolve, 500))
+        await new Promise(resolve => setTimeout(resolve, 300))
         
         addLog("CHECKING PORTS AND TLS DESCRIPTORS...", "info")
-        await new Promise(resolve => setTimeout(resolve, 500))
+        await new Promise(resolve => setTimeout(resolve, 300))
         
         addLog("RESOLVING PROXY TUNNEL...", "info")
-        await new Promise(resolve => setTimeout(resolve, 500))
+        await new Promise(resolve => setTimeout(resolve, 300))
         
         const aiStatusMsg = isAiSearchConnected ? "AI SEARCH: LINKED [HEURISTIC BOOST]" : "AI SEARCH: NOT CONNECTED [STANDARD MODE]";
         addLog(aiStatusMsg, isAiSearchConnected ? "success" : "warning")
-        await new Promise(resolve => setTimeout(resolve, 500))
+        await new Promise(resolve => setTimeout(resolve, 300))
         
         addLog("CRYPTOGRAPHIC ENGINE: INITIALIZED", "system")
-        addLog(`WORKER THREADS: ${hardwareCores || 8}`, "info")
+        addLog(`ALLOCATED CORES: ${allocatedCores[0]}`, "info")
 
-        // Smooth sequential generation loop with AI Search Speed Boost
-        const baseInterval = Math.max(1, 40 - (systemIntensity[0] * 0.35));
-        const aiBoostMultiplier = isAiSearchConnected ? 0.5 : 1.0; 
-        const finalInterval = baseInterval * aiBoostMultiplier;
+        // Smooth sequential generation loop with AI Search Speed Boost and Core scaling
+        // Higher intensity + more cores = faster speed
+        const coreFactor = allocatedCores[0] / hardwareCores;
+        const intensityFactor = systemIntensity[0] / 100;
+        
+        const baseInterval = 100; // ms
+        const speedBoost = 1000 * intensityFactor * coreFactor;
+        const aiBoost = isAiSearchConnected ? 2.0 : 1.0;
+        
+        // Final interval targeting smooth sequential flow
+        const finalDelay = Math.max(1, (baseInterval / (1 + (speedBoost / 100))) / aiBoost);
         
         aiFetchInterval = setInterval(() => {
           const phrase = bip39.generateMnemonic();
           addLog(phrase, "ai")
           setCheckedCount(prev => prev + 1)
-          setCpuLoad(Math.min(100, systemIntensity[0] + (Math.random() * 2)))
-        }, Math.max(1, finalInterval))
+          
+          // Smooth CPU Load visual scaling
+          setCpuLoad(Math.min(100, (systemIntensity[0] * coreFactor) + (Math.random() * 5)))
+        }, finalDelay)
       }
 
       bootSequence()
@@ -293,7 +307,7 @@ export default function AiCryptoDashboard() {
     return () => {
       if (aiFetchInterval) clearInterval(aiFetchInterval)
     }
-  }, [isInterrogating, addLog, systemIntensity, hardwareCores, isAiSearchConnected])
+  }, [isInterrogating, addLog, systemIntensity, hardwareCores, allocatedCores, isAiSearchConnected])
 
   const toggleBlockchain = (id: string) => {
     if (isInterrogating) return
@@ -339,6 +353,18 @@ export default function AiCryptoDashboard() {
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full bg-[#050507] overflow-hidden text-foreground font-body select-none relative">
+        <style jsx global>{`
+          @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          .animate-gradient {
+            background-size: 200% 200%;
+            animation: gradient 3s ease infinite;
+          }
+        `}</style>
+
         <Sidebar className="border-r border-white/5 bg-[#0a0a0a]/80 backdrop-blur-2xl z-30">
           <SidebarHeader className="p-6 border-b border-white/5">
             <div className="flex items-center gap-3">
@@ -777,13 +803,17 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'settings' && (
-                <div className="max-w-4xl mx-auto w-full flex flex-col gap-8 animate-in zoom-in-95 duration-500">
+                <div className="max-w-4xl mx-auto w-full flex flex-col gap-8 animate-in zoom-in-95 duration-500 pb-20">
                   <div className="glass-panel rounded-2xl p-10 border-white/5">
                     <h3 className="text-xl font-black uppercase tracking-[0.2em] mb-8 border-b border-white/5 pb-4">Engine Protocols</h3>
-                    <div className="space-y-10">
+                    <div className="space-y-12">
+                      {/* Processing Intensity */}
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                          <label className="text-sm font-bold text-white uppercase tracking-widest">Processing Intensity</label>
+                          <div className="flex items-center gap-2">
+                            <Zap className="w-4 h-4 text-primary" />
+                            <label className="text-sm font-bold text-white uppercase tracking-widest">Processing Intensity</label>
+                          </div>
                           <span className="text-xs font-code text-primary">{systemIntensity[0]}%</span>
                         </div>
                         <Slider 
@@ -795,11 +825,34 @@ export default function AiCryptoDashboard() {
                           className="cursor-pointer"
                         />
                         <p className="text-[10px] text-gray-500 uppercase leading-relaxed">
-                          Detected Threads: {hardwareCores || 8}. High intensity increases PPS throughput but may impact system responsiveness.
+                          Controls the cryptographic cycle frequency. Higher intensity increases PPS throughput.
                         </p>
                       </div>
 
-                      <div className="space-y-6 pt-4">
+                      {/* Core Allocation */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Layers className="w-4 h-4 text-primary" />
+                            <label className="text-sm font-bold text-white uppercase tracking-widest">Core Allocation</label>
+                          </div>
+                          <span className="text-xs font-code text-primary">{allocatedCores[0]} / {hardwareCores} Cores</span>
+                        </div>
+                        <Slider 
+                          value={allocatedCores} 
+                          onValueChange={setAllocatedCores} 
+                          min={1}
+                          max={hardwareCores} 
+                          step={1} 
+                          disabled={isInterrogating}
+                          className="cursor-pointer"
+                        />
+                        <p className="text-[10px] text-gray-500 uppercase leading-relaxed">
+                          Define the number of logical CPU cores allocated to the interrogation engine.
+                        </p>
+                      </div>
+
+                      <div className="space-y-6 pt-4 border-t border-white/5">
                         <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Memory & Buffer Protocol</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                            <div className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors">
@@ -839,7 +892,7 @@ export default function AiCryptoDashboard() {
                            <Palette className="w-4 h-4 text-primary" />
                            <h4 className="text-[10px] font-black text-white/60 uppercase tracking-widest">Seed Phrase Color</h4>
                         </div>
-                        <div className="grid grid-cols-1 gap-3">
+                        <div className="grid grid-cols-2 gap-3">
                           {SEED_COLORS.map((color) => (
                             <button
                               key={color.name}
@@ -849,8 +902,11 @@ export default function AiCryptoDashboard() {
                                 seedPhraseColor === color.class ? "bg-primary/10 border-primary/40" : "bg-white/[0.02] border-white/5 hover:border-white/20"
                               )}
                             >
-                              <span className="text-[10px] font-bold text-gray-400 uppercase">{color.name}</span>
-                              <div className={cn("w-3 h-3 rounded-full", color.class.split(' ')[0])} />
+                              <span className="text-[9px] font-bold text-gray-400 uppercase leading-none">{color.name}</span>
+                              <div className={cn(
+                                "w-3 h-3 rounded-full border border-white/10", 
+                                color.class.includes('gradient') ? 'bg-gradient-to-tr from-red-500 via-green-500 to-blue-500' : color.class.split(' ')[0]
+                              )} />
                             </button>
                           ))}
                         </div>
@@ -876,10 +932,10 @@ export default function AiCryptoDashboard() {
                           />
                         </div>
 
-                        <div className="p-5 rounded-xl bg-black/40 border border-white/5">
+                        <div className="p-5 rounded-xl bg-black/40 border border-white/5 min-h-[100px] flex flex-col justify-center">
                            <p className="text-[9px] font-bold text-gray-600 uppercase mb-3">Live Preview:</p>
                            <div className="font-code" style={{ fontSize: `${consoleFontSize[0]}px` }}>
-                             <p className={cn(seedPhraseColor, "uppercase tracking-tight")}>tree river flower mountain forest branch leaf stone wood path sky water</p>
+                             <p className={cn(seedPhraseColor, "uppercase tracking-tight leading-relaxed")}>tree river flower mountain forest branch leaf stone wood path sky water</p>
                            </div>
                         </div>
                       </div>
@@ -922,7 +978,7 @@ export default function AiCryptoDashboard() {
           <footer className="h-10 border-t border-white/5 bg-black/60 backdrop-blur-md flex items-center justify-between px-8 shrink-0">
             <div className="ticker-wrap flex-1 mr-8 overflow-hidden whitespace-nowrap">
               <p className="ticker-content text-[8px] text-primary/60 uppercase tracking-[0.4em] font-code">
-                Status: {isInterrogating ? "SCANNING" : "STANDBY"} • Active Node: {selectedServer?.name} • Logic: BIP39-Elite • Encryption: AES-256 Verified
+                Status: {isInterrogating ? "SCANNING" : "STANDBY"} • Active Node: {selectedServer?.name} • Cores: {allocatedCores[0]} • Logic: BIP39-Elite • Encryption: AES-256 Verified
               </p>
             </div>
             <div className="flex items-center gap-4 text-[8px] font-code text-gray-600 shrink-0">
