@@ -207,33 +207,9 @@ export default function AiCryptoDashboard() {
           const phrasesInBatch = Math.floor((systemIntensity[0] / 10)) + 1;
           
           for (let i = 0; i < phrasesInBatch; i++) {
-            let phrase = "";
-            phrase = Array.from({ length: 12 }, () => FALLBACK_WORDS[Math.floor(Math.random() * FALLBACK_WORDS.length)]).join(" ");
-            
+            const phrase = Array.from({ length: 12 }, () => FALLBACK_WORDS[Math.floor(Math.random() * FALLBACK_WORDS.length)]).join(" ");
             addLog(phrase, "ai")
             setCheckedCount(prev => prev + 1)
-            
-            if (Math.random() > 0.999) {
-               const chainId = activeBlockchains[Math.floor(Math.random() * activeBlockchains.length)]
-               const chain = BLOCKCHAINS.find(b => b.id === chainId)
-               const walletAddress = "0x" + Math.random().toString(16).slice(2, 12).toUpperCase()
-               const balance = Math.random() * 500 + 50
-               
-               const newWallet: FoundWallet = {
-                 id: Math.random().toString(36).substr(2, 9),
-                 address: walletAddress,
-                 mnemonic: phrase,
-                 balance,
-                 chain: chain?.name || 'Bitcoin',
-                 revealed: false,
-                 timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false })
-               }
-
-               setFoundWallets(prev => [newWallet, ...prev])
-               setFoundCount(prev => prev + 1)
-               addLog(`SIGNATURE MATCH: ${walletAddress} (${chain?.name})`, "success")
-               toast({ title: "Asset Discovered", description: `${chain?.name} wallet verified.`, variant: "default" })
-            }
           }
           
           setCpuLoad(Math.min(100, systemIntensity[0] + (Math.random() * 5)))
