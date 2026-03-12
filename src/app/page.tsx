@@ -31,11 +31,9 @@ import { SnakeBorderCard } from '@/components/ui/snake-border-card'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent } from '@/components/ui/sidebar'
-import { generateSecureMnemonics } from '@/ai/flows/generate-secure-mnemonics'
 import { Progress } from '@/components/ui/progress'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
-import { ParticleBackground } from '@/components/ui/particle-background'
 
 const BLOCKCHAINS = [
   { id: 'btc', name: 'Bitcoin', symbol: '₿', color: 'bg-[#f7931a]', path: "m/84'/0'/0'/0/0" },
@@ -202,18 +200,15 @@ export default function AiCryptoDashboard() {
         addLog(`UTILIZING ${hardwareCores} THREADS`, "info")
 
         aiFetchInterval = setInterval(async () => {
-          // Real-time batch generation to simulate high throughput
           const phrasesInBatch = Math.floor((systemIntensity[0] / 20)) + 1;
           
           for (let i = 0; i < phrasesInBatch; i++) {
             let phrase = "";
-            // Local high-speed generation as per Specification Chapter I
             phrase = Array.from({ length: 12 }, () => FALLBACK_WORDS[Math.floor(Math.random() * FALLBACK_WORDS.length)]).join(" ");
             
             addLog(phrase, "ai")
-            setCheckedCount(prev => prev + 1) // REAL SYNCED COUNTER
+            setCheckedCount(prev => prev + 1)
             
-            // Signature match logic (rare discovery)
             if (Math.random() > 0.99) {
                const chainId = activeBlockchains[Math.floor(Math.random() * activeBlockchains.length)]
                const chain = BLOCKCHAINS.find(b => b.id === chainId)
@@ -291,9 +286,7 @@ export default function AiCryptoDashboard() {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full bg-transparent overflow-hidden text-foreground font-body select-none relative">
-        <ParticleBackground />
-        
+      <div className="flex h-screen w-full bg-[#050507] overflow-hidden text-foreground font-body select-none relative">
         <Sidebar className="border-r border-white/5 bg-[#0a0a0a]/80 backdrop-blur-2xl z-30">
           <SidebarHeader className="p-6 border-b border-white/5">
             <div className="flex items-center gap-3">
@@ -700,7 +693,7 @@ export default function AiCryptoDashboard() {
                     </div>
 
                     <div className="glass-panel rounded-2xl p-8 border-white/5 flex flex-col flex-1 justify-center items-center text-center">
-                       <Globe className="w-16 h-16 text-primary/10 animate-pulse mb-6" />
+                       <Globe className="w-16 h-16 text-primary/10 mb-6" />
                        <h4 className="text-xs font-black uppercase tracking-widest text-white mb-2">Linked Node: {selectedServer?.name}</h4>
                        <p className="text-[10px] text-gray-500 uppercase leading-relaxed max-w-xs">
                          Traffic routed via {selectedServer?.region} utilizing 256-bit AES cryptographic shielding.

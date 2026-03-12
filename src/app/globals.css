@@ -65,7 +65,7 @@
     border-radius: 10px;
   }
   .terminal-scrollbar {
-    scrollbar-width: none; /* Hide for elite look */
+    scrollbar-width: none;
   }
 
   .glass-panel {
@@ -80,7 +80,6 @@
     @apply text-primary drop-shadow-[0_0_8px_rgba(173,79,230,0.5)];
   }
 
-  /* Snake Border Animation */
   .snake-border-container {
     @apply relative overflow-hidden rounded-xl bg-[#0f0f16]/40 border border-white/5;
   }
@@ -99,10 +98,6 @@
     @apply relative m-[1px] rounded-xl bg-[#0f0f16]/90 z-10 backdrop-blur-md;
   }
 
-  .animate-pulse-subtle {
-    animation: pulse-subtle 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
   .ticker-wrap {
     @apply overflow-hidden whitespace-nowrap;
   }
@@ -116,11 +111,6 @@
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
-}
-
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(1.02); }
 }
 
 @keyframes ticker {
