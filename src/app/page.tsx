@@ -126,7 +126,7 @@ export default function AiCryptoDashboard() {
         timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
         type
       }
-      return [newEntry, ...prev].slice(0, 100)
+      return [newEntry, ...prev].slice(0, 50)
     })
   }, [])
 
@@ -227,7 +227,7 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(interval)
   }, [isAutoMemoryEnabled, clearMemory])
 
-  // Core Interrogation Logic
+  // Core Interrogation Logic - Optimized for extreme speed and sequential smoothness
   useEffect(() => {
     let aiFetchInterval: NodeJS.Timeout
     let bootTimeout: NodeJS.Timeout
@@ -242,15 +242,22 @@ export default function AiCryptoDashboard() {
         addLog("SCAN ENGINE: ACTIVE", "system")
         addLog(`UTILIZING ${hardwareCores || 8} THREADS`, "info")
 
-        // Sequential 1-by-1 generation
-        const intervalTime = Math.max(10, 150 - (systemIntensity[0] * 1.3));
+        // Extremely fast interval while maintaining 1-by-1 increment
+        // Minimum interval is around 1ms to 4ms depending on browser caps
+        const intervalTime = Math.max(1, 80 - (systemIntensity[0] * 0.75));
 
         aiFetchInterval = setInterval(() => {
           // Generate actual BIP39 mnemonic
           const phrase = bip39.generateMnemonic();
+          
+          // Use only raw words as requested
           addLog(phrase, "ai")
+          
+          // Sequential 1-by-1 increment
           setCheckedCount(prev => prev + 1)
-          setCpuLoad(Math.min(100, systemIntensity[0] + (Math.random() * 5)))
+          
+          // Dynamic CPU load simulation
+          setCpuLoad(Math.min(100, systemIntensity[0] + (Math.random() * 3)))
         }, intervalTime)
       }, 2500)
     } else {
