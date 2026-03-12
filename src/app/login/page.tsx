@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect } from 'react'
@@ -10,7 +9,7 @@ import {
   ChevronRight, 
   Fingerprint,
   Zap,
-  Globe,
+  User,
   Loader2,
   Key
 } from 'lucide-react'
@@ -25,7 +24,7 @@ export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [licenseKey, setLicenseKey] = useState('')
 
   useEffect(() => {
@@ -39,11 +38,11 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!email || !licenseKey) {
+    if (!username || !licenseKey) {
       toast({
         variant: "destructive",
         title: "Access Denied",
-        description: "Please provide valid operator ID and license key."
+        description: "Please provide valid username and license key."
       })
       return
     }
@@ -52,7 +51,6 @@ export default function LoginPage() {
 
     try {
       // 1. Verify License Key in Firestore
-      // We assume your collection is named 'licenses' and the doc ID is the license key
       const licenseRef = doc(db, 'licenses', licenseKey.trim());
       const licenseSnap = await getDoc(licenseRef);
 
@@ -71,11 +69,11 @@ export default function LoginPage() {
 
       // 3. Mock successful session authorization
       localStorage.setItem('ai_crypto_auth_token', 'authorized_session_v4')
-      localStorage.setItem('ai_crypto_operator_id', email)
+      localStorage.setItem('ai_crypto_username', username)
       
       toast({
         title: "Handshake Verified",
-        description: `Neural link established for ${email}. Welcome, Operator.`
+        description: `Neural link established for ${username}. Welcome, Operator.`
       })
       
       router.push('/')
@@ -114,14 +112,14 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="p-8 space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">Operator ID</label>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">Username</label>
                 <div className="relative group">
-                  <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-primary transition-colors" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-primary transition-colors" />
                   <Input 
-                    type="email" 
-                    placeholder="operator@ai-crypto.inc"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    type="text" 
+                    placeholder="operator_01"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     className="bg-black/40 border-white/5 h-12 pl-12 rounded-xl focus:border-primary/50 transition-all text-white font-code"
                   />
                 </div>
