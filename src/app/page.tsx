@@ -21,7 +21,8 @@ import {
   ArrowDownCircle,
   BarChart3,
   TrendingUp,
-  Cloud
+  Cloud,
+  Timer
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SnakeBorderCard } from '@/components/ui/snake-border-card'
@@ -68,6 +69,7 @@ export default function AiCryptoDashboard() {
   const [currentEntropy, setCurrentEntropy] = useState(0)
   const [cpuLoad, setCpuLoad] = useState(0)
   const [systemIntensity, setSystemIntensity] = useState([75])
+  const [sessionSeconds, setSessionSeconds] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
   
   const addLog = useCallback((message: string, type: LogEntry['type'] = 'info') => {
@@ -87,6 +89,19 @@ export default function AiCryptoDashboard() {
       scrollRef.current.scrollTop = 0 
     }
   }, [logs])
+
+  // Session Timer
+  useEffect(() => {
+    let timerInterval: NodeJS.Timeout
+    if (isInterrogating) {
+      timerInterval = setInterval(() => {
+        setSessionSeconds(prev => prev + 1)
+      }, 1000)
+    } else {
+      setSessionSeconds(0)
+    }
+    return () => clearInterval(timerInterval)
+  }, [isInterrogating])
 
   useEffect(() => {
     let interval: NodeJS.Timeout
@@ -169,6 +184,13 @@ export default function AiCryptoDashboard() {
   const stopInterrogation = () => {
     setIsInterrogating(false)
     addLog("ENGINE COOLDOWN INITIATED", "error")
+  }
+
+  const formatTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600)
+    const m = Math.floor((seconds % 3600) / 60)
+    const s = seconds % 60
+    return [h, m, s].map(v => v < 10 ? "0" + v : v).join(":")
   }
 
   return (
@@ -321,15 +343,27 @@ export default function AiCryptoDashboard() {
                     <div className="flex-1 glass-panel rounded-2xl p-6 flex flex-col justify-between overflow-hidden">
                       <div className="space-y-6">
                         <div className="space-y-1">
-                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Throughput</p>
-                          <p className="text-2xl font-black font-code text-white tracking-tighter">
-                            {isInterrogating ? (Math.random() * 800 * (systemIntensity[0]/75)).toFixed(2) : "0.00"} <span className="text-xs text-primary/60">TPS</span>
+                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                            <Zap className="w-3 h-3" /> Network Latency
+                          </p>
+                          <p className="text-2xl font-black font-code text-green-500 tracking-tighter">
+                            {isInterrogating ? (12 + Math.random() * 5).toFixed(0) : "---"} <span className="text-xs text-green-500/60">MS</span>
                           </p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Latency</p>
-                          <p className="text-2xl font-black font-code text-green-500 tracking-tighter">
-                            {isInterrogating ? (12 + Math.random() * 5).toFixed(0) : "---"} <span className="text-xs text-green-500/60">MS</span>
+                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                            <Wallet className="w-3 h-3" /> Found Wallets
+                          </p>
+                          <p className="text-2xl font-black font-code text-white tracking-tighter">
+                            {foundCount} <span className="text-xs text-primary/60">UNITS</span>
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                            <Timer className="w-3 h-3" /> Session Time
+                          </p>
+                          <p className="text-2xl font-black font-code text-primary tracking-tighter">
+                            {formatTime(sessionSeconds)}
                           </p>
                         </div>
                       </div>
