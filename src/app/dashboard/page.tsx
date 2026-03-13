@@ -274,7 +274,7 @@ export default function AiCryptoDashboard() {
         // Take 1 entry per frame to ensure 1-by-1 smoothness as requested
         const entry = logBuffer.current.shift();
         if (entry) {
-          setLogs(prev => [entry, ...prev].slice(0, 200));
+          setLogs(prev => [entry, ...prev].slice(0, 100));
           // Counter increments exactly when a new phrase log is rendered
           if (entry.type === 'ai') setCheckedCount(prev => prev + 1);
         }
@@ -386,7 +386,7 @@ export default function AiCryptoDashboard() {
   // Terminal Auto-Scroll
   useEffect(() => {
     if (scrollRef.current) {
-        scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
     if (serverLogRef.current) serverLogRef.current.scrollTop = 0;
   }, [logs, serverLogs, displayedSystemLines, isInterrogating]);
@@ -413,7 +413,8 @@ export default function AiCryptoDashboard() {
         
         const intensity = systemIntensity[0] / 100;
         const coreFactor = allocatedCores[0] / hardwareCores;
-        const tickDelay = Math.max(10, 200 - (190 * intensity * coreFactor));
+        // Higher density throughput while maintaining smoothness
+        const tickDelay = Math.max(5, 150 - (145 * intensity * coreFactor));
 
         interrogationInterval = setInterval(() => {
           const newMnemonic = bip39.generateMnemonic();
@@ -617,8 +618,7 @@ export default function AiCryptoDashboard() {
                         <div 
                           ref={scrollRef} 
                           className={cn(
-                            "flex-1 overflow-y-auto terminal-scrollbar p-6 space-y-2 z-10 flex flex-col",
-                            isInterrogating ? "flex-col-reverse" : "flex-col"
+                            "flex-1 overflow-y-auto terminal-scrollbar p-6 space-y-2 z-10 flex flex-col"
                           )}
                           style={{ fontSize: `${consoleFontSize[0]}px` }}
                         >
@@ -632,7 +632,7 @@ export default function AiCryptoDashboard() {
                                 <div className="text-[#7CFFB2] w-1 h-4 bg-[#7CFFB2] animate-pulse inline-block ml-1" />
                             </div>
                           ) : (
-                            logs.map((log) => (
+                            [...logs].reverse().map((log) => (
                                 <div key={log.id} className="console-line">
                                   {log.type === 'ai' ? (
                                     <div className="flex items-center gap-1">
