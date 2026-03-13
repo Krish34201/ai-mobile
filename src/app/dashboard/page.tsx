@@ -36,7 +36,12 @@ import {
   RotateCcw,
   LogOut,
   Loader2,
-  Signal
+  Signal,
+  Network,
+  HardDrive,
+  Dna,
+  Link2,
+  Server as ServerIcon
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SnakeBorderCard } from '@/components/ui/snake-border-card'
@@ -130,15 +135,15 @@ const BLOCKCHAINS = [
 ]
 
 const SERVERS = [
-  { id: 'node-na-east', name: 'NORTH AMERICA EAST', region: 'Virginia, USA', latency: '12ms', status: 'active', load: 42 },
-  { id: 'node-eu-central', name: 'EUROPE CENTRAL', region: 'Frankfurt, Germany', latency: '28ms', status: 'active', load: 68 },
-  { id: 'node-asia-se', name: 'ASIA SOUTHEAST', region: 'Singapore', latency: '145ms', status: 'active', load: 12 },
-  { id: 'node-asia-ne', name: 'ASIA NORTHEAST', region: 'Tokyo, Japan', latency: '112ms', status: 'active', load: 54 },
-  { id: 'node-sa-east', name: 'SOUTH AMERICA', region: 'São Paulo, Brazil', latency: '168ms', status: 'active', load: 22 },
-  { id: 'node-af-south', name: 'AFRICA SOUTH', region: 'Johannesburg, SA', latency: '112ms', status: 'active', load: 15 },
-  { id: 'node-me-east', name: 'MIDDLE EAST', region: 'Dubai, UAE', latency: '85ms', status: 'active', load: 38 },
-  { id: 'node-oc-sydney', name: 'OCEANIA', region: 'Sydney, Australia', latency: '190ms', status: 'active', load: 29 },
-  { id: 'node-arctic-north', name: 'ARCTIC NORTH', region: 'Reykjavik, Iceland', latency: '45ms', status: 'active', load: 8 },
+  { id: 'node-na-east', name: 'NORTH AMERICA EAST', region: 'Virginia, USA', latency: '12ms', status: 'active', load: 42, ip: '142.250.190.46' },
+  { id: 'node-eu-central', name: 'EUROPE CENTRAL', region: 'Frankfurt, Germany', latency: '28ms', status: 'active', load: 68, ip: '172.217.16.174' },
+  { id: 'node-asia-se', name: 'ASIA SOUTHEAST', region: 'Singapore', latency: '145ms', status: 'active', load: 12, ip: '34.101.0.1' },
+  { id: 'node-asia-ne', name: 'ASIA NORTHEAST', region: 'Tokyo, Japan', latency: '112ms', status: 'active', load: 54, ip: '35.190.247.0' },
+  { id: 'node-sa-east', name: 'SOUTH AMERICA', region: 'São Paulo, Brazil', latency: '168ms', status: 'active', load: 22, ip: '34.95.128.0' },
+  { id: 'node-af-south', name: 'AFRICA SOUTH', region: 'Johannesburg, SA', latency: '112ms', status: 'active', load: 15, ip: '34.160.0.0' },
+  { id: 'node-me-east', name: 'MIDDLE EAST', region: 'Dubai, UAE', latency: '85ms', status: 'active', load: 38, ip: '34.150.0.0' },
+  { id: 'node-oc-sydney', name: 'OCEANIA', region: 'Sydney, Australia', latency: '190ms', status: 'active', load: 29, ip: '35.189.0.0' },
+  { id: 'node-arctic-north', name: 'ARCTIC NORTH', region: 'Reykjavik, Iceland', latency: '45ms', status: 'active', load: 8, ip: '35.200.0.0' },
 ]
 
 const SEED_COLORS = [
@@ -150,7 +155,7 @@ const SEED_COLORS = [
   { name: 'Cyber RGB', class: 'bg-gradient-to-r from-red-500 via-green-500 to-blue-500 bg-clip-text text-transparent animate-gradient' },
 ]
 
-const SESSION_STORAGE_KEY = 'ai_crypto_session_state_v2';
+const SESSION_STORAGE_KEY = 'ai_crypto_session_state_v4';
 
 interface FoundWallet {
   id: string;
@@ -239,6 +244,9 @@ export default function AiCryptoDashboard() {
       } catch (e) {
         console.error("Failed to restore session", e);
       }
+    } else {
+      // Set default font size to 8 for fresh sessions
+      setConsoleFontSize([8]);
     }
   }, []);
 
@@ -264,7 +272,7 @@ export default function AiCryptoDashboard() {
     setSystemIntensity([85]);
     setAllocatedCores([Math.floor((navigator.hardwareConcurrency || 8) / 2)]);
     setSeedPhraseColor('text-white/80');
-    setConsoleFontSize([8]);
+    setConsoleFontSize([8]); // Default to lowest
     setIsAutoMemoryEnabled(true);
     setFoundCount(0);
     setFoundWallets([]);
@@ -274,15 +282,15 @@ export default function AiCryptoDashboard() {
     });
   }, [toast]);
   
-  const addLog = useCallback((message: string, type: LogEntry['type'] = 'info') => {
+  const addLogs = useCallback((messages: {message: string, type: LogEntry['type']}[]) => {
     setLogs(prev => {
-      const newEntry: LogEntry = {
+      const newEntries: LogEntry[] = messages.map(m => ({
         id: Math.random().toString(36).substr(2, 9),
-        message,
+        message: m.message,
         timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
-        type
-      }
-      return [newEntry, ...prev].slice(0, 50) 
+        type: m.type
+      }));
+      return [...newEntries, ...prev].slice(0, 50) 
     })
   }, [])
 
@@ -408,62 +416,61 @@ export default function AiCryptoDashboard() {
         setLogs([])
         setSessionSeconds(0)
         
-        addLog("ESTABLISHING SECURE HANDSHAKE...", "system")
+        addLogs([{message: "ESTABLISHING SECURE HANDSHAKE...", type: "system"}])
         await new Promise(resolve => setTimeout(resolve, 300))
         
-        addLog("CHECKING PORTS AND TLS DESCRIPTORS...", "info")
+        addLogs([{message: "CHECKING PORTS AND TLS DESCRIPTORS...", type: "info"}])
         await new Promise(resolve => setTimeout(resolve, 300))
         
-        addLog("RESOLVING PROXY TUNNEL...", "info")
+        addLogs([{message: "RESOLVING PROXY TUNNEL...", type: "info"}])
         await new Promise(resolve => setTimeout(resolve, 300))
         
         const aiStatusMsg = isAiSearchConnected ? "AI SEARCH: LINKED [HEURISTIC BOOST]" : "AI SEARCH: NOT CONNECTED [STANDARD MODE]";
-        addLog(aiStatusMsg, isAiSearchConnected ? "success" : "warning")
+        addLogs([{message: aiStatusMsg, type: isAiSearchConnected ? "success" : "warning"}])
         await new Promise(resolve => setTimeout(resolve, 300))
         
-        addLog("CRYPTOGRAPHIC ENGINE: INITIALIZED", "system")
-        addLog(`ALLOCATED CORES: ${allocatedCores[0]}`, "info")
+        addLogs([{message: "CRYPTOGRAPHIC ENGINE: INITIALIZED", type: "system"}])
+        addLogs([{message: `ALLOCATED CORES: ${allocatedCores[0]}`, type: "info"}])
 
         const coreFactor = allocatedCores[0] / hardwareCores;
         const intensityFactor = systemIntensity[0] / 100;
-        const aiBoost = isAiSearchConnected ? 4.5 : 1.2;
+        const aiBoost = isAiSearchConnected ? 6.5 : 2.5;
         
-        // Use a fractional accumulator to sync counter with logs 1:1 even at high speeds
+        // High-speed 60FPS Sync Loop
         let logAccumulator = 0;
 
         interrogationInterval = setInterval(() => {
-          // Calculate throughput based on intensity and cores
-          // Target: Smooth "1 by 1" feel but supercharged speed
-          const logsPerTick = intensityFactor * 2.5 * coreFactor * aiBoost;
-          logAccumulator += logsPerTick;
+          // Calculate throughput based on intensity, cores, and AI boost
+          const throughput = intensityFactor * 5.0 * coreFactor * aiBoost;
+          logAccumulator += throughput;
 
-          const logsToGenerate = Math.floor(logAccumulator);
+          const batchSize = Math.floor(logAccumulator);
           
-          if (logsToGenerate >= 1) {
-            logAccumulator -= logsToGenerate;
+          if (batchSize >= 1) {
+            logAccumulator -= batchSize;
             
-            // Generate mnemonics for this tick
-            const newMnemonicBatch: string[] = [];
-            for(let i = 0; i < logsToGenerate; i++) {
-              newMnemonicBatch.push(bip39.generateMnemonic());
-            }
-
-            // Sync: Update counter and logs together
-            setCheckedCount(prev => prev + logsToGenerate);
+            // Sync Counter: 1:1 with logs
+            setCheckedCount(prev => prev + batchSize);
+            
+            // Sync Console: Batch entries for ultra-smoothness
+            const messages = Array.from({ length: batchSize }).map(() => ({
+                message: bip39.generateMnemonic(),
+                type: 'ai' as LogEntry['type']
+            }));
             
             setLogs(prev => {
-              const newEntries = newMnemonicBatch.map(mnemonic => ({
+              const newEntries = messages.map(m => ({
                 id: Math.random().toString(36).substr(2, 9),
-                message: mnemonic,
+                message: m.message,
                 timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
-                type: 'ai' as LogEntry['type']
+                type: m.type
               }));
               return [...newEntries, ...prev].slice(0, 50);
             });
           }
 
           setCpuLoad(Math.min(100, (systemIntensity[0] * coreFactor) + (Math.random() * 5)))
-        }, 16); // High-frequency 60fps update loop for ultra-smoothness
+        }, 16); 
       }
 
       bootSequence()
@@ -474,7 +481,7 @@ export default function AiCryptoDashboard() {
     return () => {
       if (interrogationInterval) clearInterval(interrogationInterval)
     }
-  }, [isInterrogating, addLog, systemIntensity, hardwareCores, allocatedCores, isAiSearchConnected])
+  }, [isInterrogating, addLogs, systemIntensity, hardwareCores, allocatedCores, isAiSearchConnected])
 
   const toggleBlockchain = (id: string) => {
     if (isInterrogating) return
@@ -497,7 +504,7 @@ export default function AiCryptoDashboard() {
 
   const stopInterrogation = () => {
     setIsInterrogating(false)
-    addLog("SCAN PROTOCOL ABORTED BY OPERATOR", "error")
+    addLogs([{message: "SCAN PROTOCOL ABORTED BY OPERATOR", type: "error"}])
     toast({
       title: "Scan Stopped",
       description: "Cryptographic engine has been safely powered down."
@@ -533,6 +540,23 @@ export default function AiCryptoDashboard() {
           .terminal-line {
             transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
           }
+          .scanline {
+            background: linear-gradient(
+              to bottom,
+              rgba(18, 16, 16, 0) 50%,
+              rgba(0, 0, 0, 0.1) 50%
+            );
+            background-size: 100% 2px;
+            pointer-events: none;
+          }
+          @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.2; }
+            100% { transform: scale(0.8); opacity: 0.5; }
+          }
+          .pulse-ring {
+            animation: pulse-ring 4s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+          }
         `}</style>
 
         <Sidebar className="border-r border-white/5 bg-[#0a0a0a]/80 backdrop-blur-2xl z-30">
@@ -558,18 +582,19 @@ export default function AiCryptoDashboard() {
                   { icon: Cloud, label: 'Server', id: 'server' },
                   { icon: Settings, label: 'Settings', id: 'settings' },
                 ].map((item) => (
-                  <SidebarMenuButton 
-                    key={item.id} 
-                    isActive={activeTab === item.id} 
-                    onClick={() => setActiveTab(item.id as TabType)}
-                    className={cn(
-                      "transition-all duration-200 h-10 px-4 rounded-lg",
-                      activeTab === item.id ? "bg-primary/10 text-primary border border-primary/20" : "text-gray-500 hover:text-white hover:bg-white/5"
-                    )}
-                  >
-                    <item.icon className="w-4 h-4" />
-                    <span className="font-bold text-xs uppercase tracking-tighter">{item.label}</span>
-                  </SidebarMenuButton>
+                  <SidebarMenuItem key={item.id}>
+                    <SidebarMenuButton 
+                      isActive={activeTab === item.id} 
+                      onClick={() => setActiveTab(item.id as TabType)}
+                      className={cn(
+                        "transition-all duration-200 h-10 px-4 rounded-lg w-full flex items-center gap-3",
+                        activeTab === item.id ? "bg-primary/10 text-primary border border-primary/20" : "text-gray-500 hover:text-white hover:bg-white/5"
+                      )}
+                    >
+                      <item.icon className="w-4 h-4" />
+                      <span className="font-bold text-xs uppercase tracking-tighter">{item.label}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 ))}
               </SidebarMenu>
             </SidebarGroup>
@@ -914,12 +939,17 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'server' && (
-                <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in slide-in-from-right-4 duration-500 overflow-hidden">
-                  <div className="flex flex-col gap-4 overflow-y-auto terminal-scrollbar pr-2">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-black uppercase tracking-[0.2em]">Global Cluster Map</h3>
-                      <span className="text-[10px] font-code text-primary/60">{SERVERS.length} Clusters Online</span>
+                <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in zoom-in-95 duration-700 overflow-hidden">
+                  {/* Left Column: Futuristic Server List */}
+                  <div className="lg:col-span-4 flex flex-col gap-4 overflow-y-auto terminal-scrollbar pr-2 pb-10">
+                    <div className="flex items-center justify-between mb-4 sticky top-0 bg-[#050507] py-2 z-10">
+                      <div className="flex items-center gap-2">
+                        <Network className="w-4 h-4 text-primary" />
+                        <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-white">Neural Cluster Map</h3>
+                      </div>
+                      <span className="text-[9px] font-code text-primary/60 bg-primary/10 px-2 py-0.5 rounded border border-primary/20">{SERVERS.length} NODES</span>
                     </div>
+                    
                     {SERVERS.map((server) => {
                       const isSelected = selectedServerId === server.id;
                       return (
@@ -927,60 +957,168 @@ export default function AiCryptoDashboard() {
                           key={server.id} 
                           onClick={() => !isInterrogating && setSelectedServerId(server.id)}
                           className={cn(
-                            "glass-panel p-5 rounded-2xl border transition-all group relative overflow-hidden",
-                            isSelected ? "border-primary/40 bg-primary/5" : "border-white/5 hover:border-white/20",
-                            isInterrogating ? "cursor-not-allowed" : "cursor-pointer"
+                            "relative overflow-hidden p-5 rounded-2xl border transition-all duration-500 group",
+                            isSelected 
+                              ? "bg-primary/[0.08] border-primary/50 shadow-[0_0_30px_rgba(173,79,230,0.15)] scale-[1.02]" 
+                              : "glass-panel border-white/5 hover:border-white/20 hover:bg-white/[0.03]",
+                            isInterrogating ? "cursor-not-allowed opacity-50" : "cursor-pointer"
                           )}
                         >
-                          <div className="flex items-center justify-between relative z-10">
-                            <div className="flex items-center gap-4">
-                              <div className={cn("w-2 h-2 rounded-full", server.status === 'active' ? "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]" : "bg-yellow-500")} />
-                              <div>
-                                <p className="text-sm font-black font-code text-white uppercase">{server.name}</p>
-                                <p className="text-[10px] text-gray-500 uppercase">{server.region}</p>
+                          {/* Selected Glow Effect */}
+                          {isSelected && (
+                            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-50" />
+                          )}
+                          
+                          <div className="flex flex-col gap-4 relative z-10">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className={cn(
+                                  "w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-500",
+                                  isSelected ? "bg-primary text-black border-primary shadow-[0_0_15px_rgba(173,79,230,0.4)]" : "bg-white/5 text-gray-500 border-white/10"
+                                )}>
+                                  <ServerIcon className="w-5 h-5" />
+                                </div>
+                                <div>
+                                  <p className={cn("text-xs font-black uppercase tracking-wider", isSelected ? "text-white" : "text-gray-400")}>{server.name}</p>
+                                  <div className="flex items-center gap-1.5 mt-0.5">
+                                    <Globe className="w-2.5 h-2.5 text-gray-600" />
+                                    <p className="text-[9px] text-gray-500 uppercase font-bold tracking-tighter">{server.region}</p>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className={cn(
+                                  "text-[10px] font-bold px-2 py-0.5 rounded inline-block uppercase tracking-tighter",
+                                  server.status === 'active' ? "text-green-500 bg-green-500/10" : "text-yellow-500 bg-yellow-500/10"
+                                )}>
+                                  {server.status}
+                                </div>
                               </div>
                             </div>
-                            <div className="flex gap-6 text-right">
-                              <div className="space-y-1">
-                                <p className="text-[8px] text-gray-600 uppercase">Latency</p>
-                                <p className="text-xs font-bold text-green-500">{server.latency}</p>
+                            
+                            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-white/5">
+                              <div className="space-y-1.5">
+                                <div className="flex items-center justify-between text-[8px] font-code uppercase">
+                                  <span className="text-gray-500">Latency</span>
+                                  <span className="text-green-500">{server.latency}</span>
+                                </div>
+                                <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                  <div className="h-full bg-green-500/50" style={{ width: `${Math.max(20, 100 - parseInt(server.latency))}%` }} />
+                                </div>
                               </div>
-                              <div className="space-y-1">
-                                <p className="text-[8px] text-gray-600 uppercase">Load</p>
-                                <p className="text-xs font-bold text-white">{server.load}%</p>
+                              <div className="space-y-1.5">
+                                <div className="flex items-center justify-between text-[8px] font-code uppercase">
+                                  <span className="text-gray-500">Node Load</span>
+                                  <span className={cn(server.load > 60 ? "text-yellow-500" : "text-primary")}>{server.load}%</span>
+                                </div>
+                                <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                  <div className={cn("h-full", server.load > 60 ? "bg-yellow-500/50" : "bg-primary/50")} style={{ width: `${server.load}%` }} />
+                                </div>
                               </div>
-                              {isSelected && <CheckCircle2 className="w-4 h-4 text-primary ml-2" />}
                             </div>
                           </div>
-                          {isSelected && <div className="absolute left-0 top-0 h-full w-1 bg-primary" />}
+                          
+                          {/* Animated Scanline for selected */}
+                          {isSelected && (
+                             <div className="absolute top-0 left-0 w-full h-[1px] bg-primary/40 animate-[slide-down_2s_linear_infinite]" />
+                          )}
                         </div>
                       )
                     })}
                   </div>
                   
-                  <div className="flex flex-col gap-6 min-h-0">
-                    <div className="glass-panel rounded-2xl p-6 border-white/5 flex flex-col h-1/2">
-                      <div className="flex items-center gap-3 mb-6">
-                        <Terminal className="w-4 h-4 text-primary" />
-                        <h3 className="text-sm font-black uppercase tracking-[0.2em]">Cluster Feedback</h3>
-                      </div>
-                      <div className="flex-1 bg-black/40 rounded-xl p-4 font-code text-[10px] overflow-hidden">
-                        <div ref={serverLogRef} className="h-full overflow-y-auto terminal-scrollbar space-y-1 flex flex-col">
-                           {serverLogs.map((log, i) => (
-                             <div key={i} className="text-gray-500 hover:text-white/60 transition-colors py-0.5 border-b border-white/[0.02]">
-                               {log}
-                             </div>
-                           ))}
-                        </div>
-                      </div>
+                  {/* Right Column: Neural Visuals & Terminal */}
+                  <div className="lg:col-span-8 flex flex-col gap-6 min-h-0">
+                    <div className="glass-panel rounded-3xl p-8 border-white/5 flex flex-col flex-1 relative overflow-hidden group">
+                       {/* Futuristic Mesh Background */}
+                       <div className="absolute inset-0 opacity-10 pointer-events-none">
+                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--primary)_1px,_transparent_1px)] bg-[size:32px_32px]" />
+                       </div>
+
+                       <div className="relative z-10 flex flex-col h-full">
+                         <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary relative">
+                                <Dna className="w-6 h-6 animate-pulse" />
+                                <div className="absolute inset-0 rounded-2xl pulse-ring border border-primary/40" />
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-black uppercase tracking-[0.2em] text-white">Active Endpoint Telemetry</h4>
+                                <p className="text-[10px] text-primary/60 font-code uppercase tracking-widest mt-0.5">Node ID: {selectedServer?.id}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                               <p className="text-[9px] text-gray-500 uppercase font-bold tracking-widest">Protocol Version</p>
+                               <p className="text-xs font-code text-white">v4.0.0-PRO_ELITE</p>
+                            </div>
+                         </div>
+
+                         {/* Neural Map Visual */}
+                         <div className="flex-1 flex flex-col items-center justify-center relative my-10">
+                            <div className="relative">
+                               <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="w-64 h-64 border-2 border-primary/5 rounded-full animate-[spin_30s_linear_infinite]" />
+                                  <div className="absolute w-48 h-48 border border-primary/10 rounded-full animate-[spin_20s_linear_infinite_reverse]" />
+                                  <div className="absolute w-80 h-80 border-t border-r border-primary/20 rounded-full animate-[spin_60s_linear_infinite]" />
+                               </div>
+                               
+                               <div className="relative bg-black/40 backdrop-blur-3xl p-10 rounded-full border border-primary/20 shadow-[0_0_50px_rgba(173,79,230,0.15)] group-hover:scale-110 transition-transform duration-700">
+                                  <Globe className={cn("w-32 h-32 transition-all duration-1000", isInterrogating ? "text-primary drop-shadow-[0_0_20px_rgba(173,79,230,0.6)]" : "text-primary/30")} />
+                                  {isInterrogating && (
+                                    <div className="absolute inset-0 bg-primary/5 rounded-full animate-ping opacity-20" />
+                                  )}
+                               </div>
+                               
+                               {/* Floating Nodes */}
+                               <div className="absolute -top-10 -right-10 p-4 glass-panel rounded-2xl border-primary/20 animate-bounce duration-[3000ms]">
+                                  <Wifi className="w-4 h-4 text-primary" />
+                               </div>
+                               <div className="absolute -bottom-5 -left-10 p-4 glass-panel rounded-2xl border-cyan-400/20 animate-pulse">
+                                  <Activity className="w-4 h-4 text-cyan-400" />
+                               </div>
+                            </div>
+                         </div>
+
+                         <div className="grid grid-cols-3 gap-6 mt-auto">
+                            <div className="p-5 glass-panel rounded-2xl border-white/5 space-y-2">
+                               <span className="text-[9px] text-gray-600 uppercase font-black tracking-widest">Uptime</span>
+                               <p className="text-sm font-black text-white font-code">99.998%</p>
+                            </div>
+                            <div className="p-5 glass-panel rounded-2xl border-white/5 space-y-2">
+                               <span className="text-[9px] text-gray-600 uppercase font-black tracking-widest">Packets/Sec</span>
+                               <p className="text-sm font-black text-white font-code">{isInterrogating ? '14,204' : '0'}</p>
+                            </div>
+                            <div className="p-5 glass-panel rounded-2xl border-white/5 space-y-2">
+                               <span className="text-[9px] text-gray-600 uppercase font-black tracking-widest">Encryption</span>
+                               <div className="flex items-center gap-2">
+                                 <Lock className="w-3 h-3 text-cyan-400" />
+                                 <p className="text-xs font-black text-white font-code">AES-256</p>
+                               </div>
+                            </div>
+                         </div>
+                       </div>
                     </div>
 
-                    <div className="glass-panel rounded-2xl p-8 border-white/5 flex flex-col flex-1 justify-center items-center text-center">
-                       <Globe className="w-16 h-16 text-primary/10 mb-6" />
-                       <h4 className="text-xs font-black uppercase tracking-widest text-white mb-2">Endpoint: {selectedServer?.name}</h4>
-                       <p className="text-[10px] text-gray-500 uppercase leading-relaxed max-w-xs">
-                         All cryptographic packets are routed via {selectedServer?.region} utilizing AES-256 standard encryption.
-                       </p>
+                    <div className="glass-panel rounded-3xl border-white/5 flex flex-col h-[300px] relative overflow-hidden">
+                      <div className="flex items-center gap-3 p-6 border-b border-white/5 bg-white/[0.02]">
+                        <Terminal className="w-4 h-4 text-primary" />
+                        <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-white">Cluster Pulse Logic</h3>
+                      </div>
+                      <div className="flex-1 bg-black/60 p-6 font-code text-[10px] overflow-hidden relative">
+                        <div className="absolute inset-0 scanline opacity-30 z-20" />
+                        <div ref={serverLogRef} className="h-full overflow-y-auto terminal-scrollbar space-y-1.5 flex flex-col z-10 relative">
+                           {serverLogs.map((log, i) => (
+                             <div key={i} className="text-[#00FF41]/60 hover:text-[#00FF41] transition-colors py-1 border-b border-white/[0.03] tracking-tighter">
+                               <span className="text-gray-600 mr-2 opacity-50 select-none">NODE_LOG:</span> {log}
+                             </div>
+                           ))}
+                           {serverLogs.length === 0 && (
+                             <div className="h-full flex items-center justify-center text-gray-800 uppercase tracking-[0.5em] font-black animate-pulse">
+                               Awaiting Connection...
+                             </div>
+                           )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
