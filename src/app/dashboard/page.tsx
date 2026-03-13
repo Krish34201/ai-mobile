@@ -136,7 +136,7 @@ export default function AiCryptoDashboard() {
   const [networkPing, setNetworkPing] = useState(24)
   
   const [seedPhraseColor, setSeedPhraseColor] = useState('text-[#dcdcdc]')
-  const [consoleFontSize, setConsoleFontSize] = useState([8])
+  const [consoleFontSize, setConsoleFontSize] = useState([13])
   
   const [isAiSearchConnected, setIsAiSearchConnected] = useState(false)
   const [isAiSearchConnecting, setIsAiSearchConnecting] = useState(false)
@@ -294,7 +294,7 @@ export default function AiCryptoDashboard() {
     setSystemIntensity([85]);
     setAllocatedCores([Math.floor((hardwareCores || 8) / 2)]);
     setSeedPhraseColor('text-[#dcdcdc]');
-    setConsoleFontSize([8]);
+    setConsoleFontSize([13]);
     toast({
       title: "Workstation Reset",
       description: "All session metrics and configurations purged."
@@ -985,7 +985,7 @@ export default function AiCryptoDashboard() {
                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Font Size</label>
                             <span className="text-xs font-code text-primary">{consoleFontSize[0]}px</span>
                           </div>
-                          <Slider value={consoleFontSize} onValueChange={setConsoleFontSize} min={8} max={16} step={1} className="cursor-pointer" />
+                          <Slider value={consoleFontSize} onValueChange={setConsoleFontSize} min={8} max={24} step={1} className="cursor-pointer" />
                         </div>
                       </div>
                     </div>
