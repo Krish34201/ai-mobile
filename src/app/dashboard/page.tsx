@@ -192,7 +192,7 @@ export default function AiCryptoDashboard() {
   const [networkPing, setNetworkPing] = useState(24)
   
   const [seedPhraseColor, setSeedPhraseColor] = useState('text-white/80')
-  const [consoleFontSize, setConsoleFontSize] = useState([11])
+  const [consoleFontSize, setConsoleFontSize] = useState([8])
   const [isAutoMemoryEnabled, setIsAutoMemoryEnabled] = useState(true)
   const [lastPurgeTime, setLastPurgeTime] = useState<string | null>(null)
   
@@ -264,7 +264,7 @@ export default function AiCryptoDashboard() {
     setSystemIntensity([85]);
     setAllocatedCores([Math.floor((navigator.hardwareConcurrency || 8) / 2)]);
     setSeedPhraseColor('text-white/80');
-    setConsoleFontSize([11]);
+    setConsoleFontSize([8]);
     setIsAutoMemoryEnabled(true);
     setFoundCount(0);
     setFoundWallets([]);
