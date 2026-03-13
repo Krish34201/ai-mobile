@@ -107,16 +107,6 @@ const INTERROGATION_SYSTEM_MESSAGES = [
 
 const SESSION_STORAGE_KEY = 'ai_crypto_session_state_v4';
 
-interface FoundWallet {
-  id: string;
-  address: string;
-  mnemonic: string;
-  balance: number;
-  chain: string;
-  revealed: boolean;
-  timestamp: string;
-}
-
 interface LogEntry {
   id: string;
   message: string;
@@ -135,8 +125,6 @@ export default function AiCryptoDashboard() {
   const [isInterrogating, setIsInterrogating] = useState(false)
   const [checkedCount, setCheckedCount] = useState(0)
   const [displayCount, setDisplayCount] = useState(0)
-  const [foundCount, setFoundCount] = useState(0)
-  const [foundWallets, setFoundWallets] = useState<FoundWallet[]>([])
   const [activeBlockchains, setActiveBlockchains] = useState<string[]>([])
   const [cpuLoad, setCpuLoad] = useState(0)
   const [systemIntensity, setSystemIntensity] = useState([85])
@@ -149,7 +137,6 @@ export default function AiCryptoDashboard() {
   
   const [seedPhraseColor, setSeedPhraseColor] = useState('text-[#dcdcdc]')
   const [consoleFontSize, setConsoleFontSize] = useState([8])
-  const [isAutoMemoryEnabled, setIsAutoMemoryEnabled] = useState(true)
   
   const [isAiSearchConnected, setIsAiSearchConnected] = useState(false)
   const [isAiSearchConnecting, setIsAiSearchConnecting] = useState(false)
@@ -173,6 +160,23 @@ export default function AiCryptoDashboard() {
       description: "Operator session terminated."
     })
     router.push('/login')
+  }
+
+  // Interrogation Control Protocols
+  const startInterrogation = () => {
+    if (activeBlockchains.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Selection Required",
+        description: "Please select at least one blockchain to begin the interrogation."
+      })
+      return
+    }
+    setIsInterrogating(true)
+  }
+
+  const stopInterrogation = () => {
+    setIsInterrogating(false)
   }
 
   useEffect(() => {
@@ -232,16 +236,16 @@ export default function AiCryptoDashboard() {
     return () => clearTimeout(timeout);
   }, [charIndex, lineIndex, isInterrogating]);
 
-  // Ultra-Smooth Log Flush Protocol
+  // Ultra-Smooth Log Flush Protocol (Hardware Accelerated)
   useEffect(() => {
     if (!isInterrogating) return;
 
     const flushLogs = () => {
       if (logBuffer.current.length > 0) {
-        const batchSize = Math.min(logBuffer.current.length, 5); // Batch for performance but keep 1-by-1 feel
+        const batchSize = Math.min(logBuffer.current.length, 5);
         const batch = logBuffer.current.splice(0, batchSize);
         
-        setLogs(prev => [...batch, ...prev].slice(0, 200)); // Strict 200-entry window for 24/7 stability
+        setLogs(prev => [...batch, ...prev].slice(0, 200)); 
       }
       requestAnimationFrame(flushLogs);
     };
@@ -295,8 +299,6 @@ export default function AiCryptoDashboard() {
     setAllocatedCores([Math.floor((hardwareCores || 8) / 2)]);
     setSeedPhraseColor('text-[#dcdcdc]');
     setConsoleFontSize([8]);
-    setFoundCount(0);
-    setFoundWallets([]);
     toast({
       title: "Workstation Reset",
       description: "All session metrics and configurations purged."
@@ -400,7 +402,7 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(timerInterval)
   }, [isInterrogating])
 
-  // Sequential Neural Engine (Optimized for 24/7 Stability)
+  // Sequential Neural Engine (1-by-1 Forensic Flow)
   useEffect(() => {
     let interrogationInterval: NodeJS.Timeout
 
@@ -421,7 +423,6 @@ export default function AiCryptoDashboard() {
         interrogationInterval = setInterval(() => {
           const newMnemonic = bip39.generateMnemonic();
           
-          // Randomly inject system messages for realism
           if (Math.random() > 0.98) {
             const sysMsg = INTERROGATION_SYSTEM_MESSAGES[Math.floor(Math.random() * INTERROGATION_SYSTEM_MESSAGES.length)];
             addLogsToBuffer([{message: sysMsg, type: "system"}]);
@@ -616,7 +617,6 @@ export default function AiCryptoDashboard() {
                       </div>
                     </div>
                     
-                    {/* SLOW LUXURY SNAKE BORDER WRAPPER */}
                     <div className="scan-wrapper flex-1 min-h-0 shadow-[0_0_40px_rgba(0,0,0,0.5)]">
                       <div className="h-full scan-console terminal-scrollbar flex flex-col relative">
                         <div className="absolute inset-0 scanline opacity-30 z-20 pointer-events-none" />
