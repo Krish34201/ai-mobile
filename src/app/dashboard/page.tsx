@@ -175,13 +175,13 @@ export default function AiCryptoDashboard() {
     }
   }, []);
 
-  // Professional Sequential Counter Logic
+  // Professional Sequential Counter Logic with Adaptive Sync for 24/7 Stability
   useEffect(() => {
     if (displayCount >= checkedCount) return;
 
     const gap = checkedCount - displayCount;
-    // Step faster for large gaps, but always sequential for small ones
-    const step = gap > 100 ? Math.ceil(gap / 10) : 1; 
+    // Sequential by default, but adaptive burst if gap is huge (e.g. background tab throttling)
+    const step = gap > 1000 ? Math.ceil(gap / 20) : gap > 100 ? Math.ceil(gap / 10) : 1; 
     
     const timeout = setTimeout(() => {
       setDisplayCount(prev => Math.min(checkedCount, prev + step));
@@ -190,7 +190,7 @@ export default function AiCryptoDashboard() {
     return () => clearTimeout(timeout);
   }, [checkedCount, displayCount]);
 
-  // AI Typing Animation Logic (Standby)
+  // AI Typing Animation Logic (Only active when NOT scanning to save resources)
   useEffect(() => {
     if (isInterrogating) return;
 
@@ -225,6 +225,7 @@ export default function AiCryptoDashboard() {
     return () => clearTimeout(timeout);
   }, [charIndex, lineIndex, isInterrogating]);
 
+  // Session Restoration
   useEffect(() => {
     const savedSession = localStorage.getItem(SESSION_STORAGE_KEY);
     if (savedSession) {
@@ -249,6 +250,7 @@ export default function AiCryptoDashboard() {
     }
   }, []);
 
+  // Session Persistence
   useEffect(() => {
     const sessionData = {
       checkedCount,
@@ -299,7 +301,7 @@ export default function AiCryptoDashboard() {
         timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
         type: m.type
       }));
-      return [...newEntries, ...prev].slice(0, 100) 
+      return [...newEntries, ...prev].slice(0, 100); // Strict sliding window for 24/7 memory safety
     })
   }, [])
 
@@ -307,7 +309,7 @@ export default function AiCryptoDashboard() {
     setServerLogs(prev => [
       `${new Date().toLocaleTimeString('en-GB', { hour12: false })} > ${msg}`,
       ...prev
-    ].slice(0, 50))
+    ].slice(0, 50)); // Memory safety for server logs
   }, [])
 
   const connectAiSearch = async () => {
@@ -343,6 +345,7 @@ export default function AiCryptoDashboard() {
     })
   }
 
+  // System Clock and HW Detection
   useEffect(() => {
     const updateTime = () => {
         setSystemTime(new Date().toLocaleTimeString('en-GB', { hour12: false }));
@@ -360,6 +363,7 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  // Background Server activity Simulation
   useEffect(() => {
     const interval = setInterval(() => {
       const msgs = [
@@ -376,6 +380,7 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(interval);
   }, [addServerLog]);
 
+  // Terminal Auto-Scroll logic
   useEffect(() => {
     if (scrollRef.current) {
         scrollRef.current.scrollTo({
@@ -386,6 +391,7 @@ export default function AiCryptoDashboard() {
     if (serverLogRef.current) serverLogRef.current.scrollTop = 0;
   }, [logs, serverLogs, displayedSystemLines, isInterrogating]);
 
+  // Interrogation Timer
   useEffect(() => {
     let timerInterval: NodeJS.Timeout
     if (isInterrogating) {
@@ -394,7 +400,7 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(timerInterval)
   }, [isInterrogating])
 
-  // Sequential Neural Engine (Smooth 1-by-1)
+  // Sequential Neural Engine (Optimized for 24/7 Stability)
   useEffect(() => {
     let interrogationInterval: NodeJS.Timeout
 
@@ -425,18 +431,20 @@ export default function AiCryptoDashboard() {
 
         interrogationInterval = setInterval(() => {
           const newMnemonic = bip39.generateMnemonic();
-          const newLog = {
-            id: Math.random().toString(36).substr(2, 9),
-            // Updated format as requested: Balance: 0 | Wallet check: {full phrase}
-            message: `Balance: 0 | Wallet check: ${newMnemonic}`,
-            timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
-            type: 'ai' as const
-          };
-
-          setLogs(prev => [newLog, ...prev].slice(0, 100));
-          setCheckedCount(prev => prev + 1);
+          const timestamp = new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 });
           
-          setCpuLoad(Math.min(100, (systemIntensity[0] * (allocatedCores[0] / hardwareCores)) + (Math.random() * 5)))
+          setLogs(prev => {
+            const newLog: LogEntry = {
+              id: Math.random().toString(36).substr(2, 9),
+              message: `Balance: 0 | Wallet check: ${newMnemonic}`,
+              timestamp,
+              type: 'ai'
+            };
+            return [newLog, ...prev].slice(0, 100);
+          });
+          
+          setCheckedCount(prev => prev + 1);
+          setCpuLoad(Math.min(100, (systemIntensity[0] * (allocatedCores[0] / hardwareCores)) + (Math.random() * 5)));
         }, tickDelay);
       }
 
@@ -828,7 +836,7 @@ export default function AiCryptoDashboard() {
 
                     <div className="md:col-span-2 glass-panel p-8 rounded-3xl border-white/5 flex items-center justify-between">
                        <div className="space-y-4">
-                          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Uplink Status</h4>
+                          <h4 className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em]">Uplink Status</h4>
                           <div className="flex items-center gap-6">
                              <div className="flex flex-col gap-1">
                                 <span className="text-[9px] font-code text-primary/60 uppercase">Protocol</span>
