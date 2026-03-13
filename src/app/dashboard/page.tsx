@@ -54,16 +54,16 @@ import * as bip39 from 'bip39'
 import { logout } from '@/app/login/actions'
 
 const BLOCKCHAINS = [
-  { id: 'btc', name: 'Bitcoin', symbol: '₿', logo: "/logos/bitcoin.svg", path: "m/84'/0'/0'/0/0" },
-  { id: 'eth', name: 'Ethereum', symbol: 'Ξ', logo: "/logos/ethereum.svg", path: "m/44'/60'/0'/0/0" },
-  { id: 'sol', name: 'Solana', symbol: 'S', logo: "/logos/solana.svg", path: "m/44'/501'/0'/0'" },
-  { id: 'bnb', name: 'BNB Chain', symbol: 'B', logo: "/logos/bnb.svg", path: "m/44'/714'/0'/0/0" },
-  { id: 'trx', name: 'Tron', symbol: 'T', logo: "/logos/tron.svg", path: "m/44'/195'/0'/0/0" },
-  { id: 'xrp', name: 'Ripple', symbol: 'X', logo: "/logos/xrp.svg", path: "m/44'/144'/0'/0/0" },
-  { id: 'ltc', name: 'Litecoin', symbol: 'Ł', logo: "/logos/litecoin.svg", path: "m/44'/2'/0'/0/0" },
-  { id: 'matic', name: 'Polygon', symbol: 'P', logo: "/logos/polygon.svg", path: "m/44'/60'/0'/0/0" },
-  { id: 'usdt', name: 'Tether', symbol: '₮', logo: "/logos/tether.svg", path: "m/44'/60'/0'/0/0" },
-  { id: 'usdc', name: 'USDC', symbol: 'U', logo: "/logos/usdc.svg", path: "m/44'/60'/0'/0/0" },
+  { id: 'btc', name: 'Bitcoin', logo: "/logos/bitcoin.svg" },
+  { id: 'eth', name: 'Ethereum', logo: "/logos/ethereum.svg" },
+  { id: 'sol', name: 'Solana', logo: "/logos/solana.svg" },
+  { id: 'bnb', name: 'BNB Chain', logo: "/logos/bnb.svg" },
+  { id: 'tron', name: 'Tron', logo: "/logos/tron.svg" },
+  { id: 'xrp', name: 'Ripple', logo: "/logos/xrp.svg" },
+  { id: 'ltc', name: 'Litecoin', logo: "/logos/litecoin.svg" },
+  { id: 'matic', name: 'Polygon', logo: "/logos/polygon.svg" },
+  { id: 'usdt', name: 'Tether', logo: "/logos/tether.svg" },
+  { id: 'usdc', name: 'USDC', logo: "/logos/usdc.svg" },
 ]
 
 const SERVERS = [
@@ -129,6 +129,7 @@ export default function AiCryptoDashboard() {
   const [serverLogs, setServerLogs] = useState<string[]>([])
   const [isInterrogating, setIsInterrogating] = useState(false)
   const [checkedCount, setCheckedCount] = useState(0)
+  const [displayCount, setDisplayCount] = useState(0)
   const [foundCount, setFoundCount] = useState(0)
   const [foundWallets, setFoundWallets] = useState<FoundWallet[]>([])
   const [activeBlockchains, setActiveBlockchains] = useState<string[]>([])
@@ -174,6 +175,24 @@ export default function AiCryptoDashboard() {
     }
   }, []);
 
+  // Smooth Counter Animation Logic
+  useEffect(() => {
+    if (displayCount >= checkedCount) return;
+
+    // Adaptive step: count faster for larger gaps
+    const gap = checkedCount - displayCount;
+    const step = Math.ceil(gap / 10); 
+    
+    const timeout = setTimeout(() => {
+      setDisplayCount(prev => {
+        const next = prev + step;
+        return next >= checkedCount ? checkedCount : next;
+      });
+    }, 30);
+
+    return () => clearTimeout(timeout);
+  }, [checkedCount, displayCount]);
+
   // AI Typing Animation Logic
   useEffect(() => {
     if (isInterrogating) return;
@@ -214,7 +233,10 @@ export default function AiCryptoDashboard() {
     if (savedSession) {
       try {
         const data = JSON.parse(savedSession);
-        if (data.checkedCount !== undefined) setCheckedCount(data.checkedCount);
+        if (data.checkedCount !== undefined) {
+          setCheckedCount(data.checkedCount);
+          setDisplayCount(data.checkedCount);
+        }
         if (data.activeBlockchains) setActiveBlockchains(data.activeBlockchains);
         if (data.systemIntensity) setSystemIntensity(data.systemIntensity);
         if (data.allocatedCores) setAllocatedCores(data.allocatedCores);
@@ -247,6 +269,7 @@ export default function AiCryptoDashboard() {
   const clearSession = useCallback(() => {
     localStorage.removeItem(SESSION_STORAGE_KEY);
     setCheckedCount(0);
+    setDisplayCount(0);
     setActiveBlockchains([]);
     setSystemIntensity([85]);
     setAllocatedCores([Math.floor((hardwareCores || 8) / 2)]);
@@ -416,7 +439,7 @@ export default function AiCryptoDashboard() {
             setCheckedCount(prev => prev + batchSize);
             
             const messages = Array.from({ length: batchSize }).map(() => ({
-                message: bip39.generateMnemonic(),
+                message: `[SCAN] PHRASE CANDIDATE FOUND > ${bip39.generateMnemonic()}`,
                 type: 'ai' as LogEntry['type']
             }));
             
@@ -621,8 +644,8 @@ export default function AiCryptoDashboard() {
                           <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
                             <Zap className="w-3 h-3" /> Seed phrases checked
                           </p>
-                          <p className="text-2xl font-black font-code text-white tracking-tighter">
-                            {checkedCount.toLocaleString()}
+                          <p className="seed-counter font-code tracking-tighter">
+                            {displayCount.toLocaleString()}
                           </p>
                         </div>
                         <div className="space-y-1">
@@ -668,6 +691,7 @@ export default function AiCryptoDashboard() {
                     
                     <SnakeBorderCard processing={isInterrogating} className="flex-1 min-h-0 overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)]">
                       <div className="h-full font-code overflow-hidden flex flex-col relative bg-black/60">
+                        <div className="absolute inset-0 scanline opacity-30 z-20 pointer-events-none" />
                         <div 
                           ref={scrollRef} 
                           className={cn(
@@ -687,7 +711,10 @@ export default function AiCryptoDashboard() {
                             </div>
                           ) : (
                             logs.map((log) => (
-                                <div key={log.id} className="terminal-line flex gap-4 leading-normal animate-in fade-in slide-in-from-bottom-2 duration-700 ease-out">
+                                <div key={log.id} className={cn(
+                                  "terminal-line flex gap-4 leading-normal seed-entry",
+                                  log.type === 'ai' ? 'mb-2' : ''
+                                )}>
                                   <span className="text-white/10 shrink-0 select-none">[{log.timestamp}]</span>
                                   <span className={cn(
                                     "break-all uppercase tracking-tight",
@@ -855,8 +882,8 @@ export default function AiCryptoDashboard() {
                             <div className="flex items-center gap-6">
                               <div className="w-14 h-14 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-center relative overflow-hidden group-hover:border-primary/40 transition-colors">
                                 <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                {BLOCKCHAINS.find(b => b.name === wallet.chain) ? (
-                                  <img src={BLOCKCHAINS.find(b => b.name === wallet.chain)?.logo} className="w-8 h-8 relative z-10" alt="logo" />
+                                {BLOCKCHAINS.find(b => b.id === wallet.chain) ? (
+                                  <img src={BLOCKCHAINS.find(b => b.id === wallet.chain)?.logo} className="w-8 h-8 relative z-10" alt="logo" />
                                 ) : (
                                   <Wallet className="w-8 h-8 text-primary relative z-10" />
                                 )}
@@ -1100,7 +1127,7 @@ export default function AiCryptoDashboard() {
                         <span className="text-[9px] font-code text-primary/40 uppercase tracking-widest">Live Node interrogation active</span>
                       </div>
                       <div className="flex-1 bg-black/60 p-6 font-code text-[10px] overflow-hidden relative">
-                        <div className="absolute inset-0 scanline opacity-30 z-20" />
+                        <div className="absolute inset-0 scanline opacity-30 z-20 pointer-events-none" />
                         <div ref={serverLogRef} className="h-full overflow-y-auto terminal-scrollbar space-y-1.5 flex flex-col z-10 relative">
                            {serverLogs.map((log, i) => (
                              <div key={i} className="text-[#00FF41]/60 hover:text-[#00FF41] transition-colors py-1 border-b border-white/[0.03] tracking-tighter animate-in slide-in-from-left-2 duration-300">
