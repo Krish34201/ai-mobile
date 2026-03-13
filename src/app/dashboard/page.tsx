@@ -175,25 +175,22 @@ export default function AiCryptoDashboard() {
     }
   }, []);
 
-  // Smooth Counter Animation Logic
+  // Professional Sequential Counter Logic
   useEffect(() => {
     if (displayCount >= checkedCount) return;
 
-    // Adaptive step: count faster for larger gaps
     const gap = checkedCount - displayCount;
-    const step = Math.ceil(gap / 10); 
+    // Step faster for large gaps, but always sequential for small ones
+    const step = gap > 100 ? Math.ceil(gap / 10) : 1; 
     
     const timeout = setTimeout(() => {
-      setDisplayCount(prev => {
-        const next = prev + step;
-        return next >= checkedCount ? checkedCount : next;
-      });
-    }, 30);
+      setDisplayCount(prev => Math.min(checkedCount, prev + step));
+    }, 10); 
 
     return () => clearTimeout(timeout);
   }, [checkedCount, displayCount]);
 
-  // AI Typing Animation Logic
+  // AI Typing Animation Logic (Standby)
   useEffect(() => {
     if (isInterrogating) return;
 
@@ -397,6 +394,7 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(timerInterval)
   }, [isInterrogating])
 
+  // Sequential Neural Engine (Smooth 1-by-1)
   useEffect(() => {
     let interrogationInterval: NodeJS.Timeout
 
@@ -419,43 +417,30 @@ export default function AiCryptoDashboard() {
         await new Promise(resolve => setTimeout(resolve, 300))
         
         addLogs([{message: "CRYPTOGRAPHIC ENGINE: INITIALIZED", type: "system"}])
-        addLogs([{message: `ALLOCATED CORES: ${allocatedCores[0]}`, type: "info"}])
-
-        const coreFactor = allocatedCores[0] / hardwareCores;
-        const intensityFactor = systemIntensity[0] / 100;
-        const aiBoost = isAiSearchConnected ? 6.5 : 2.5;
         
-        let logAccumulator = 0;
+        // Calculate dynamic interval based on speed settings
+        // Base delay is 150ms (slow), Max speed delay is 5ms (blazing)
+        const intensity = systemIntensity[0] / 100;
+        const aiBoost = isAiSearchConnected ? 2 : 1;
+        const coreFactor = allocatedCores[0] / hardwareCores;
+        
+        // Final tick delay: faster if intensity is high, boost is on, and more cores are used
+        const tickDelay = Math.max(5, 150 - (145 * intensity * coreFactor * (aiBoost / 2)));
 
         interrogationInterval = setInterval(() => {
-          const throughput = intensityFactor * 5.0 * coreFactor * aiBoost;
-          logAccumulator += throughput;
+          const newMnemonic = bip39.generateMnemonic();
+          const newLog = {
+            id: Math.random().toString(36).substr(2, 9),
+            message: `[SCAN] PHRASE CANDIDATE FOUND > ${newMnemonic}`,
+            timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
+            type: 'ai' as const
+          };
 
-          const batchSize = Math.floor(logAccumulator);
+          setLogs(prev => [newLog, ...prev].slice(0, 100));
+          setCheckedCount(prev => prev + 1);
           
-          if (batchSize >= 1) {
-            logAccumulator -= batchSize;
-            
-            setCheckedCount(prev => prev + batchSize);
-            
-            const messages = Array.from({ length: batchSize }).map(() => ({
-                message: `[SCAN] PHRASE CANDIDATE FOUND > ${bip39.generateMnemonic()}`,
-                type: 'ai' as LogEntry['type']
-            }));
-            
-            setLogs(prev => {
-              const newEntries = messages.map(m => ({
-                id: Math.random().toString(36).substr(2, 9),
-                message: m.message,
-                timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
-                type: m.type
-              }));
-              return [...newEntries, ...prev].slice(0, 100);
-            });
-          }
-
-          setCpuLoad(Math.min(100, (systemIntensity[0] * coreFactor) + (Math.random() * 5)))
-        }, 16); 
+          setCpuLoad(Math.min(100, (systemIntensity[0] * (allocatedCores[0] / hardwareCores)) + (Math.random() * 5)))
+        }, tickDelay);
       }
 
       bootSequence()
@@ -466,7 +451,7 @@ export default function AiCryptoDashboard() {
     return () => {
       if (interrogationInterval) clearInterval(interrogationInterval)
     }
-  }, [isInterrogating, addLogs, systemIntensity, hardwareCores, allocatedCores, isAiSearchConnected, activeBlockchains, toast])
+  }, [isInterrogating, addLogs, systemIntensity, hardwareCores, allocatedCores, isAiSearchConnected]);
 
   const toggleBlockchain = (id: string) => {
     if (isInterrogating) return
@@ -828,7 +813,7 @@ export default function AiCryptoDashboard() {
                           <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400">Neural Session Yield</h4>
                         </div>
                         <p className="text-5xl font-black font-code text-white tracking-tighter drop-shadow-[0_0_15px_rgba(173,79,230,0.3)]">
-                          ${foundWallets.reduce((acc, w) => acc + w.balance * 2400, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          $0.00
                         </p>
                         <div className="flex items-center gap-2 mt-4">
                           <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
