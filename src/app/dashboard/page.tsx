@@ -81,7 +81,7 @@ const SERVERS = [
 const SEED_COLORS = [
   { name: 'Classic Silver', class: 'text-white/80' },
   { name: 'Neural Violet', class: 'text-primary' },
-  { name: 'Matrix Green', class: 'text-green-400' },
+  { name: 'Matrix Green', class: 'text-[#7CFFB2]' },
   { name: 'Cyber Cyan', class: 'text-cyan-400' },
   { name: 'Gold Amber', class: 'text-amber-400' },
   { name: 'Cyber RGB', class: 'bg-gradient-to-r from-red-500 via-green-500 to-blue-500 bg-clip-text text-transparent animate-gradient' },
@@ -181,11 +181,11 @@ export default function AiCryptoDashboard() {
 
     const gap = checkedCount - displayCount;
     // Sequential by default, but adaptive burst if gap is huge (e.g. background tab throttling)
-    const step = gap > 1000 ? Math.ceil(gap / 20) : gap > 100 ? Math.ceil(gap / 10) : 1; 
+    const step = gap > 500 ? Math.ceil(gap / 5) : gap > 50 ? Math.ceil(gap / 2) : 1; 
     
     const timeout = setTimeout(() => {
       setDisplayCount(prev => Math.min(checkedCount, prev + step));
-    }, 10); 
+    }, 5); // Ultra-low latency for realtime feel
 
     return () => clearTimeout(timeout);
   }, [checkedCount, displayCount]);
@@ -245,8 +245,6 @@ export default function AiCryptoDashboard() {
       } catch (e) {
         console.error("Failed to restore session", e);
       }
-    } else {
-      setConsoleFontSize([8]);
     }
   }, []);
 
@@ -710,7 +708,9 @@ export default function AiCryptoDashboard() {
                                     <div className="flex-1 font-code">
                                       <span className="balance">Balance: 0</span>
                                       <span className="text-gray-500"> | </span>
-                                      <span className="seed">{log.message.split(' | ')[1]}</span>
+                                      <span className={cn("seed transition-colors duration-300", seedPhraseColor)}>
+                                        {log.message.split(' | ')[1]}
+                                      </span>
                                     </div>
                                   ) : (
                                     <span className={cn(
