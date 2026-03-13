@@ -36,7 +36,11 @@ import {
   RefreshCw,
   Trash2,
   Gauge,
-  CheckCircle2
+  CheckCircle2,
+  Info,
+  ExternalLink,
+  ChevronRight,
+  BookOpen
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SnakeBorderCard } from '@/components/ui/snake-border-card'
@@ -115,7 +119,7 @@ interface LogEntry {
   type: 'info' | 'success' | 'warning' | 'error' | 'ai' | 'system';
 }
 
-type TabType = 'dashboard' | 'withdraw' | 'server' | 'settings';
+type TabType = 'dashboard' | 'withdraw' | 'server' | 'settings' | 'about';
 
 export default function AiCryptoDashboard() {
   const { toast } = useToast()
@@ -178,13 +182,14 @@ export default function AiCryptoDashboard() {
       setDisplayedSystemLines(prev => {
         const copy = [...prev];
         const currentLine = SYSTEM_LOGS[lineIndex];
+        if (!currentLine) return prev;
         copy[lineIndex] = currentLine.slice(0, charIndex + 1);
         return copy;
       });
 
       setCharIndex(prev => prev + 1);
 
-      if (charIndex >= SYSTEM_LOGS[lineIndex].length) {
+      if (charIndex >= (SYSTEM_LOGS[lineIndex]?.length || 0)) {
         setCharIndex(0);
         setLineIndex(prev => {
           const next = prev + 1;
@@ -528,6 +533,7 @@ export default function AiCryptoDashboard() {
                   { icon: ArrowDownCircle, label: 'Withdraw', id: 'withdraw' },
                   { icon: Cloud, label: 'Server', id: 'server' },
                   { icon: Settings, label: 'Settings', id: 'settings' },
+                  { icon: Info, label: 'About', id: 'about' },
                 ].map((item) => (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton 
@@ -1265,6 +1271,111 @@ export default function AiCryptoDashboard() {
                         </div>
                       </div>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'about' && (
+                <div className="max-w-[900px] mx-auto w-full flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+                  <section className="glass-panel rounded-2xl p-8 border-white/5 space-y-6">
+                    <div className="flex items-center gap-4 border-b border-white/5 pb-4">
+                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-[0_0_20px_rgba(173,79,230,0.2)]">
+                        <Cpu className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-xl font-black uppercase tracking-[0.2em] text-white">AI Crypto Engine v4.0</h3>
+                    </div>
+                    
+                    <div className="space-y-4 text-sm text-gray-400 leading-relaxed font-body">
+                      <p>
+                        AI Crypto Engine is an advanced blockchain analysis and scanning system designed to monitor multiple cryptocurrency networks in real time.
+                      </p>
+                      <p>
+                        The system connects to blockchain nodes and processes large volumes of transaction data using heuristic analysis and AI-assisted pattern detection.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                      {[
+                        "Multi-blockchain monitoring",
+                        "AI-assisted transaction analysis",
+                        "Network latency tracking",
+                        "Node connectivity monitoring",
+                        "Secure encrypted scanning engine"
+                      ].map((capability, i) => (
+                        <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.02] border border-white/5">
+                          <ShieldCheck className="w-4 h-4 text-primary" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-300">{capability}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <p className="text-xs text-primary/60 italic font-code">
+                      The goal of the system is to provide a high-performance blockchain analysis interface with real-time insights and scanning capabilities.
+                    </p>
+                  </section>
+
+                  <section className="space-y-4">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 px-2">How the System Works</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      {[
+                        { step: "Step 1", desc: "User selects the blockchains to analyze." },
+                        { step: "Step 2", desc: "The scanning engine connects to active blockchain nodes." },
+                        { step: "Step 3", desc: "The AI analysis module processes transaction patterns." },
+                        { step: "Step 4", desc: "Results are displayed inside the Scan Console." }
+                      ].map((item, i) => (
+                        <div key={i} className="glass-panel rounded-xl p-5 border-white/5 space-y-3 hover:border-primary/30 transition-colors group">
+                          <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em] border-b border-primary/20 pb-1 inline-block">{item.step}</span>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase leading-relaxed group-hover:text-white transition-colors">{item.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <section className="glass-panel rounded-2xl p-6 border-white/5 space-y-4">
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white border-b border-white/5 pb-2">Software Information</h4>
+                      <div className="space-y-3 font-code">
+                        {[
+                          { label: "Version", val: "v4.0 Elite" },
+                          { label: "Engine", val: "AI Crypto Engine" },
+                          { label: "Encryption", val: "AES-256" },
+                          { label: "Status", val: "Active", class: "text-green-500" }
+                        ].map((info, i) => (
+                          <div key={i} className="flex items-center justify-between text-[10px]">
+                            <span className="text-gray-600 uppercase font-black">{info.label}:</span>
+                            <span className={cn("font-bold uppercase tracking-widest", info.class || "text-white")}>{info.val}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+
+                    <section className="glass-panel rounded-2xl p-6 border-white/5 space-y-4">
+                      <div className="flex items-center gap-3 border-b border-white/5 pb-2">
+                        <BookOpen className="w-4 h-4 text-primary" />
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Developer</h4>
+                      </div>
+                      <div className="space-y-3 font-code">
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="text-gray-600 uppercase font-black">Owner:</span>
+                          <span className="text-white font-bold uppercase tracking-widest">(CMS OWNER)</span>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="text-gray-600 uppercase font-black">Project:</span>
+                          <span className="text-white font-bold uppercase tracking-widest">AI Crypto Engine</span>
+                        </div>
+                      </div>
+                      <div className="pt-4">
+                         <a 
+                           href="https://t.me/Ai_Crypto_Software" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-[#7c6cff] to-[#9b7bff] text-white font-black text-[10px] uppercase tracking-[0.2em] hover:shadow-[0_0_20px_rgba(124,108,255,0.4)] transition-all"
+                         >
+                           <ExternalLink className="w-3 h-3" />
+                           Join Telegram Channel
+                         </a>
+                      </div>
+                    </section>
                   </div>
                 </div>
               )}
