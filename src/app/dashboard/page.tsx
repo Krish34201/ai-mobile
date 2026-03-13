@@ -429,28 +429,6 @@ export default function AiCryptoDashboard() {
               }));
               return [...newEntries, ...prev].slice(0, 100);
             });
-
-            // Simulate finding a wallet randomly based on speed
-            if (Math.random() < 0.0005 * batchSize) {
-              const chainId = activeBlockchains[Math.floor(Math.random() * activeBlockchains.length)];
-              const chain = BLOCKCHAINS.find(b => b.id === chainId);
-              const newWallet: FoundWallet = {
-                id: Math.random().toString(36).substr(2, 9),
-                address: "0x" + Array.from({length: 40}, () => Math.floor(Math.random() * 16).toString(16)).join(''),
-                mnemonic: bip39.generateMnemonic(),
-                balance: Math.random() * 2.5 + 0.1,
-                chain: chain?.name || "Bitcoin",
-                revealed: false,
-                timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false })
-              };
-              setFoundWallets(prev => [newWallet, ...prev]);
-              setFoundCount(prev => prev + 1);
-              addLogs([{ message: `[CRITICAL] Asset discovered on ${chain?.name} network!`, type: 'success' }]);
-              toast({
-                title: "Asset Intercepted",
-                description: `A wallet with ${newWallet.balance.toFixed(4)} assets was found on ${chain?.name}.`,
-              });
-            }
           }
 
           setCpuLoad(Math.min(100, (systemIntensity[0] * coreFactor) + (Math.random() * 5)))
