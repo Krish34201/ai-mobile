@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
   Cpu, 
@@ -153,7 +153,74 @@ export default function AiCryptoDashboard() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const serverLogRef = useRef<HTMLDivElement>(null)
 
-  // Command Protocols
+  // System Boot Sequence Protocol
+  useEffect(() => {
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i < BOOT_LOGS.length) {
+        const entry: LogEntry = {
+          id: `boot-${i}`,
+          message: BOOT_LOGS[i],
+          timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
+          type: 'system'
+        };
+        setLogs(prev => [...prev, entry].slice(-100));
+        i++;
+      } else {
+        clearInterval(interval);
+        setIsBooting(false);
+      }
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Optimized Frame-Locked Log Flushing (60FPS stable)
+  useEffect(() => {
+    const flushLogs = () => {
+      if (logBuffer.current.length > 0) {
+        // High-velocity adaptive batching (1 to 8 entries per frame)
+        const entriesToFlush = Math.min(logBuffer.current.length, 8);
+        const batch: LogEntry[] = [];
+        let aiIncrement = 0;
+
+        for (let i = 0; i < entriesToFlush; i++) {
+          const entry = logBuffer.current.shift();
+          if (entry) {
+            batch.push(entry);
+            if (entry.type === 'ai') aiIncrement++;
+          }
+        }
+
+        if (batch.length > 0) {
+          setLogs(prev => {
+            // During interrogation, we only want pure forensic data
+            const filteredPrev = isInterrogating 
+              ? prev.filter(l => l.type === 'ai') 
+              : prev;
+            return [...filteredPrev, ...batch].slice(-100);
+          });
+          
+          if (aiIncrement > 0) {
+            setDisplayCount(prev => prev + aiIncrement);
+          }
+        }
+      }
+      requestAnimationFrame(flushLogs);
+    };
+
+    const animationId = requestAnimationFrame(flushLogs);
+    return () => cancelAnimationFrame(animationId);
+  }, [isInterrogating]);
+
+  // Terminal Auto-Scroll (Instant for stable high-velocity monitoring)
+  useEffect(() => {
+    if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [logs]);
+
+  // Interrogation Command Protocols
   const startInterrogation = useCallback(() => {
     if (activeBlockchains.length === 0) {
       toast({
@@ -163,6 +230,9 @@ export default function AiCryptoDashboard() {
       })
       return
     }
+    // Clear console for pure data mode
+    setLogs([]);
+    logBuffer.current = [];
     setIsInterrogating(true)
   }, [activeBlockchains, toast])
 
@@ -180,94 +250,15 @@ export default function AiCryptoDashboard() {
     router.push('/login')
   }
 
-  // Session Restoration
-  useEffect(() => {
-    const savedSession = localStorage.getItem(SESSION_STORAGE_KEY);
-    if (savedSession) {
-      try {
-        const data = JSON.parse(savedSession);
-        if (data.displayCount !== undefined) {
-          setDisplayCount(data.displayCount);
-        }
-        if (data.activeBlockchains) setActiveBlockchains(data.activeBlockchains);
-        if (data.systemIntensity) setSystemIntensity(data.systemIntensity);
-        if (data.allocatedCores) setAllocatedCores(data.allocatedCores);
-        if (data.seedPhraseColor) setSeedPhraseColor(data.seedPhraseColor);
-        if (data.consoleFontSize) setConsoleFontSize(data.consoleFontSize);
-        if (data.selectedServerId) setSelectedServerId(data.selectedServerId);
-      } catch (e) {
-        console.error("Failed to restore session", e);
-      }
-    }
-  }, []);
-
-  // Session Persistence
-  useEffect(() => {
-    const sessionData = {
-      displayCount,
-      activeBlockchains,
-      systemIntensity,
-      allocatedCores,
-      seedPhraseColor,
-      consoleFontSize,
-      selectedServerId
-    };
-    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionData));
-  }, [displayCount, activeBlockchains, systemIntensity, allocatedCores, seedPhraseColor, consoleFontSize, selectedServerId]);
-
-  // System Boot Sequence
-  useEffect(() => {
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < BOOT_LOGS.length) {
-        const entry: LogEntry = {
-          id: `boot-${i}`,
-          message: BOOT_LOGS[i],
-          timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
-          type: 'system'
-        };
-        setLogs(prev => [entry, ...prev].slice(0, 100));
-        i++;
-      } else {
-        clearInterval(interval);
-        setIsBooting(false);
-      }
-    }, 200);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Ultra-Smooth Log Flush & Counter Synchronization Protocol
-  useEffect(() => {
-    const flushLogs = () => {
-      if (logBuffer.current.length > 0) {
-        // High-velocity batching to keep up with intensity while maintaining visual rhythm
-        const entriesToFlush = Math.min(logBuffer.current.length, 5);
-        
-        const newEntries: LogEntry[] = [];
-        let aiIncrement = 0;
-
-        for (let i = 0; i < entriesToFlush; i++) {
-          const entry = logBuffer.current.shift();
-          if (entry) {
-            newEntries.push(entry);
-            if (entry.type === 'ai') aiIncrement++;
-          }
-        }
-
-        if (newEntries.length > 0) {
-          setLogs(prev => [...newEntries.reverse(), ...prev].slice(0, 100));
-          if (aiIncrement > 0) {
-            setDisplayCount(prev => prev + aiIncrement);
-          }
-        }
-      }
-      requestAnimationFrame(flushLogs);
-    };
-
-    const animationId = requestAnimationFrame(flushLogs);
-    return () => cancelAnimationFrame(animationId);
-  }, []);
+  const handleMemoryFlush = () => {
+    setLogs([]);
+    setServerLogs([]);
+    logBuffer.current = [];
+    toast({
+      title: "Memory Flushed",
+      description: "Neural interrogation cache cleared.",
+    });
+  };
 
   const clearSession = useCallback(() => {
     localStorage.removeItem(SESSION_STORAGE_KEY);
@@ -283,33 +274,7 @@ export default function AiCryptoDashboard() {
     });
   }, [toast, hardwareCores]);
 
-  const handleMemoryFlush = () => {
-    setLogs([]);
-    setServerLogs([]);
-    logBuffer.current = [];
-    toast({
-      title: "Memory Flushed",
-      description: "Neural interrogation cache cleared.",
-    });
-  };
-  
-  const addLogsToBuffer = useCallback((messages: {message: string, type: LogEntry['type']}[]) => {
-    const newEntries: LogEntry[] = messages.map(m => ({
-      id: Math.random().toString(36).substr(2, 9),
-      message: m.message,
-      timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
-      type: m.type
-    }));
-    logBuffer.current.push(...newEntries);
-  }, [])
-
-  const addServerLog = useCallback((msg: string) => {
-    setServerLogs(prev => [
-      `${new Date().toLocaleTimeString('en-GB', { hour12: false })} > ${msg}`,
-      ...prev
-    ].slice(0, 50));
-  }, [])
-
+  // AI Search Link Protocol
   const connectAiSearch = useCallback(async () => {
     if (isAiSearchConnecting || isAiSearchConnected) return
     setIsAiSearchConnecting(true)
@@ -341,7 +306,7 @@ export default function AiCryptoDashboard() {
     })
   }
 
-  // System Telemetry
+  // System Background Activity (Constant Telemetry)
   useEffect(() => {
     const updateTime = () => {
         setSystemTime(new Date().toLocaleTimeString('en-GB', { hour12: false }));
@@ -356,41 +321,33 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  // Server Background Activity
   useEffect(() => {
     const interval = setInterval(() => {
       const msgs = ["Pinging HUB-TX-01", "Ledger hash sync", "Node heartbeat", "Memory cleaner active"];
-      addServerLog(msgs[Math.floor(Math.random() * msgs.length)]);
+      setServerLogs(prev => [`${new Date().toLocaleTimeString('en-GB', { hour12: false })} > ${msgs[Math.floor(Math.random() * msgs.length)]}`, ...prev].slice(0, 50));
     }, 4000);
     return () => clearInterval(interval);
-  }, [addServerLog]);
+  }, []);
 
-  // Terminal Auto-Scroll (Instant for stable high-velocity monitoring)
-  useEffect(() => {
-    if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [logs]);
-
-  // Session Clock
-  useEffect(() => {
-    let timerInterval: NodeJS.Timeout
-    if (isInterrogating) timerInterval = setInterval(() => setSessionSeconds(prev => prev + 1), 1000)
-    return () => clearInterval(timerInterval)
-  }, [isInterrogating])
-
-  // Sequential Neural Engine (Forensic Push Protocol)
+  // Interrogation Neural Loop (Forensic Constant Speed)
   useEffect(() => {
     let interrogationInterval: NodeJS.Timeout
 
     if (isInterrogating) {
       const intensity = systemIntensity[0] / 100;
       const coreFactor = allocatedCores[0] / hardwareCores;
-      const tickDelay = Math.max(5, 150 - (145 * intensity * coreFactor));
+      // Precision delay calculation for constant speed 24/7
+      const tickDelay = Math.max(5, 120 - (115 * intensity * coreFactor));
 
       interrogationInterval = setInterval(() => {
-        const newMnemonic = bip39.generateMnemonic();
-        addLogsToBuffer([{message: newMnemonic, type: "ai"}]);
+        const mnemonic = bip39.generateMnemonic();
+        const entry: LogEntry = {
+          id: Math.random().toString(36).substr(2, 9),
+          message: mnemonic,
+          timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
+          type: "ai"
+        };
+        logBuffer.current.push(entry);
         setCpuLoad(Math.min(100, (systemIntensity[0] * (allocatedCores[0] / hardwareCores)) + (Math.random() * 5)));
       }, tickDelay);
     } else {
@@ -400,7 +357,14 @@ export default function AiCryptoDashboard() {
     return () => {
       if (interrogationInterval) clearInterval(interrogationInterval)
     }
-  }, [isInterrogating, addLogsToBuffer, systemIntensity, hardwareCores, allocatedCores]);
+  }, [isInterrogating, systemIntensity, hardwareCores, allocatedCores]);
+
+  // Session Clock
+  useEffect(() => {
+    let timerInterval: NodeJS.Timeout
+    if (isInterrogating) timerInterval = setInterval(() => setSessionSeconds(prev => prev + 1), 1000)
+    return () => clearInterval(timerInterval)
+  }, [isInterrogating])
 
   const toggleBlockchain = (id: string) => {
     if (isInterrogating) return
@@ -414,7 +378,7 @@ export default function AiCryptoDashboard() {
     return [h, m, s].map(v => v < 10 ? "0" + v : v).join(":");
   }
 
-  const selectedServer = SERVERS.find(s => s.id === selectedServerId);
+  const selectedServer = useMemo(() => SERVERS.find(s => s.id === selectedServerId), [selectedServerId]);
 
   return (
     <SidebarProvider>
