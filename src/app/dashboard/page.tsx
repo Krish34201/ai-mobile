@@ -39,28 +39,31 @@ import {
   Info,
   ExternalLink,
   ChevronRight,
-  BookOpen
+  BookOpen,
+  Microchip,
+  Shield,
+  History
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
-import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarBase, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu } from '@/components/ui/sidebar'
+import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar'
 import { Progress } from '@/components/ui/progress'
 import { Slider } from '@/components/ui/slider'
 import * as bip39 from 'bip39'
 import { logout } from '@/app/login/actions'
 
 const BLOCKCHAINS = [
-  { id: 'btc', name: 'Bitcoin', logo: "/logos/bitcoin.svg" },
-  { id: 'eth', name: 'Ethereum', logo: "/logos/ethereum.svg" },
-  { id: 'sol', name: 'Solana', logo: "/logos/solana.svg" },
-  { id: 'bnb', name: 'BNB Chain', logo: "/logos/bnb.svg" },
-  { id: 'tron', name: 'Tron', logo: "/logos/tron.svg" },
-  { id: 'xrp', name: 'Ripple', logo: "/logos/xrp.svg" },
-  { id: 'ltc', name: 'Litecoin', logo: "/logos/litecoin.svg" },
-  { id: 'matic', name: 'Polygon', logo: "/logos/polygon.svg" },
-  { id: 'usdt', name: 'Tether', logo: "/logos/tether.svg" },
-  { id: 'usdc', name: 'USDC', logo: "/logos/usdc.svg" },
+  { id: 'btc', name: 'Bitcoin', logo: "https://cryptologos.cc/logos/bitcoin-btc-logo.svg" },
+  { id: 'eth', name: 'Ethereum', logo: "https://cryptologos.cc/logos/ethereum-eth-logo.svg" },
+  { id: 'sol', name: 'Solana', logo: "https://cryptologos.cc/logos/solana-sol-logo.svg" },
+  { id: 'bnb', name: 'BNB Chain', logo: "https://cryptologos.cc/logos/bnb-bnb-logo.svg" },
+  { id: 'tron', name: 'Tron', logo: "https://cryptologos.cc/logos/tron-trx-logo.svg" },
+  { id: 'xrp', name: 'Ripple', logo: "https://cryptologos.cc/logos/xrp-xrp-logo.svg" },
+  { id: 'ltc', name: 'Litecoin', logo: "https://cryptologos.cc/logos/litecoin-ltc-logo.svg" },
+  { id: 'matic', name: 'Polygon', logo: "https://cryptologos.cc/logos/polygon-matic-logo.svg" },
+  { id: 'usdt', name: 'Tether', logo: "https://cryptologos.cc/logos/tether-usdt-logo.svg" },
+  { id: 'usdc', name: 'USDC', logo: "https://cryptologos.cc/logos/usd-coin-usdc-logo.svg" },
 ]
 
 const SERVERS = [
@@ -68,10 +71,6 @@ const SERVERS = [
   { id: 'node-eu-central', name: 'EUROPE CENTRAL', region: 'Frankfurt, Germany', latency: '28ms', status: 'active', load: 68, ip: '172.217.16.174' },
   { id: 'node-asia-se', name: 'ASIA SOUTHEAST', region: 'Singapore', latency: '145ms', status: 'active', load: 12, ip: '34.101.0.1' },
   { id: 'node-asia-ne', name: 'ASIA NORTHEAST', region: 'Tokyo, Japan', latency: '112ms', status: 'active', load: 54, ip: '35.190.247.0' },
-  { id: 'node-sa-east', name: 'SOUTH AMERICA', region: 'São Paulo, Brazil', latency: '168ms', status: 'active', load: 22, ip: '34.95.128.0' },
-  { id: 'node-af-south', name: 'AFRICA SOUTH', region: 'Johannesburg, SA', latency: '112ms', status: 'active', load: 15, ip: '34.160.0.0' },
-  { id: 'node-me-east', name: 'MIDDLE EAST', region: 'Dubai, UAE', latency: '85ms', status: 'active', load: 38, ip: '34.150.0.0' },
-  { id: 'node-oc-sydney', name: 'OCEANIA', region: 'Sydney, Australia', latency: '190ms', status: 'active', load: 29, ip: '35.189.0.0' },
   { id: 'node-arctic-north', name: 'ARCTIC NORTH', region: 'Reykjavik, Iceland', latency: '45ms', status: 'active', load: 8, ip: '35.200.0.0' },
 ]
 
@@ -141,8 +140,9 @@ export default function AiCryptoDashboard() {
   const [selectedServerId, setSelectedServerId] = useState('node-na-east')
   const [networkPing, setNetworkPing] = useState(24)
   
+  // Customization & Persistence
   const [seedPhraseColor, setSeedPhraseColor] = useState('text-[#dcdcdc]')
-  const [consoleFontSize, setConsoleFontSize] = useState([13])
+  const [consoleFontSize, setConsoleFontSize] = useState([8])
   
   const [isAiSearchConnected, setIsAiSearchConnected] = useState(false)
   const [isAiSearchConnecting, setIsAiSearchConnecting] = useState(false)
@@ -153,7 +153,37 @@ export default function AiCryptoDashboard() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const serverLogRef = useRef<HTMLDivElement>(null)
 
-  // System Boot Sequence Protocol
+  // 1. Session Persistence Protocol
+  useEffect(() => {
+    const savedState = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        setDisplayCount(parsed.displayCount || 0);
+        setActiveBlockchains(parsed.activeBlockchains || []);
+        setSystemIntensity(parsed.systemIntensity || [85]);
+        setAllocatedCores(parsed.allocatedCores || [4]);
+        setSeedPhraseColor(parsed.seedPhraseColor || 'text-[#dcdcdc]');
+        setConsoleFontSize(parsed.consoleFontSize || [8]);
+      } catch (e) {
+        console.error("Session reconstruction failed", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const state = {
+      displayCount,
+      activeBlockchains,
+      systemIntensity,
+      allocatedCores,
+      seedPhraseColor,
+      consoleFontSize
+    };
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
+  }, [displayCount, activeBlockchains, systemIntensity, allocatedCores, seedPhraseColor, consoleFontSize]);
+
+  // 2. System Boot Sequence Protocol
   useEffect(() => {
     let i = 0;
     const interval = setInterval(() => {
@@ -175,7 +205,7 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  // Optimized Frame-Locked Log Flushing (60FPS stable)
+  // 3. Optimized Frame-Locked Log Flushing (60FPS stable)
   useEffect(() => {
     const flushLogs = () => {
       if (logBuffer.current.length > 0) {
@@ -220,7 +250,7 @@ export default function AiCryptoDashboard() {
     }
   }, [logs]);
 
-  // Interrogation Command Protocols
+  // 4. Interrogation Command Protocols
   const startInterrogation = useCallback(() => {
     if (activeBlockchains.length === 0) {
       toast({
@@ -267,7 +297,7 @@ export default function AiCryptoDashboard() {
     setSystemIntensity([85]);
     setAllocatedCores([Math.floor((hardwareCores || 8) / 2)]);
     setSeedPhraseColor('text-[#dcdcdc]');
-    setConsoleFontSize([13]);
+    setConsoleFontSize([8]);
     toast({
       title: "Workstation Reset",
       description: "All session metrics and configurations purged."
@@ -434,6 +464,25 @@ export default function AiCryptoDashboard() {
                   </div>
                   <Progress value={cpuLoad} className="h-1 bg-white/5" />
                 </div>
+
+                <div className="grid grid-cols-1 gap-4 pt-2">
+                   <div className="flex items-center justify-between text-[9px] font-code border-b border-white/5 pb-2">
+                      <span className="text-gray-500 uppercase flex items-center gap-2"><Zap className="w-3 h-3" /> Threads</span>
+                      <span className="text-white font-bold tracking-widest">32 ACTIVE</span>
+                   </div>
+                   <div className="flex items-center justify-between text-[9px] font-code border-b border-white/5 pb-2">
+                      <span className="text-gray-500 uppercase flex items-center gap-2"><Microchip className="w-3 h-3" /> Entropy</span>
+                      <span className="text-white font-bold tracking-widest">256-BIT</span>
+                   </div>
+                   <div className="flex items-center justify-between text-[9px] font-code border-b border-white/5 pb-2">
+                      <span className="text-gray-500 uppercase flex items-center gap-2"><Shield className="w-3 h-3" /> Encryption</span>
+                      <span className="text-white font-bold tracking-widest">AES-GCM</span>
+                   </div>
+                   <div className="flex items-center justify-between text-[9px] font-code border-b border-white/5 pb-2">
+                      <span className="text-gray-500 uppercase flex items-center gap-2"><History className="w-3 h-3" /> Uptime</span>
+                      <span className="text-white font-bold tracking-widest">{formatTime(sessionSeconds)}</span>
+                   </div>
+                </div>
                 
                 <div className="pt-4 flex items-center gap-3">
                   <div className={cn("w-2 h-2 rounded-full", isInterrogating ? "bg-green-500 animate-pulse shadow-[0_0_12px_rgba(34,197,94,0.6)]" : "bg-red-500")} />
@@ -488,7 +537,7 @@ export default function AiCryptoDashboard() {
                           const isActive = activeBlockchains.includes(chain.id)
                           return (
                             <div key={chain.id} onClick={() => toggleBlockchain(chain.id)} className={cn("blockchain-card", isActive && "active", isInterrogating && "cursor-not-allowed pointer-events-none opacity-50")}>
-                              <img src={chain.logo} alt={`${chain.name} logo`} />
+                              <img src={chain.logo} alt={`${chain.name} logo`} className="w-6 h-6 object-contain" />
                               <span>{chain.name}</span>
                             </div>
                           )
