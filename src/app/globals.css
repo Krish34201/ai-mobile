@@ -119,31 +119,30 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 14px 16px;
-    background: rgba(15, 15, 25, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 12px 14px;
+    background: #0f0f17;
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 10px;
     transition: all 0.2s ease;
     cursor: pointer;
   }
 
   .blockchain-card img {
-    width: 26px;
-    height: 26px;
-    filter: drop-shadow(0 0 6px rgba(79, 172, 254, 0.35));
+    width: 24px;
+    height: 24px;
   }
 
   .blockchain-card span {
     font-size: 14px;
     font-weight: 500;
-    color: #e6e6e6;
+    color: #e5e5e5;
     letter-spacing: 0.3px;
   }
 
   .blockchain-card:hover {
     border-color: #7c6cff;
-    background: rgba(20, 20, 35, 0.9);
-    box-shadow: 0 0 14px rgba(124, 108, 255, 0.35);
+    background: #161625;
+    box-shadow: 0 0 12px rgba(124, 108, 255, 0.35);
     transform: translateY(-2px);
   }
 

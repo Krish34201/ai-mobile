@@ -38,7 +38,7 @@ import { Button } from '@/components/ui/button'
 import { SnakeBorderCard } from '@/components/ui/snake-border-card'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
-import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent } from '@/components/ui/sidebar'
+import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarBase, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu } from '@/components/ui/sidebar'
 import { Progress } from '@/components/ui/progress'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
@@ -46,16 +46,16 @@ import * as bip39 from 'bip39'
 import { logout } from '@/app/login/actions'
 
 const BLOCKCHAINS = [
-  { id: 'btc', name: 'Bitcoin', symbol: '₿', logo: "https://cryptologos.cc/logos/bitcoin-btc-logo.svg", path: "m/84'/0'/0'/0/0" },
-  { id: 'eth', name: 'Ethereum', symbol: 'Ξ', logo: "https://cryptologos.cc/logos/ethereum-eth-logo.svg", path: "m/44'/60'/0'/0/0" },
-  { id: 'sol', name: 'Solana', symbol: 'S', logo: "https://cryptologos.cc/logos/solana-sol-logo.svg", path: "m/44'/501'/0'/0'" },
-  { id: 'bnb', name: 'BNB Chain', symbol: 'B', logo: "https://cryptologos.cc/logos/bnb-bnb-logo.svg", path: "m/44'/714'/0'/0/0" },
-  { id: 'trx', name: 'Tron', symbol: 'T', logo: "https://cryptologos.cc/logos/tron-trx-logo.svg", path: "m/44'/195'/0'/0/0" },
-  { id: 'xrp', name: 'Ripple', symbol: 'X', logo: "https://cryptologos.cc/logos/xrp-xrp-logo.svg", path: "m/44'/144'/0'/0/0" },
-  { id: 'ltc', name: 'Litecoin', symbol: 'Ł', logo: "https://cryptologos.cc/logos/litecoin-ltc-logo.svg", path: "m/44'/2'/0'/0/0" },
-  { id: 'matic', name: 'Polygon', symbol: 'P', logo: "https://cryptologos.cc/logos/polygon-matic-logo.svg", path: "m/44'/60'/0'/0/0" },
-  { id: 'usdt', name: 'Tether', symbol: '₮', logo: "https://cryptologos.cc/logos/tether-usdt-logo.svg", path: "m/44'/60'/0'/0/0" },
-  { id: 'usdc', name: 'USDC', symbol: 'U', logo: "https://cryptologos.cc/logos/usd-coin-usdc-logo.svg", path: "m/44'/60'/0'/0/0" },
+  { id: 'btc', name: 'Bitcoin', symbol: '₿', logo: "/logos/bitcoin.svg", path: "m/84'/0'/0'/0/0" },
+  { id: 'eth', name: 'Ethereum', symbol: 'Ξ', logo: "/logos/ethereum.svg", path: "m/44'/60'/0'/0/0" },
+  { id: 'sol', name: 'Solana', symbol: 'S', logo: "/logos/solana.svg", path: "m/44'/501'/0'/0'" },
+  { id: 'bnb', name: 'BNB Chain', symbol: 'B', logo: "/logos/bnb.svg", path: "m/44'/714'/0'/0/0" },
+  { id: 'trx', name: 'Tron', symbol: 'T', logo: "/logos/tron.svg", path: "m/44'/195'/0'/0/0" },
+  { id: 'xrp', name: 'Ripple', symbol: 'X', logo: "/logos/xrp.svg", path: "m/44'/144'/0'/0/0" },
+  { id: 'ltc', name: 'Litecoin', symbol: 'Ł', logo: "/logos/litecoin.svg", path: "m/44'/2'/0'/0/0" },
+  { id: 'matic', name: 'Polygon', symbol: 'P', logo: "/logos/polygon.svg", path: "m/44'/60'/0'/0/0" },
+  { id: 'usdt', name: 'Tether', symbol: '₮', logo: "/logos/tether.svg", path: "m/44'/60'/0'/0/0" },
+  { id: 'usdc', name: 'USDC', symbol: 'U', logo: "/logos/usdc.svg", path: "m/44'/60'/0'/0/0" },
 ]
 
 const SERVERS = [
