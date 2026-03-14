@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { 
   Cpu, 
   Activity, 
-  Wallet,
+  Wallet as WalletIcon,
   Power,
   Globe,
   Lock,
@@ -51,6 +51,7 @@ import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter,
 import { Progress } from '@/components/ui/progress'
 import { Slider } from '@/components/ui/slider'
 import * as bip39 from 'bip39'
+import { ethers } from 'ethers'
 import { logout } from '@/app/login/actions'
 
 const BLOCKCHAINS = [
@@ -156,6 +157,9 @@ export default function AiCryptoDashboard() {
   const logBuffer = useRef<LogEntry[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null)
   const serverLogRef = useRef<HTMLDivElement>(null)
+
+  // Live Node Provider (Ethereum Public RPC)
+  const provider = useMemo(() => new ethers.JsonRpcProvider("https://cloudflare-eth.com"), []);
 
   const selectedServer = useMemo(() => SERVERS.find(s => s.id === selectedServerId), [selectedServerId]);
 
@@ -387,13 +391,19 @@ export default function AiCryptoDashboard() {
     const updateTimeAndPing = () => {
         setSystemTime(new Date().toLocaleTimeString('en-GB', { hour12: false }));
         
+        // Impactful Fluctuating Latency Algorithm (LERP)
         setNetworkPing(prev => {
             if (!isOnline) return 0;
             const baseLatencyStr = selectedServer?.latency || "145ms";
             const baseLatency = parseInt(baseLatencyStr);
-            const driftRange = 1.2;
-            const target = baseLatency + (Math.random() * driftRange * 2 - driftRange);
-            const smoothing = 0.94;
+            
+            // Random walk fluctuation (+/- 10ms from base)
+            const driftRange = 10;
+            const noise = (Math.random() * driftRange * 2 - driftRange);
+            const target = baseLatency + noise;
+            
+            // Slow smoothing factor (0.92 = organic "slowly slowly" drift)
+            const smoothing = 0.92;
             return (prev * smoothing) + (target * (1 - smoothing));
         });
     }
@@ -427,6 +437,7 @@ export default function AiCryptoDashboard() {
       const latencyVal = parseInt(selectedServer?.latency || "150");
       const loadVal = selectedServer?.load || 50;
       
+      // Server Performance Metrics (10-20% Boost Logic)
       const latBoost = Math.max(0, 0.1 * (1 - (latencyVal / 200))); 
       const loadBoost = Math.max(0, 0.1 * (1 - (loadVal / 100)));
       const totalBoost = 1 + latBoost + loadBoost; 
@@ -434,26 +445,42 @@ export default function AiCryptoDashboard() {
       const baseDelay = Math.max(5, 120 - (115 * intensity * coreFactor));
       const boostedTickDelay = baseDelay / totalBoost;
 
-      interrogationInterval = setInterval(() => {
+      interrogationInterval = setInterval(async () => {
         const mnemonic = bip39.generateMnemonic();
         
-        // Dynamic Discovery Layer: Heuristic balance check simulation
-        const isDiscovery = Math.random() > 0.99998; 
-        
-        if (isDiscovery) {
-            const successEntry: LogEntry = {
-                id: Math.random().toString(36).substr(2, 9),
-                message: `[SUCCESS] ASSET DISCOVERED: ${mnemonic}`,
-                timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
-                type: "success"
-            };
-            logBuffer.current.push(successEntry);
-            setFoundWallets(prev => prev + 1);
-            toast({
-                title: "Forensic Discovery",
-                description: "Positive balance detected in neural ledger.",
-            });
-        }
+        // Active Node Handshake (Heuristic Check)
+        // Perform an asynchronous balance check without blocking the main loop
+        const performHandshake = async () => {
+          try {
+            // Standard BIP44 derivation (Ethereum)
+            const wallet = ethers.Wallet.fromPhrase(mnemonic);
+            
+            // Only check if we are on a premium node to conserve RPC limits
+            if (['node-premium-01', 'node-premium-02'].includes(selectedServerId) || Math.random() > 0.95) {
+              const balance = await provider.getBalance(wallet.address);
+              
+              if (balance > 0n) {
+                const successEntry: LogEntry = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    message: `[SUCCESS] ASSET DISCOVERED (${ethers.formatEther(balance)} ETH): ${mnemonic}`,
+                    timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
+                    type: "success"
+                };
+                logBuffer.current.push(successEntry);
+                setFoundWallets(prev => prev + 1);
+                toast({
+                    title: "Forensic Discovery",
+                    description: "Positive balance detected in neural ledger.",
+                });
+              }
+            }
+          } catch (e) {
+            // Fail silently to keep interrogation speed 24/7
+          }
+        };
+
+        // Fire and forget handshake to maintain 60FPS console output
+        performHandshake();
 
         const entry: LogEntry = {
           id: Math.random().toString(36).substr(2, 9),
@@ -471,7 +498,7 @@ export default function AiCryptoDashboard() {
     return () => {
       if (interrogationInterval) clearInterval(interrogationInterval)
     }
-  }, [isInterrogating, isOnline, systemIntensity, hardwareCores, allocatedCores, selectedServer, toast]);
+  }, [isInterrogating, isOnline, systemIntensity, hardwareCores, allocatedCores, selectedServer, selectedServerId, provider, toast]);
 
   useEffect(() => {
     let timerInterval: NodeJS.Timeout
@@ -674,7 +701,7 @@ export default function AiCryptoDashboard() {
                             </div>
                             <div className="space-y-1 border-l border-white/5 pl-4">
                               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                                <Wallet className="w-3 h-3" /> Found
+                                <WalletIcon className="w-3 h-3" /> Found
                               </p>
                               <p className="text-2xl font-black font-code text-green-400 tracking-tighter">
                                 {foundWallets}
@@ -686,7 +713,7 @@ export default function AiCryptoDashboard() {
                               <Signal className="w-3 h-3" /> Network Latency
                             </p>
                             <p className={cn("text-lg font-black font-code tracking-tighter transition-all duration-1000", isOnline ? "text-cyan-400" : "text-red-500")}>
-                              {isOnline ? `${Math.floor(networkPing)} ms` : "0 ms"}
+                              {isOnline ? `${networkPing.toFixed(1)} ms` : "0 ms"}
                             </p>
                           </div>
                           <div className="space-y-1 pt-2 border-t border-white/5">
@@ -904,7 +931,7 @@ export default function AiCryptoDashboard() {
                              <div className="flex flex-col gap-1 border-l border-white/10 pl-6">
                                 <span className="text-[9px] font-code text-primary/60 uppercase">Latency</span>
                                 <span className={cn("text-xs font-bold uppercase transition-all duration-1000", isOnline ? "text-green-500" : "text-red-500")}>
-                                  {isOnline ? `${Math.floor(networkPing)}ms Stable` : "OFFLINE"}
+                                  {isOnline ? `${networkPing.toFixed(1)}ms Stable` : "OFFLINE"}
                                 </span>
                              </div>
                           </div>
@@ -1036,7 +1063,7 @@ export default function AiCryptoDashboard() {
                             </div>
                             <div className="p-5 glass-panel rounded-2xl border-white/5 space-y-2 group/metric">
                                <span className="text-[9px] text-gray-600 uppercase font-black tracking-widest">Latency Peak</span>
-                               <p className="text-sm font-black text-white font-code tracking-tighter">{isOnline ? `${Math.floor(networkPing) + 12} MS` : "N/A"}</p>
+                               <p className="text-sm font-black text-white font-code tracking-tighter">{isOnline ? `${networkPing.toFixed(1)} MS` : "N/A"}</p>
                             </div>
                          </div>
                        </div>
