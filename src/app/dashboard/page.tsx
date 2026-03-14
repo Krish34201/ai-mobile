@@ -985,7 +985,7 @@ export default function AiCryptoDashboard() {
                     
                     {SERVERS.map((server) => {
                       const isSelected = selectedServerId === server.id;
-                      const isLocked = !['node-na-east', 'node-premium-01', 'node-premium-02'].includes(server.id);
+                      const isLocked = !['node-na-east', 'node-asia-se', 'node-premium-02'].includes(server.id);
                       return (
                         <div 
                           key={server.id} 
