@@ -130,6 +130,7 @@ export default function AiCryptoDashboard() {
   const [isInterrogating, setIsInterrogating] = useState(false)
   const [isBooting, setIsBooting] = useState(true)
   const [displayCount, setDisplayCount] = useState(0)
+  const [foundWallets, setFoundWallets] = useState(0)
   const [activeBlockchains, setActiveBlockchains] = useState<string[]>([])
   const [cpuLoad, setCpuLoad] = useState(0)
   const [systemIntensity, setSystemIntensity] = useState([85])
@@ -160,6 +161,7 @@ export default function AiCryptoDashboard() {
       try {
         const parsed = JSON.parse(savedState);
         setDisplayCount(parsed.displayCount || 0);
+        setFoundWallets(parsed.foundWallets || 0);
         setActiveBlockchains(parsed.activeBlockchains || []);
         setSystemIntensity(parsed.systemIntensity || [85]);
         setAllocatedCores(parsed.allocatedCores || [4]);
@@ -174,6 +176,7 @@ export default function AiCryptoDashboard() {
   useEffect(() => {
     const state = {
       displayCount,
+      foundWallets,
       activeBlockchains,
       systemIntensity,
       allocatedCores,
@@ -181,7 +184,7 @@ export default function AiCryptoDashboard() {
       consoleFontSize
     };
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
-  }, [displayCount, activeBlockchains, systemIntensity, allocatedCores, seedPhraseColor, consoleFontSize]);
+  }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, seedPhraseColor, consoleFontSize]);
 
   // 2. System Boot Sequence Protocol
   useEffect(() => {
@@ -293,6 +296,7 @@ export default function AiCryptoDashboard() {
   const clearSession = useCallback(() => {
     localStorage.removeItem(SESSION_STORAGE_KEY);
     setDisplayCount(0);
+    setFoundWallets(0);
     setActiveBlockchains([]);
     setSystemIntensity([85]);
     setAllocatedCores([Math.floor((hardwareCores || 8) / 2)]);
@@ -542,13 +546,23 @@ export default function AiCryptoDashboard() {
                           </p>
                         </div>
                         <div className="space-y-4">
-                          <div className="space-y-1">
-                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                              <Timer className="w-3 h-3" /> Session time
-                            </p>
-                            <p className="text-2xl font-black font-code text-primary tracking-tighter">
-                              {formatTime(sessionSeconds)}
-                            </p>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                                <Timer className="w-3 h-3" /> Session time
+                              </p>
+                              <p className="text-2xl font-black font-code text-primary tracking-tighter">
+                                {formatTime(sessionSeconds)}
+                              </p>
+                            </div>
+                            <div className="space-y-1 border-l border-white/5 pl-4">
+                              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                                <Wallet className="w-3 h-3" /> Found
+                              </p>
+                              <p className="text-2xl font-black font-code text-green-400 tracking-tighter">
+                                {foundWallets}
+                              </p>
+                            </div>
                           </div>
                           <div className="space-y-1 pt-2 border-t border-white/5">
                             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
