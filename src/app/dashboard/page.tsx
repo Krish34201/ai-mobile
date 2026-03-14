@@ -138,8 +138,8 @@ export default function AiCryptoDashboard() {
   const [systemTime, setSystemTime] = useState<string | null>(null)
   const [hardwareCores, setHardwareCores] = useState<number>(8)
   const [allocatedCores, setAllocatedCores] = useState([4])
-  const [selectedServerId, setSelectedServerId] = useState('node-na-east')
-  const [networkPing, setNetworkPing] = useState(24)
+  const [selectedServerId, setSelectedServerId] = useState('node-asia-se')
+  const [networkPing, setNetworkPing] = useState(145)
   
   // Customization & Persistence
   const [seedPhraseColor, setSeedPhraseColor] = useState('text-[#dcdcdc]')
@@ -253,7 +253,21 @@ export default function AiCryptoDashboard() {
     }
   }, [logs]);
 
-  // 4. Interrogation Command Protocols
+  // 4. Automatic Memory Management Protocol (10-minute cycle)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLogs([]);
+      setServerLogs([]);
+      logBuffer.current = [];
+      toast({
+        title: "Auto-Flush Executed",
+        description: "System memory cleared for 24/7 stability.",
+      });
+    }, 10 * 60 * 1000); // 10 minutes
+    return () => clearInterval(interval);
+  }, [toast]);
+
+  // 5. Interrogation Command Protocols
   const startInterrogation = useCallback(() => {
     if (activeBlockchains.length === 0) {
       toast({
@@ -283,7 +297,7 @@ export default function AiCryptoDashboard() {
     router.push('/login')
   }
 
-  const handleMemoryFlush = () => {
+  const handleMemoryFlush = useCallback(() => {
     setLogs([]);
     setServerLogs([]);
     logBuffer.current = [];
@@ -291,7 +305,7 @@ export default function AiCryptoDashboard() {
       title: "Memory Flushed",
       description: "Neural interrogation cache cleared.",
     });
-  };
+  }, [toast]);
 
   const clearSession = useCallback(() => {
     localStorage.removeItem(SESSION_STORAGE_KEY);
@@ -956,7 +970,7 @@ export default function AiCryptoDashboard() {
                                 </div>
                                 <Button variant="outline" size="sm" onClick={handleMemoryFlush} className="h-8 text-[9px] uppercase font-bold border-primary/20 text-primary hover:bg-primary/10">Flush Memory</Button>
                               </div>
-                              <p className="text-[9px] text-gray-600 uppercase leading-relaxed">Clears terminal and server activity logs to optimize client-side memory.</p>
+                              <p className="text-[9px] text-gray-600 uppercase leading-relaxed">Clears terminal and server activity logs to optimize client-side memory. Auto-flush every 10m.</p>
                            </div>
                            <div className="flex flex-col gap-3 p-5 rounded-2xl border border-red-500/10 bg-red-500/[0.01] hover:bg-red-500/[0.03] transition-colors group">
                               <div className="flex items-center justify-between">
