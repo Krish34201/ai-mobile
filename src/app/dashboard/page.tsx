@@ -157,6 +157,8 @@ export default function AiCryptoDashboard() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const serverLogRef = useRef<HTMLDivElement>(null)
 
+  const selectedServer = useMemo(() => SERVERS.find(s => s.id === selectedServerId), [selectedServerId]);
+
   useEffect(() => {
     const savedState = localStorage.getItem(SESSION_STORAGE_KEY);
     if (savedState) {
@@ -381,25 +383,41 @@ export default function AiCryptoDashboard() {
     })
   }
 
-  const selectedServer = useMemo(() => SERVERS.find(s => s.id === selectedServerId), [selectedServerId]);
-
   useEffect(() => {
-    const updateTime = () => {
+    const updateTimeAndPing = () => {
         setSystemTime(new Date().toLocaleTimeString('en-GB', { hour12: false }));
+        
         setNetworkPing(prev => {
             if (!isOnline) return 0;
-            const baseLatency = parseInt(selectedServer?.latency || "145");
-            // Slow fluctuation drift target range (±10ms)
-            const fluctuation = Math.floor(Math.random() * 20) - 10;
-            const target = baseLatency + fluctuation;
-            // High smoothing factor (98% history, 2% target) for "slowly slowly" effect
-            const smoothedValue = prev * 0.98 + target * 0.02;
+            
+            // Extract numeric base latency from server string (e.g., "145ms" -> 145)
+            const baseLatencyStr = selectedServer?.latency || "145ms";
+            const baseLatency = parseInt(baseLatencyStr);
+            
+            // Impactful drift: Randomly walk target between ±5% of base
+            // Creates a range for the target to fluctuate within
+            const driftRange = Math.max(2, baseLatency * 0.05);
+            const targetDrift = (Math.random() * driftRange * 2) - driftRange;
+            const target = baseLatency + targetDrift;
+            
+            // Weighted smoothing (92% historical weight) for "slowly slowly" effect
+            // Transitions over ~10-15 seconds when switching servers
+            const smoothingFactor = 0.92;
+            const smoothedValue = prev * smoothingFactor + target * (1 - smoothingFactor);
+            
+            // Return floor for display, minimum of 1ms
             return Math.max(1, Math.floor(smoothedValue));
         });
     }
-    updateTime();
-    if (typeof window !== 'undefined') setHardwareCores(navigator.hardwareConcurrency || 8);
-    const interval = setInterval(updateTime, 1000);
+    
+    updateTimeAndPing();
+    
+    if (typeof window !== 'undefined') {
+      setHardwareCores(navigator.hardwareConcurrency || 8);
+    }
+    
+    // Telemetry updates every 1000ms for readable fluctuation
+    const interval = setInterval(updateTimeAndPing, 1000);
     return () => clearInterval(interval);
   }, [isOnline, selectedServer]);
 
