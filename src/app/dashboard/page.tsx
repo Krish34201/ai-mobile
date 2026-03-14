@@ -143,25 +143,20 @@ export default function AiCryptoDashboard() {
   const [selectedServerId, setSelectedServerId] = useState('node-asia-se')
   const [networkPing, setNetworkPing] = useState(145)
   
-  // Customization & Persistence
   const [seedPhraseColor, setSeedPhraseColor] = useState('text-[#dcdcdc]')
   const [consoleFontSize, setConsoleFontSize] = useState([8])
   
-  // Network Detector States
   const [isOnline, setIsOnline] = useState(true)
   const [wasInterrogatingBeforeOffline, setWasInterrogatingBeforeOffline] = useState(false)
 
-  // AI Search States
   const [isAiSearchConnected, setIsAiSearchConnected] = useState(false)
   const [isAiSearchConnecting, setIsAiSearchConnecting] = useState(false)
   const [aiSearchLogs, setAiSearchLogs] = useState<string[]>([])
 
-  // Real-time Buffer for Ultra-smooth Interrogation
   const logBuffer = useRef<LogEntry[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null)
   const serverLogRef = useRef<HTMLDivElement>(null)
 
-  // 1. Session Persistence Protocol
   useEffect(() => {
     const savedState = localStorage.getItem(SESSION_STORAGE_KEY);
     if (savedState) {
@@ -193,7 +188,6 @@ export default function AiCryptoDashboard() {
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
   }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, seedPhraseColor, consoleFontSize]);
 
-  // 2. Network Detection Protocol
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
@@ -220,17 +214,20 @@ export default function AiCryptoDashboard() {
       }
     };
 
-    setIsOnline(navigator.onLine);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    if (typeof window !== 'undefined') {
+      setIsOnline(navigator.onLine);
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+    }
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      }
     };
   }, [isInterrogating, wasInterrogatingBeforeOffline, toast]);
 
-  // 3. System Boot Sequence Protocol
   useEffect(() => {
     let i = 0;
     const interval = setInterval(() => {
@@ -252,7 +249,6 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  // 4. Optimized Frame-Locked Log Flushing (60FPS stable)
   useEffect(() => {
     const flushLogs = () => {
       if (logBuffer.current.length > 0) {
@@ -294,7 +290,6 @@ export default function AiCryptoDashboard() {
     }
   }, [logs]);
 
-  // 5. Memory Flush Protocol (Auto-clean every 10m)
   useEffect(() => {
     const interval = setInterval(() => {
       setLogs([]);
@@ -394,10 +389,12 @@ export default function AiCryptoDashboard() {
         setNetworkPing(prev => {
             if (!isOnline) return 0;
             const baseLatency = parseInt(selectedServer?.latency || "145");
-            const fluctuation = Math.floor(Math.random() * 5) - 2;
+            // Slow fluctuation drift target range (±10ms)
+            const fluctuation = Math.floor(Math.random() * 20) - 10;
             const target = baseLatency + fluctuation;
-            // Smoothly interpolate towards the target latency based on the selected server
-            return Math.max(1, Math.floor(prev * 0.8 + target * 0.2));
+            // High smoothing factor (98% history, 2% target) for "slowly slowly" effect
+            const smoothedValue = prev * 0.98 + target * 0.02;
+            return Math.max(1, Math.floor(smoothedValue));
         });
     }
     updateTime();
@@ -655,7 +652,7 @@ export default function AiCryptoDashboard() {
                             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
                               <Signal className="w-3 h-3" /> Network Latency
                             </p>
-                            <p className={cn("text-lg font-black font-code tracking-tighter", isOnline ? "text-cyan-400" : "text-red-500")}>
+                            <p className={cn("text-lg font-black font-code tracking-tighter transition-all duration-1000", isOnline ? "text-cyan-400" : "text-red-500")}>
                               {isOnline ? `${networkPing} ms` : "0 ms"}
                             </p>
                           </div>
@@ -866,7 +863,7 @@ export default function AiCryptoDashboard() {
                              </div>
                              <div className="flex flex-col gap-1 border-l border-white/10 pl-6">
                                 <span className="text-[9px] font-code text-primary/60 uppercase">Latency</span>
-                                <span className={cn("text-xs font-bold uppercase", isOnline ? "text-green-500" : "text-red-500")}>
+                                <span className={cn("text-xs font-bold uppercase transition-all duration-1000", isOnline ? "text-green-500" : "text-red-500")}>
                                   {isOnline ? `${networkPing}ms Stable` : "OFFLINE"}
                                 </span>
                              </div>
