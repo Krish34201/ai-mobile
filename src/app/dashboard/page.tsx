@@ -19,11 +19,6 @@ import {
   Timer,
   Terminal,
   Share2,
-  Eye,
-  EyeOff,
-  AlertTriangle,
-  Type,
-  Palette,
   Unplug,
   Layers,
   RotateCcw,
@@ -35,14 +30,18 @@ import {
   RefreshCw,
   Trash2,
   Gauge,
-  CheckCircle2,
+  AlertTriangle,
+  Type,
+  Palette,
   Info,
   ExternalLink,
   ChevronRight,
   BookOpen,
   Microchip,
   Shield,
-  History
+  History,
+  WifiOff,
+  Wifi
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
@@ -145,6 +144,11 @@ export default function AiCryptoDashboard() {
   const [seedPhraseColor, setSeedPhraseColor] = useState('text-[#dcdcdc]')
   const [consoleFontSize, setConsoleFontSize] = useState([8])
   
+  // Network Detector States
+  const [isOnline, setIsOnline] = useState(true)
+  const [wasInterrogatingBeforeOffline, setWasInterrogatingBeforeOffline] = useState(false)
+
+  // AI Search States
   const [isAiSearchConnected, setIsAiSearchConnected] = useState(false)
   const [isAiSearchConnecting, setIsAiSearchConnecting] = useState(false)
   const [aiSearchLogs, setAiSearchLogs] = useState<string[]>([])
@@ -186,7 +190,44 @@ export default function AiCryptoDashboard() {
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
   }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, seedPhraseColor, consoleFontSize]);
 
-  // 2. System Boot Sequence Protocol
+  // 2. Network Detection Protocol
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      toast({
+        title: "Uplink Restored",
+        description: "Neural mesh reconnection successful. Resuming system...",
+      });
+      if (wasInterrogatingBeforeOffline) {
+        setIsInterrogating(true);
+        setWasInterrogatingBeforeOffline(false);
+      }
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      toast({
+        variant: "destructive",
+        title: "Connection Severed",
+        description: "Neural uplink lost. Suspending all forensic operations.",
+      });
+      if (isInterrogating) {
+        setWasInterrogatingBeforeOffline(true);
+        setIsInterrogating(false);
+      }
+    };
+
+    setIsOnline(navigator.onLine);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [isInterrogating, wasInterrogatingBeforeOffline, toast]);
+
+  // 3. System Boot Sequence Protocol
   useEffect(() => {
     let i = 0;
     const interval = setInterval(() => {
@@ -208,7 +249,7 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  // 3. Optimized Frame-Locked Log Flushing (60FPS stable)
+  // 4. Optimized Frame-Locked Log Flushing (60FPS stable)
   useEffect(() => {
     const flushLogs = () => {
       if (logBuffer.current.length > 0) {
@@ -250,6 +291,7 @@ export default function AiCryptoDashboard() {
     }
   }, [logs]);
 
+  // 5. Memory Flush Protocol (Auto-clean every 10m)
   useEffect(() => {
     const interval = setInterval(() => {
       setLogs([]);
@@ -264,6 +306,14 @@ export default function AiCryptoDashboard() {
   }, [toast]);
 
   const startInterrogation = useCallback(() => {
+    if (!isOnline) {
+      toast({
+        variant: "destructive",
+        title: "Uplink Error",
+        description: "Cannot initiate scan without active network connectivity."
+      })
+      return
+    }
     if (activeBlockchains.length === 0) {
       toast({
         variant: "destructive",
@@ -275,7 +325,7 @@ export default function AiCryptoDashboard() {
     setLogs([]);
     logBuffer.current = [];
     setIsInterrogating(true)
-  }, [activeBlockchains, toast])
+  }, [activeBlockchains, isOnline, toast])
 
   const stopInterrogation = useCallback(() => {
     setIsInterrogating(false)
@@ -337,6 +387,7 @@ export default function AiCryptoDashboard() {
     const updateTime = () => {
         setSystemTime(new Date().toLocaleTimeString('en-GB', { hour12: false }));
         setNetworkPing(prev => {
+            if (!isOnline) return 0;
             const fluctuation = Math.floor(Math.random() * 5) - 2;
             return Math.max(12, Math.min(180, prev + fluctuation));
         });
@@ -345,20 +396,21 @@ export default function AiCryptoDashboard() {
     if (typeof window !== 'undefined') setHardwareCores(navigator.hardwareConcurrency || 8);
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isOnline]);
 
   useEffect(() => {
     const interval = setInterval(() => {
+      if (!isOnline) return;
       const msgs = ["Pinging HUB-TX-01", "Ledger hash sync", "Node heartbeat", "Memory cleaner active"];
       setServerLogs(prev => [`${new Date().toLocaleTimeString('en-GB', { hour12: false })} > ${msgs[Math.floor(Math.random() * msgs.length)]}`, ...prev].slice(0, 50));
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isOnline]);
 
   useEffect(() => {
     let interrogationInterval: NodeJS.Timeout
 
-    if (isInterrogating) {
+    if (isInterrogating && isOnline) {
       const intensity = systemIntensity[0] / 100;
       const coreFactor = allocatedCores[0] / hardwareCores;
       const tickDelay = Math.max(5, 120 - (115 * intensity * coreFactor));
@@ -381,7 +433,7 @@ export default function AiCryptoDashboard() {
     return () => {
       if (interrogationInterval) clearInterval(interrogationInterval)
     }
-  }, [isInterrogating, systemIntensity, hardwareCores, allocatedCores]);
+  }, [isInterrogating, isOnline, systemIntensity, hardwareCores, allocatedCores]);
 
   useEffect(() => {
     let timerInterval: NodeJS.Timeout
@@ -478,9 +530,9 @@ export default function AiCryptoDashboard() {
                 </div>
                 
                 <div className="pt-4 flex items-center gap-3">
-                  <div className={cn("w-2 h-2 rounded-full", isInterrogating ? "bg-green-500 animate-pulse shadow-[0_0_12px_rgba(34,197,94,0.6)]" : "bg-red-500")} />
+                  <div className={cn("w-2 h-2 rounded-full", isOnline ? (isInterrogating ? "bg-green-500 animate-pulse shadow-[0_0_12px_rgba(34,197,94,0.6)]" : "bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.6)]") : "bg-red-500 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.6)]")} />
                   <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                    {isInterrogating ? "Scanning" : "Standby"}
+                    {!isOnline ? "Offline" : isInterrogating ? "Scanning" : "Standby"}
                   </span>
                 </div>
               </SidebarGroupContent>
@@ -501,12 +553,18 @@ export default function AiCryptoDashboard() {
                <div className="flex items-center gap-3">
                  <Activity className={cn("w-4 h-4", isInterrogating ? "text-primary animate-pulse" : "text-gray-700")} />
                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">System Status</span>
-                 <span className={cn("text-[10px] font-black uppercase tracking-[0.2em]", isInterrogating ? "text-primary" : "text-gray-700")}>
-                   {isInterrogating ? "Active" : "Ready"}
+                 <span className={cn("text-[10px] font-black uppercase tracking-[0.2em]", !isOnline ? "text-red-500" : isInterrogating ? "text-primary" : "text-gray-700")}>
+                   {!isOnline ? "Disconnected" : isInterrogating ? "Active" : "Ready"}
                  </span>
                </div>
             </div>
             <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 mr-6">
+                {isOnline ? <Wifi className="w-4 h-4 text-green-500" /> : <WifiOff className="w-4 h-4 text-red-500" />}
+                <span className={cn("text-[9px] font-bold uppercase tracking-widest", isOnline ? "text-green-500/60" : "text-red-500")}>
+                  {isOnline ? "Network Live" : "Network Error"}
+                </span>
+              </div>
               <div className="flex flex-col items-end">
                 <span className="text-[9px] font-code text-gray-600 uppercase">System Time</span>
                 <span className="text-xs font-code text-white/80">{systemTime || "00:00:00"}</span>
@@ -517,6 +575,27 @@ export default function AiCryptoDashboard() {
           <div className="flex-1 overflow-hidden p-8 flex flex-col">
             <div className="max-w-[1400px] mx-auto w-full flex-1 flex flex-col min-h-0">
               
+              {!isOnline && (
+                <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-8 animate-in fade-in duration-500">
+                  <div className="max-w-md w-full glass-panel rounded-3xl p-10 border-red-500/20 text-center space-y-6">
+                    <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto border border-red-500/30">
+                      <WifiOff className="w-10 h-10 text-red-500 animate-pulse" />
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-xl font-black text-white uppercase tracking-[0.2em]">Connection Severed</h2>
+                      <p className="text-[11px] text-gray-500 uppercase leading-relaxed font-bold tracking-widest">
+                        Neural uplink to blockchain nodes has been lost. <br />
+                        All forensic operations have been suspended to prevent data corruption.
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-center gap-3 py-4 border-t border-white/5">
+                      <RefreshCw className="w-4 h-4 text-primary animate-spin" />
+                      <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">Monitoring for reconnection...</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {activeTab === 'dashboard' && (
                 <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 flex-1 min-h-0">
                   <div className="xl:col-span-1 flex flex-col gap-6 min-h-0">
@@ -529,7 +608,7 @@ export default function AiCryptoDashboard() {
                         {BLOCKCHAINS.map((chain) => {
                           const isActive = activeBlockchains.includes(chain.id)
                           return (
-                            <div key={chain.id} onClick={() => toggleBlockchain(chain.id)} className={cn("blockchain-card", isActive && "active", isInterrogating && "cursor-not-allowed pointer-events-none opacity-50")}>
+                            <div key={chain.id} onClick={() => toggleBlockchain(chain.id)} className={cn("blockchain-card", isActive && "active", (isInterrogating || !isOnline) && "cursor-not-allowed pointer-events-none opacity-50")}>
                               <img src={chain.logo} alt={`${chain.name} logo`} className="w-6 h-6 object-contain" />
                               <span>{chain.name}</span>
                             </div>
@@ -571,8 +650,8 @@ export default function AiCryptoDashboard() {
                             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
                               <Signal className="w-3 h-3" /> Network Latency
                             </p>
-                            <p className="text-lg font-black font-code text-cyan-400 tracking-tighter">
-                              {networkPing} ms
+                            <p className={cn("text-lg font-black font-code tracking-tighter", isOnline ? "text-cyan-400" : "text-red-500")}>
+                              {isOnline ? `${networkPing} ms` : "0 ms"}
                             </p>
                           </div>
                           <div className="space-y-1 pt-2 border-t border-white/5">
@@ -630,6 +709,14 @@ export default function AiCryptoDashboard() {
                               )}
                             </div>
                           ))}
+                          {!isOnline && isInterrogating && (
+                            <div className="console-line flex gap-4 font-code text-red-500 animate-pulse">
+                              <span className="text-white/10 shrink-0 select-none">[{new Date().toLocaleTimeString('en-GB', { hour12: false })}]</span>
+                              <span className="uppercase tracking-tight font-bold">
+                                SYSTEM SUSPENDED: WAITING FOR NETWORK UPLINK...
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -774,11 +861,13 @@ export default function AiCryptoDashboard() {
                              </div>
                              <div className="flex flex-col gap-1 border-l border-white/10 pl-6">
                                 <span className="text-[9px] font-code text-primary/60 uppercase">Latency</span>
-                                <span className="text-xs font-bold text-green-500 uppercase">{networkPing}ms Stable</span>
+                                <span className={cn("text-xs font-bold uppercase", isOnline ? "text-green-500" : "text-red-500")}>
+                                  {isOnline ? `${networkPing}ms Stable` : "OFFLINE"}
+                                </span>
                              </div>
                           </div>
                        </div>
-                       <Button className="bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 h-12 px-8 rounded-xl font-black text-[10px] uppercase tracking-widest">
+                       <Button disabled={!isOnline} className="bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 h-12 px-8 rounded-xl font-black text-[10px] uppercase tracking-widest">
                          Synchronize Ledger
                        </Button>
                     </div>
@@ -819,11 +908,11 @@ export default function AiCryptoDashboard() {
                       return (
                         <div 
                           key={server.id} 
-                          onClick={() => !isInterrogating && !isLocked && setSelectedServerId(server.id)} 
+                          onClick={() => isOnline && !isInterrogating && !isLocked && setSelectedServerId(server.id)} 
                           className={cn(
                             "relative overflow-hidden p-5 rounded-2xl border transition-all duration-500", 
                             isSelected ? "bg-primary/[0.08] border-primary/50" : "glass-panel border-white/5 hover:border-white/20", 
-                            (isInterrogating || isLocked) ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                            (isInterrogating || isLocked || !isOnline) ? "cursor-not-allowed opacity-50" : "cursor-pointer"
                           )}
                         >
                           {isLocked && <Lock className="absolute top-3 right-3 w-3 h-3 text-red-500/60" />}
@@ -839,26 +928,30 @@ export default function AiCryptoDashboard() {
                                 </div>
                               </div>
                               <div className={cn("text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-tighter", server.status === 'active' ? "text-green-500 bg-green-500/10" : "text-yellow-500 bg-yellow-500/10")}>
-                                {server.status}
+                                {isOnline ? server.status : "Offline"}
                               </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4 pt-2 border-t border-white/5">
                               <div className="space-y-1.5">
                                 <div className="flex items-center justify-between text-[8px] font-code uppercase">
                                   <span className="text-gray-500">Latency</span>
-                                  <span className="text-green-500">{server.latency}</span>
+                                  <span className={cn(isOnline ? "text-green-500" : "text-red-500")}>
+                                    {isOnline ? server.latency : "N/A"}
+                                  </span>
                                 </div>
                                 <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                                  <div className="h-full bg-green-500/50" style={{ width: `${Math.max(20, 100 - parseInt(server.latency))}%` }} />
+                                  <div className="h-full bg-green-500/50" style={{ width: isOnline ? `${Math.max(20, 100 - parseInt(server.latency))}%` : '0%' }} />
                                 </div>
                               </div>
                               <div className="space-y-1.5">
                                 <div className="flex items-center justify-between text-[8px] font-code uppercase">
                                   <span className="text-gray-500">Node Load</span>
-                                  <span className={cn(server.load > 60 ? "text-yellow-500" : "text-primary")}>{server.load}%</span>
+                                  <span className={cn(server.load > 60 ? "text-yellow-500" : "text-primary")}>
+                                    {isOnline ? `${server.load}%` : "0%"}
+                                  </span>
                                 </div>
                                 <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                                  <div className={cn("h-full", server.load > 60 ? "bg-yellow-500/50" : "bg-primary/50")} style={{ width: `${server.load}%` }} />
+                                  <div className={cn("h-full", server.load > 60 ? "bg-yellow-500/50" : "bg-primary/50")} style={{ width: isOnline ? `${server.load}%` : '0%' }} />
                                 </div>
                               </div>
                             </div>
@@ -874,8 +967,8 @@ export default function AiCryptoDashboard() {
                          <div className="flex items-center justify-between mb-8">
                             <div className="flex items-center gap-4">
                               <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary relative">
-                                <Dna className="w-6 h-6 animate-pulse" />
-                                <div className="absolute inset-0 rounded-2xl pulse-ring border border-primary/40" />
+                                <Dna className={cn("w-6 h-6", isInterrogating && isOnline && "animate-pulse")} />
+                                {isInterrogating && isOnline && <div className="absolute inset-0 rounded-2xl pulse-ring border border-primary/40" />}
                               </div>
                               <div>
                                 <h4 className="text-sm font-black uppercase tracking-[0.2em] text-white">Active Endpoint Telemetry</h4>
@@ -885,22 +978,23 @@ export default function AiCryptoDashboard() {
                          </div>
                          <div className="flex-1 flex items-center justify-center relative my-10">
                             <div className="relative bg-black/40 backdrop-blur-3xl p-12 rounded-full border border-primary/20 shadow-[0_0_100px_rgba(173,79,230,0.15)]">
-                               <Globe className={cn("w-40 h-40 transition-all duration-1000", isInterrogating ? "text-primary drop-shadow-[0_0_30px_rgba(173,79,230,0.6)]" : "text-primary/30")} />
-                               {isInterrogating && <div className="absolute inset-0 bg-primary/5 rounded-full animate-ping opacity-20" />}
+                               <Globe className={cn("w-40 h-40 transition-all duration-1000", isInterrogating && isOnline ? "text-primary drop-shadow-[0_0_30px_rgba(173,79,230,0.6)]" : "text-primary/30")} />
+                               {isInterrogating && isOnline && <div className="absolute inset-0 bg-primary/5 rounded-full animate-ping opacity-20" />}
+                               {!isOnline && <WifiOff className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 text-red-500 animate-pulse" />}
                             </div>
                          </div>
                          <div className="grid grid-cols-3 gap-6 mt-auto">
                             <div className="p-5 glass-panel rounded-2xl border-white/5 space-y-2 group/metric">
                                <span className="text-[9px] text-gray-600 uppercase font-black tracking-widest">Uptime</span>
-                               <p className="text-sm font-black text-white font-code tracking-tighter">99.998%</p>
+                               <p className="text-sm font-black text-white font-code tracking-tighter">{isOnline ? "99.998%" : "OFFLINE"}</p>
                             </div>
                             <div className="p-5 glass-panel rounded-2xl border-white/5 space-y-2 group/metric">
                                <span className="text-[9px] text-gray-600 uppercase font-black tracking-widest">Encryption</span>
-                               <p className="text-xs font-black text-white font-code tracking-tighter uppercase">AES-256 GCM</p>
+                               <p className="text-xs font-black text-white font-code tracking-tighter uppercase">{isOnline ? "AES-256 GCM" : "SUSPENDED"}</p>
                             </div>
                             <div className="p-5 glass-panel rounded-2xl border-white/5 space-y-2 group/metric">
                                <span className="text-[9px] text-gray-600 uppercase font-black tracking-widest">Latency Peak</span>
-                               <p className="text-sm font-black text-white font-code tracking-tighter">{networkPing + 12} MS</p>
+                               <p className="text-sm font-black text-white font-code tracking-tighter">{isOnline ? `${networkPing + 12} MS` : "N/A"}</p>
                             </div>
                          </div>
                        </div>
@@ -921,6 +1015,11 @@ export default function AiCryptoDashboard() {
                                <span className="text-gray-600 mr-2 opacity-50 select-none font-bold">NODE_LOG:</span> {log}
                              </div>
                            ))}
+                           {!isOnline && (
+                             <div className="text-red-500 font-bold py-2 animate-pulse">
+                               [CRITICAL] SYSTEM LOSS: NODE UPLINK DISCONNECTED
+                             </div>
+                           )}
                         </div>
                       </div>
                     </div>
@@ -1065,7 +1164,7 @@ export default function AiCryptoDashboard() {
                           { label: "Version", val: "v4.0 Elite" },
                           { label: "Engine", val: "AI Crypto Engine" },
                           { label: "Encryption", val: "AES-256" },
-                          { label: "Status", val: "Active", class: "text-green-500" }
+                          { label: "Status", val: isOnline ? "Active" : "Offline", class: isOnline ? "text-green-500" : "text-red-500" }
                         ].map((info, i) => (
                           <div key={i} className="flex items-center justify-between text-[10px]">
                             <span className="text-gray-600 uppercase font-black">{info.label}:</span>
@@ -1106,18 +1205,23 @@ export default function AiCryptoDashboard() {
                       <Power className="w-4 h-4 mr-3" /> STOP SCAN
                     </Button>
                   ) : (
-                    <Button onClick={startInterrogation} disabled={activeBlockchains.length === 0 || isBooting} className={cn("h-14 px-20 rounded-xl font-black text-xs uppercase tracking-[0.2em] transition-all bg-gradient-to-r from-[#AD4FE6] to-[#2937A3] text-white shadow-[0_0_30px_rgba(173,79,230,0.3)] hover:opacity-90 disabled:opacity-30")}>
+                    <Button onClick={startInterrogation} disabled={activeBlockchains.length === 0 || isBooting || !isOnline} className={cn("h-14 px-20 rounded-xl font-black text-xs uppercase tracking-[0.2em] transition-all bg-gradient-to-r from-[#AD4FE6] to-[#2937A3] text-white shadow-[0_0_30px_rgba(173,79,230,0.3)] hover:opacity-90 disabled:opacity-30")}>
                       <Zap className="w-4 h-4 mr-3" /> START SCAN
                     </Button>
                   )}
-                  {activeBlockchains.length === 0 && !isInterrogating && !isBooting && (
+                  {activeBlockchains.length === 0 && !isInterrogating && !isBooting && isOnline && (
                     <div className="flex items-center gap-2 text-[10px] text-yellow-500 font-bold uppercase animate-pulse">
                       <AlertTriangle className="w-3 h-3" /> Select Blockchains to Proceed
                     </div>
                   )}
-                  {isBooting && (
+                  {isBooting && isOnline && (
                     <div className="flex items-center gap-2 text-[10px] text-primary font-bold uppercase animate-pulse">
                       <RefreshCw className="w-3 h-3 animate-spin" /> System Initializing...
+                    </div>
+                  )}
+                  {!isOnline && (
+                    <div className="flex items-center gap-2 text-[10px] text-red-500 font-bold uppercase animate-pulse">
+                      <WifiOff className="w-3 h-3" /> Offline: Awaiting Reconnection
                     </div>
                   )}
                 </div>
@@ -1128,7 +1232,7 @@ export default function AiCryptoDashboard() {
           <footer className="h-10 border-t border-white/5 bg-black/60 backdrop-blur-md flex items-center justify-between px-8 shrink-0">
             <div className="ticker-wrap flex-1 mr-8 overflow-hidden whitespace-nowrap">
               <p className="ticker-content text-[8px] text-primary/60 uppercase tracking-[0.4em] font-code">
-                Status: {isInterrogating ? "SCANNING" : isBooting ? "INITIALIZING" : "STANDBY"} • Active Node: {selectedServer?.name} • Logic: BIP39-Elite • Encryption: AES-256 Verified
+                Status: {!isOnline ? "CONNECTION SEVERED" : isInterrogating ? "SCANNING" : isBooting ? "INITIALIZING" : "STANDBY"} • Active Node: {selectedServer?.name} • Logic: BIP39-Elite • Encryption: AES-256 Verified
               </p>
             </div>
           </footer>
