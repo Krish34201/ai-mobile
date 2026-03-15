@@ -1,3 +1,4 @@
+
 'use server';
 
 import { getIronSession } from 'iron-session';
@@ -34,6 +35,7 @@ export async function authenticateUser(formData: { username: string; licenseKey:
     session.username = formData.username;
     session.isLoggedIn = true;
     session.allowedChains = data.allowed_chains || [];
+    session.aiSearchEnabled = data.ai_search_enabled || false;
     await session.save();
     
     return { success: true };

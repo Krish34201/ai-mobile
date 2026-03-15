@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
@@ -51,7 +52,8 @@ import { Progress } from '@/components/ui/progress'
 import { Slider } from '@/components/ui/slider'
 import * as bip39 from 'bip39'
 import { ethers } from 'ethers'
-import { logout, verifyLicenseSession } from '@/app/login/actions'
+import { logout, verifyLicenseSession, getSession } from '@/app/login/actions'
+import { SessionData } from '@/lib/session'
 
 const BLOCKCHAINS = [
   { id: 'btc', name: 'Bitcoin', logo: "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/btc.png" },
@@ -152,6 +154,8 @@ export default function AiCryptoDashboard() {
   const [isAiSearchConnecting, setIsAiSearchConnecting] = useState(false)
   const [aiSearchLogs, setAiSearchLogs] = useState<string[]>([])
 
+  const [session, setSession] = useState<SessionData | null>(null)
+
   const logBuffer = useRef<LogEntry[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null)
   const serverLogRef = useRef<HTMLDivElement>(null)
@@ -183,6 +187,20 @@ export default function AiCryptoDashboard() {
     const interval = setInterval(checkLicense, 30000);
     return () => clearInterval(interval);
   }, [toast]);
+
+  // Load Session Data
+  useEffect(() => {
+    const fetchSession = async () => {
+      const sess = await getSession();
+      setSession(sess);
+    }
+    fetchSession();
+  }, []);
+
+  const filteredBlockchains = useMemo(() => {
+    if (!session?.allowedChains || session.allowedChains.length === 0) return BLOCKCHAINS;
+    return BLOCKCHAINS.filter(chain => session.allowedChains?.includes(chain.id));
+  }, [session]);
 
   useEffect(() => {
     const savedState = localStorage.getItem(SESSION_STORAGE_KEY);
@@ -279,8 +297,7 @@ export default function AiCryptoDashboard() {
   useEffect(() => {
     const flushLogs = () => {
       if (logBuffer.current.length > 0) {
-        // High-velocity batch size for 40% speed increase
-        const entriesToFlush = Math.min(logBuffer.current.length, 25);
+        const entriesToFlush = Math.min(logBuffer.current.length, 12);
         const batch: LogEntry[] = [];
         let aiIncrement = 0;
 
@@ -364,14 +381,6 @@ export default function AiCryptoDashboard() {
     });
   }, [toast]);
 
-  // Auto-Flush Protocol: 10 Minutes
-  useEffect(() => {
-    const autoFlushInterval = setInterval(() => {
-      handleMemoryFlush();
-    }, 600000);
-    return () => clearInterval(autoFlushInterval);
-  }, [handleMemoryFlush]);
-
   const clearSession = useCallback(() => {
     localStorage.removeItem(SESSION_STORAGE_KEY);
     setDisplayCount(0);
@@ -388,12 +397,30 @@ export default function AiCryptoDashboard() {
   }, [toast]);
 
   const connectAiSearch = useCallback(async () => {
+    if (session?.aiSearchEnabled !== true) {
+      toast({
+        variant: "destructive",
+        title: "Access Denied",
+        description: "Neural heuristic uplink requires Enterprise Tier license. No access."
+      })
+      return;
+    }
+
+    setIsAiSearchConnecting(true)
+    const phases = ["Synchronizing with heuristic nodes...", "Initializing pattern engine...", "Mapping global entropy...", "Authenticating AI handshake..."]
+    
+    for (let i = 0; i < phases.length; i++) {
+      setAiSearchLogs(prev => [...prev, phases[i]])
+      await new Promise(r => setTimeout(r, 800))
+    }
+    
+    setIsAiSearchConnecting(false)
+    setIsAiSearchConnected(true)
     toast({
-      variant: "destructive",
-      title: "Access Denied",
-      description: "Neural heuristic uplink requires Enterprise Tier license. No access."
+      title: "AI Search Active",
+      description: "Neural mesh linked to global entropy sensors."
     })
-  }, [toast]);
+  }, [session, toast]);
 
   const disconnectAiSearch = () => {
     setIsAiSearchConnected(false)
@@ -435,8 +462,7 @@ export default function AiCryptoDashboard() {
     if (isInterrogating && isOnline) {
       const intensity = systemIntensity[0] / 100;
       const coreFactor = allocatedCores[0] / 8;
-      // Re-calibrated throughput velocity for additional 40% speed increase
-      const baseDelay = Math.max(2, (92 - (88 * intensity * coreFactor)) / 1.4);
+      const baseDelay = Math.max(5, (100 - (95 * intensity * coreFactor)));
 
       interrogationInterval = setInterval(async () => {
         // 1. Generate Mnemonic
@@ -445,15 +471,11 @@ export default function AiCryptoDashboard() {
         // 2. Perform Live Multi-Chain Balance Handshake
         const performLiveCheck = async () => {
           try {
-            // Standard BIP44 Derivation for Ethereum-compatible chains
             const wallet = ethers.Wallet.fromPhrase(mnemonic);
-            
-            // Randomly select one of the active EVM chains to check
             const evmChains = activeBlockchains.filter(b => ['eth', 'bnb', 'matic', 'usdt', 'usdc'].includes(b));
             if (evmChains.length > 0) {
               const chainId = evmChains[Math.floor(Math.random() * evmChains.length)];
               const provider = chainId === 'bnb' ? providers.bnb : chainId === 'matic' ? providers.matic : providers.eth;
-              
               const balance = await provider.getBalance(wallet.address);
               
               if (balance > 0n) {
@@ -465,18 +487,11 @@ export default function AiCryptoDashboard() {
                 };
                 logBuffer.current.push(successEntry);
                 setFoundWallets(prev => prev + 1);
-                toast({
-                  title: "Forensic Discovery",
-                  description: "Positive balance detected in neural ledger.",
-                });
               }
             }
-          } catch (e) {
-            // Handshake error ignored to prevent main-thread locking
-          }
+          } catch (e) {}
         };
 
-        // Trigger balance check asynchronously
         performLiveCheck();
 
         const entry: LogEntry = {
@@ -495,7 +510,7 @@ export default function AiCryptoDashboard() {
     return () => {
       if (interrogationInterval) clearInterval(interrogationInterval)
     }
-  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, activeBlockchains, providers, toast]);
+  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, activeBlockchains, providers]);
 
   useEffect(() => {
     let timerInterval: NodeJS.Timeout
@@ -664,7 +679,7 @@ export default function AiCryptoDashboard() {
                         <span className="text-[9px] font-code text-primary/60">{activeBlockchains.length} Selected</span>
                       </div>
                       <div className="blockchain-grid">
-                        {BLOCKCHAINS.map((chain) => {
+                        {filteredBlockchains.map((chain) => {
                           const isActive = activeBlockchains.includes(chain.id)
                           return (
                             <div key={chain.id} onClick={() => toggleBlockchain(chain.id)} className={cn("blockchain-card", isActive && "active", (isInterrogating || !isOnline) && "cursor-not-allowed pointer-events-none opacity-50")}>
@@ -775,14 +790,6 @@ export default function AiCryptoDashboard() {
                               )}
                             </div>
                           ))}
-                          {!isOnline && isInterrogating && (
-                            <div className="console-line flex gap-4 font-code text-red-500 animate-pulse">
-                              <span className="text-white/10 shrink-0 select-none">[{new Date().toLocaleTimeString('en-GB', { hour12: false })}]</span>
-                              <span className="uppercase tracking-tight font-bold">
-                                SYSTEM SUSPENDED: WAITING FOR NETWORK UPLINK...
-                              </span>
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -846,38 +853,6 @@ export default function AiCryptoDashboard() {
                                      <div className="flex items-center justify-between">
                                         <span className="text-[9px] font-code text-gray-400">Entropy Boost</span>
                                         <span className="text-[9px] font-bold text-primary uppercase">Maxed</span>
-                                     </div>
-                                  </div>
-                               </div>
-
-                               <div className="p-4 rounded-xl bg-black/40 border border-white/5 space-y-3">
-                                  <h5 className="text-[9px] font-black text-gray-500 uppercase tracking-widest border-b border-white/5 pb-2">System Analysis</h5>
-                                  <div className="space-y-2">
-                                     <div className="flex items-center justify-between">
-                                        <span className="text-[9px] font-code text-gray-400">Active Nodes</span>
-                                        <span className="text-[9px] font-bold text-white">12</span>
-                                     </div>
-                                     <div className="flex items-center justify-between">
-                                        <span className="text-[9px] font-code text-gray-400">Latency</span>
-                                        <span className="text-[9px] font-bold text-green-500 uppercase">{Math.floor(networkPing)}ms Stable</span>
-                                     </div>
-                                     <div className="flex items-center justify-between">
-                                        <span className="text-[9px] font-code text-gray-400">Scan Threads</span>
-                                        <span className="text-[9px] font-bold text-white uppercase">32 Active</span>
-                                     </div>
-                                  </div>
-                               </div>
-
-                               <div className="p-4 rounded-xl bg-black/40 border border-white/5 space-y-3">
-                                  <h5 className="text-[9px] font-black text-gray-500 uppercase tracking-widest border-b border-white/5 pb-2">AI Processing</h5>
-                                  <div className="space-y-2">
-                                     <div className="flex items-center justify-between">
-                                        <span className="text-[9px] font-code text-gray-400">Pattern Engine</span>
-                                        <span className="text-[9px] font-bold text-primary uppercase">Running</span>
-                                     </div>
-                                     <div className="flex items-center justify-between">
-                                        <span className="text-[9px] font-code text-gray-400">Entropy Scanner</span>
-                                        <span className="text-[9px] font-bold text-primary uppercase">Active</span>
                                      </div>
                                   </div>
                                </div>
