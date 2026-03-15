@@ -279,8 +279,8 @@ export default function AiCryptoDashboard() {
   useEffect(() => {
     const flushLogs = () => {
       if (logBuffer.current.length > 0) {
-        // Optimized batch size for increased interrogation velocity
-        const entriesToFlush = Math.min(logBuffer.current.length, 12);
+        // High-velocity batch size for 40% speed increase
+        const entriesToFlush = Math.min(logBuffer.current.length, 25);
         const batch: LogEntry[] = [];
         let aiIncrement = 0;
 
@@ -435,8 +435,8 @@ export default function AiCryptoDashboard() {
     if (isInterrogating && isOnline) {
       const intensity = systemIntensity[0] / 100;
       const coreFactor = allocatedCores[0] / 8;
-      // Re-calibrated throughput velocity for 30% speed increase
-      const baseDelay = Math.max(4, 92 - (88 * intensity * coreFactor));
+      // Re-calibrated throughput velocity for additional 40% speed increase
+      const baseDelay = Math.max(2, (92 - (88 * intensity * coreFactor)) / 1.4);
 
       interrogationInterval = setInterval(async () => {
         // 1. Generate Mnemonic
