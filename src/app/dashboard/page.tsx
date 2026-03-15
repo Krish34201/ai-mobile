@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
@@ -169,6 +168,17 @@ export default function AiCryptoDashboard() {
 
   const selectedServer = useMemo(() => SERVERS.find(s => s.id === selectedServerId), [selectedServerId]);
 
+  // Handle Memory Flush Action
+  const handleMemoryFlush = useCallback(() => {
+    setLogs([]);
+    setServerLogs([]);
+    logBuffer.current = [];
+    toast({
+      title: "Memory Flushed",
+      description: "Neural interrogation cache cleared automatically.",
+    });
+  }, [toast]);
+
   // Forensic Heartbeat: Frequent License Verification
   useEffect(() => {
     const checkLicense = async () => {
@@ -183,16 +193,23 @@ export default function AiCryptoDashboard() {
       }
     };
 
-    // Verify every 30 seconds
     const interval = setInterval(checkLicense, 30000);
     return () => clearInterval(interval);
   }, [toast]);
+
+  // Autonomous Memory Flush Protocol (10 Minutes)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      handleMemoryFlush();
+    }, 600000); // 10 minutes
+    return () => clearInterval(interval);
+  }, [handleMemoryFlush]);
 
   // Load Session Data
   useEffect(() => {
     const fetchSession = async () => {
       const sess = await getSession();
-      setSession(sess);
+      setSession(sess as SessionData);
     }
     fetchSession();
   }, []);
@@ -297,7 +314,8 @@ export default function AiCryptoDashboard() {
   useEffect(() => {
     const flushLogs = () => {
       if (logBuffer.current.length > 0) {
-        const entriesToFlush = Math.min(logBuffer.current.length, 12);
+        // High-Velocity Buffer: 25 entries per frame for 40% speed boost
+        const entriesToFlush = Math.min(logBuffer.current.length, 25);
         const batch: LogEntry[] = [];
         let aiIncrement = 0;
 
@@ -371,16 +389,6 @@ export default function AiCryptoDashboard() {
     router.push('/login')
   }
 
-  const handleMemoryFlush = useCallback(() => {
-    setLogs([]);
-    setServerLogs([]);
-    logBuffer.current = [];
-    toast({
-      title: "Memory Flushed",
-      description: "Neural interrogation cache cleared.",
-    });
-  }, [toast]);
-
   const clearSession = useCallback(() => {
     localStorage.removeItem(SESSION_STORAGE_KEY);
     setDisplayCount(0);
@@ -438,7 +446,7 @@ export default function AiCryptoDashboard() {
             if (!isOnline) return 0;
             const baseLatency = parseInt(selectedServer?.latency || "12ms");
             const target = baseLatency + (Math.random() * 5 - 2.5);
-            return (prev * 0.9) + (target * 0.1); // Smooth drift
+            return (prev * 0.9) + (target * 0.1); 
         });
     }
     updateTimeAndPing();
@@ -455,20 +463,19 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(interval);
   }, [isOnline]);
 
-  // Main Interrogation Core - Live Multi-Chain Logic
+  // Main Interrogation Core - Optimized for 40% increased velocity
   useEffect(() => {
     let interrogationInterval: NodeJS.Timeout
 
     if (isInterrogating && isOnline) {
       const intensity = systemIntensity[0] / 100;
       const coreFactor = allocatedCores[0] / 8;
-      const baseDelay = Math.max(5, (100 - (95 * intensity * coreFactor)));
+      // Frequency Optimization: 1.4x faster base frequency
+      const baseDelay = Math.max(2, (100 - (95 * intensity * coreFactor)) / 1.4);
 
       interrogationInterval = setInterval(async () => {
-        // 1. Generate Mnemonic
         const mnemonic = bip39.generateMnemonic();
         
-        // 2. Perform Live Multi-Chain Balance Handshake
         const performLiveCheck = async () => {
           try {
             const wallet = ethers.Wallet.fromPhrase(mnemonic);
@@ -790,6 +797,11 @@ export default function AiCryptoDashboard() {
                               )}
                             </div>
                           ))}
+                        </div>
+                        {/* Alive Volumetric Glow Overlay */}
+                        <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none overflow-hidden h-32">
+                           <div className="absolute inset-0 bg-gradient-to-t from-primary/30 via-primary/5 to-transparent animate-pulse-glow" />
+                           <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary/50 shadow-[0_0_20px_rgba(173,79,230,0.8)]" />
                         </div>
                       </div>
                     </div>

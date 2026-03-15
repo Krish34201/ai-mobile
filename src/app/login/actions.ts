@@ -1,4 +1,3 @@
-
 'use server';
 
 import { getIronSession } from 'iron-session';
@@ -76,7 +75,16 @@ export async function logout() {
   session.destroy();
 }
 
+/**
+ * Retrieves a sanitized, serializable version of the session data.
+ * This prevents the "Plain objects only" error when passing to Client Components.
+ */
 export async function getSession() {
   const session = await getIronSession<SessionData>(await cookies(), sessionOptions);
-  return session;
+  return {
+    username: session.username || null,
+    isLoggedIn: !!session.isLoggedIn,
+    allowedChains: session.allowedChains || [],
+    aiSearchEnabled: !!session.aiSearchEnabled,
+  };
 }
