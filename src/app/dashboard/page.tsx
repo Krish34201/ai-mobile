@@ -919,36 +919,58 @@ export default function AiCryptoDashboard() {
                          </div>
                        ) : (
                          <div className="flex flex-col h-full space-y-4">
-                            <div className="flex flex-col items-center text-center p-2 mb-4 shrink-0">
-                              <div className="relative mb-4">
-                                <Share2 className={cn("w-12 h-12 transition-all duration-700 text-primary", isInterrogating && "animate-pulse drop-shadow-[0_0_15px_rgba(173,79,230,0.5)]")} />
-                                <div className="absolute inset-0 rounded-full pulse-ring border border-primary/20" />
-                              </div>
-                              <span className="text-[10px] font-black text-primary uppercase tracking-widest">Neural Link Established</span>
+                            <div className="flex items-center gap-3 p-2 shrink-0 border-b border-white/5 pb-4">
+                               <div className="relative shrink-0">
+                                 <Share2 className={cn("w-8 h-8 transition-all duration-700 text-primary", isInterrogating && "animate-pulse")} />
+                                 <div className="absolute inset-0 rounded-full pulse-ring border border-primary/20" />
+                               </div>
+                               <div className="flex flex-col">
+                                 <span className="text-[10px] font-black text-white uppercase tracking-widest leading-none">Neural Link</span>
+                                 <span className="text-[8px] font-bold text-primary uppercase tracking-widest mt-1">Status: Operational</span>
+                               </div>
                             </div>
 
-                            <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-black/40 border border-white/5 rounded-xl">
-                              <div className="p-3 border-b border-white/5 bg-white/[0.02] flex items-center justify-between shrink-0">
-                                <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Neural Terminal</span>
+                            {/* Heuristic Stats Grid (Something else) */}
+                            <div className="grid grid-cols-2 gap-3 shrink-0">
+                              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-1 transition-all hover:border-primary/20">
+                                <span className="text-[8px] text-gray-600 uppercase font-black tracking-widest">Pattern Depth</span>
+                                <span className="text-[10px] font-code text-primary font-bold">12-BIT SYNC</span>
+                              </div>
+                              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-1 transition-all hover:border-primary/20">
+                                <span className="text-[8px] text-gray-600 uppercase font-black tracking-widest">Heuristic Load</span>
+                                <span className="text-[10px] font-code text-primary font-bold">{isInterrogating ? '82.4%' : '0.0%'}</span>
+                              </div>
+                              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-1 transition-all hover:border-primary/20">
+                                <span className="text-[8px] text-gray-600 uppercase font-black tracking-widest">Entropy Sync</span>
+                                <span className="text-[10px] font-code text-primary font-bold">MASTERED</span>
+                              </div>
+                              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-1 transition-all hover:border-primary/20">
+                                <span className="text-[8px] text-gray-600 uppercase font-black tracking-widest">AI Threads</span>
+                                <span className="text-[10px] font-code text-primary font-bold">16 ACTIVE</span>
+                              </div>
+                            </div>
+
+                            <div className="h-[200px] flex flex-col min-h-0 overflow-hidden bg-black/40 border border-white/5 rounded-xl">
+                              <div className="p-2 border-b border-white/5 bg-white/[0.02] flex items-center justify-between shrink-0">
+                                <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Neural Terminal</span>
                                 <div className="flex gap-1">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                  <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+                                  <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
                                 </div>
                               </div>
                               <div 
                                 ref={aiTerminalScrollRef}
-                                className="flex-1 overflow-y-auto p-4 space-y-2 terminal-scrollbar font-code text-[9px]"
+                                className="flex-1 overflow-y-auto p-3 space-y-1.5 terminal-scrollbar font-code text-[9px]"
                               >
                                 {aiTerminalLogs.length === 0 ? (
-                                  <div className="text-gray-700 uppercase animate-pulse italic">
+                                  <div className="text-gray-700 uppercase animate-pulse italic text-[8px]">
                                     {isInterrogating ? "CALIBRATING AI FEED..." : "AWAITING ENGINE SCAN..."}
                                   </div>
                                 ) : (
                                   aiTerminalLogs.map((log) => (
-                                    <div key={log.id} className="animate-in slide-in-from-bottom-1 duration-200">
-                                      <span className="text-primary/40 mr-2">[{log.timestamp}]</span>
+                                    <div key={log.id} className="animate-in slide-in-from-bottom-1 duration-200 leading-tight">
+                                      <span className="text-primary/40 mr-1.5">[{log.timestamp}]</span>
                                       <span className={cn(
-                                        "text-white/80 leading-relaxed",
+                                        "text-white/80",
                                         log.message.includes('[ALERT]') && "text-yellow-400 font-bold",
                                         log.message.includes('[MATCH]') && "text-primary font-bold"
                                       )}>
