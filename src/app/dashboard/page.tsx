@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
@@ -52,7 +51,7 @@ import { Progress } from '@/components/ui/progress'
 import { Slider } from '@/components/ui/slider'
 import * as bip39 from 'bip39'
 import { ethers } from 'ethers'
-import { logout } from '@/app/login/actions'
+import { logout, verifyLicenseSession } from '@/app/login/actions'
 
 const BLOCKCHAINS = [
   { id: 'btc', name: 'Bitcoin', logo: "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/btc.png" },
@@ -139,7 +138,6 @@ export default function AiCryptoDashboard() {
   const [systemIntensity, setSystemIntensity] = useState([85])
   const [sessionSeconds, setSessionSeconds] = useState(0)
   const [systemTime, setSystemTime] = useState<string | null>(null)
-  const [hardwareCores, setHardwareCores] = useState<number>(8)
   const [allocatedCores, setAllocatedCores] = useState([4])
   const [selectedServerId, setSelectedServerId] = useState('node-na-east')
   const [networkPing, setNetworkPing] = useState(12)
@@ -166,6 +164,25 @@ export default function AiCryptoDashboard() {
   }), []);
 
   const selectedServer = useMemo(() => SERVERS.find(s => s.id === selectedServerId), [selectedServerId]);
+
+  // Forensic Heartbeat: Frequent License Verification
+  useEffect(() => {
+    const checkLicense = async () => {
+      const result = await verifyLicenseSession();
+      if (!result.success) {
+        toast({
+          variant: "destructive",
+          title: "Session Terminated",
+          description: "Neural license verification failed. Access revoked.",
+        });
+        window.location.href = '/login';
+      }
+    };
+
+    // Verify every 30 seconds
+    const interval = setInterval(checkLicense, 30000);
+    return () => clearInterval(interval);
+  }, [toast]);
 
   useEffect(() => {
     const savedState = localStorage.getItem(SESSION_STORAGE_KEY);

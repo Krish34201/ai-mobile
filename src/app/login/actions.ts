@@ -1,4 +1,3 @@
-
 'use server';
 
 import { getIronSession } from 'iron-session';
@@ -41,6 +40,32 @@ export async function authenticateUser(formData: { username: string; licenseKey:
   } catch (error: any) {
     console.error('Handshake Error:', error);
     return { success: false, message: 'Neural Handshake Error: System interrogation failed.' };
+  }
+}
+
+/**
+ * Forensic Heartbeat: Verifies the license status in real-time.
+ * If the license is no longer active, the session is destroyed.
+ */
+export async function verifyLicenseSession() {
+  try {
+    const session = await getIronSession<SessionData>(await cookies(), sessionOptions);
+    
+    if (!session.isLoggedIn || !session.username) {
+      return { success: false };
+    }
+
+    const userDocRef = doc(db, 'licenses', session.username);
+    const userDoc = await getDoc(userDocRef);
+
+    if (!userDoc.exists() || userDoc.data()?.active !== true) {
+      session.destroy();
+      return { success: false };
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { success: false };
   }
 }
 
