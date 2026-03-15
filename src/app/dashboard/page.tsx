@@ -922,7 +922,7 @@ export default function AiCryptoDashboard() {
                             <div className="flex items-center gap-3 p-2 shrink-0 border-b border-white/5 pb-4">
                                <div className="relative shrink-0">
                                  <Share2 className={cn("w-8 h-8 transition-all duration-700 text-primary", isInterrogating && "animate-pulse")} />
-                                 <div className="absolute inset-0 rounded-full pulse-ring border border-primary/20" />
+                                 <div className="absolute inset-0 rounded-full pulse-ring border border-primary/40" />
                                </div>
                                <div className="flex flex-col">
                                  <span className="text-[10px] font-black text-white uppercase tracking-widest leading-none">Neural Link</span>
