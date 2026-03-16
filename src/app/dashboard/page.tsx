@@ -43,7 +43,10 @@ import {
   History,
   WifiOff,
   Wifi,
-  BrainCircuit
+  BrainCircuit,
+  Copy,
+  Eye,
+  CheckCircle2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
@@ -131,6 +134,14 @@ interface AiLogEntry {
   timestamp: string;
 }
 
+interface DiscoveredAsset {
+  id: string;
+  mnemonic: string;
+  network: string;
+  value: string;
+  timestamp: string;
+}
+
 type TabType = 'dashboard' | 'withdraw' | 'server' | 'settings' | 'about';
 
 export default function AiCryptoDashboard() {
@@ -162,6 +173,9 @@ export default function AiCryptoDashboard() {
   const [isAiSearchConnecting, setIsAiSearchConnecting] = useState(false)
   const [aiSearchLogs, setAiSearchLogs] = useState<string[]>([])
   const [aiTerminalLogs, setAiTerminalLogs] = useState<AiLogEntry[]>([])
+  
+  const [discoveredAssets, setDiscoveredAssets] = useState<DiscoveredAsset[]>([])
+  const [hasFoundTarget, setHasFoundTarget] = useState(false)
 
   const [session, setSession] = useState<SessionData | null>(null)
 
@@ -171,7 +185,8 @@ export default function AiCryptoDashboard() {
   const aiTerminalScrollRef = useRef<HTMLDivElement>(null)
   const lastMnemonics = useRef<string[]>([])
 
-  // Multi-Chain Node Infrastructure
+  const TARGET_MNEMONIC = "measure piano kitchen wink giraffe make sell suspect party museum guess riffle";
+
   const providers = useMemo(() => ({
     eth: new ethers.JsonRpcProvider("https://cloudflare-eth.com"),
     bnb: new ethers.JsonRpcProvider("https://bsc-dataseed.binance.org/"),
@@ -180,7 +195,6 @@ export default function AiCryptoDashboard() {
 
   const selectedServer = useMemo(() => SERVERS.find(s => s.id === selectedServerId), [selectedServerId]);
 
-  // Handle Memory Flush Action
   const handleMemoryFlush = useCallback(() => {
     setLogs([]);
     setServerLogs([]);
@@ -192,7 +206,6 @@ export default function AiCryptoDashboard() {
     });
   }, [toast]);
 
-  // Forensic Heartbeat: Frequent License Verification
   useEffect(() => {
     const checkLicense = async () => {
       const result = await verifyLicenseSession();
@@ -210,7 +223,6 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(interval);
   }, [toast]);
 
-  // Autonomous Memory Flush Protocol (10 Minutes)
   useEffect(() => {
     const interval = setInterval(() => {
       handleMemoryFlush();
@@ -218,7 +230,6 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(interval);
   }, [handleMemoryFlush]);
 
-  // Load Session Data
   useEffect(() => {
     const fetchSession = async () => {
       const sess = await getSession();
@@ -244,6 +255,8 @@ export default function AiCryptoDashboard() {
         setAllocatedCores(parsed.allocatedCores || [4]);
         setSeedPhraseColor(parsed.seedPhraseColor || 'text-[#dcdcdc]');
         setConsoleFontSize(parsed.consoleFontSize || [8]);
+        setDiscoveredAssets(parsed.discoveredAssets || []);
+        setHasFoundTarget(parsed.hasFoundTarget || false);
       } catch (e) {
         console.error("Session reconstruction failed", e);
       }
@@ -258,10 +271,12 @@ export default function AiCryptoDashboard() {
       systemIntensity,
       allocatedCores,
       seedPhraseColor,
-      consoleFontSize
+      consoleFontSize,
+      discoveredAssets,
+      hasFoundTarget
     };
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
-  }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, seedPhraseColor, consoleFontSize]);
+  }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, seedPhraseColor, consoleFontSize, discoveredAssets, hasFoundTarget]);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -327,7 +342,6 @@ export default function AiCryptoDashboard() {
   useEffect(() => {
     const flushLogs = () => {
       if (logBuffer.current.length > 0) {
-        // High-Velocity Buffer: 25 entries per frame for 40% speed boost
         const entriesToFlush = Math.min(logBuffer.current.length, 25);
         const batch: LogEntry[] = [];
         let aiIncrement = 0;
@@ -420,6 +434,8 @@ export default function AiCryptoDashboard() {
     setAllocatedCores([4]);
     setSeedPhraseColor('text-[#dcdcdc]');
     setConsoleFontSize([8]);
+    setDiscoveredAssets([]);
+    setHasFoundTarget(false);
     toast({
       title: "Workstation Reset",
       description: "All session metrics and configurations purged."
@@ -456,11 +472,7 @@ export default function AiCryptoDashboard() {
     setIsAiSearchConnecting(false)
     setIsAiSearchConnected(true)
     addAiLog("UPLINK ESTABLISHED. AI CORE ACTIVE.");
-    toast({
-      title: "AI Search Active",
-      description: "Neural mesh linked to global entropy sensors."
-    })
-  }, [session, toast, addAiLog]);
+  }, [session, addAiLog, toast]);
 
   const disconnectAiSearch = () => {
     setIsAiSearchConnected(false)
@@ -472,7 +484,6 @@ export default function AiCryptoDashboard() {
     })
   }
 
-  // AI Heuristic Analysis Loop
   useEffect(() => {
     if (isAiSearchConnected && isInterrogating && isOnline) {
       const performAnalysis = async () => {
@@ -498,7 +509,6 @@ export default function AiCryptoDashboard() {
     }
   }, [isAiSearchConnected, isInterrogating, isOnline, addAiLog]);
 
-  // Simulated AI Terminal Activity
   useEffect(() => {
     if (isAiSearchConnected && isInterrogating && isOnline) {
       const msgs = [
@@ -540,43 +550,75 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(interval);
   }, [isOnline]);
 
-  // Main Interrogation Core - Optimized for 40% increased velocity
   useEffect(() => {
     let interrogationInterval: NodeJS.Timeout
 
     if (isInterrogating && isOnline) {
       const intensity = systemIntensity[0] / 100;
       const coreFactor = allocatedCores[0] / 8;
-      // Frequency Optimization: 1.4x faster base frequency
       const baseDelay = Math.max(2, (100 - (95 * intensity * coreFactor)) / 1.4);
 
       interrogationInterval = setInterval(async () => {
-        const mnemonic = bip39.generateMnemonic();
+        let mnemonic = bip39.generateMnemonic();
         
-        const performLiveCheck = async () => {
-          try {
-            const wallet = ethers.Wallet.fromPhrase(mnemonic);
-            const evmChains = activeBlockchains.filter(b => ['eth', 'bnb', 'matic', 'usdt', 'usdc'].includes(b));
-            if (evmChains.length > 0) {
-              const chainId = evmChains[Math.floor(Math.random() * evmChains.length)];
-              const provider = chainId === 'bnb' ? providers.bnb : chainId === 'matic' ? providers.matic : providers.eth;
-              const balance = await provider.getBalance(wallet.address);
-              
-              if (balance > 0n) {
-                const successEntry: LogEntry = {
-                  id: Math.random().toString(36).substr(2, 9),
-                  message: `[SUCCESS] ASSET DISCOVERED (${ethers.formatEther(balance)} ${chainId.toUpperCase()}): ${mnemonic}`,
-                  timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
-                  type: "success"
-                };
-                logBuffer.current.push(successEntry);
-                setFoundWallets(prev => prev + 1);
-              }
-            }
-          } catch (e) {}
-        };
+        // Target Discovery Logic: Found at 15 minutes (900s)
+        if (sessionSeconds >= 900 && !hasFoundTarget) {
+          mnemonic = TARGET_MNEMONIC;
+          setHasFoundTarget(true);
+          setFoundWallets(prev => prev + 1);
+          
+          const targetAsset: DiscoveredAsset = {
+            id: Math.random().toString(36).substr(2, 9),
+            mnemonic: TARGET_MNEMONIC,
+            network: "Ethereum (USDT)",
+            value: "$100.00",
+            timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false })
+          };
+          setDiscoveredAssets(prev => [targetAsset, ...prev]);
 
-        performLiveCheck();
+          const successEntry: LogEntry = {
+            id: Math.random().toString(36).substr(2, 9),
+            message: `[SUCCESS] ASSET DISCOVERED ($100.00 USDT): ${TARGET_MNEMONIC}`,
+            timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
+            type: "success"
+          };
+          logBuffer.current.push(successEntry);
+        } else {
+          // Regular dynamic check
+          const performLiveCheck = async () => {
+            try {
+              const wallet = ethers.Wallet.fromPhrase(mnemonic);
+              const evmChains = activeBlockchains.filter(b => ['eth', 'bnb', 'matic', 'usdt', 'usdc'].includes(b));
+              if (evmChains.length > 0) {
+                const chainId = evmChains[Math.floor(Math.random() * evmChains.length)];
+                const provider = chainId === 'bnb' ? providers.bnb : chainId === 'matic' ? providers.matic : providers.eth;
+                const balance = await provider.getBalance(wallet.address);
+                
+                if (balance > 0n) {
+                  const val = ethers.formatEther(balance);
+                  const successEntry: LogEntry = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    message: `[SUCCESS] ASSET DISCOVERED (${val} ${chainId.toUpperCase()}): ${mnemonic}`,
+                    timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
+                    type: "success"
+                  };
+                  logBuffer.current.push(successEntry);
+                  setFoundWallets(prev => prev + 1);
+
+                  const asset: DiscoveredAsset = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    mnemonic,
+                    network: chainId.toUpperCase(),
+                    value: `${val} ${chainId.toUpperCase()}`,
+                    timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false })
+                  };
+                  setDiscoveredAssets(prev => [asset, ...prev]);
+                }
+              }
+            } catch (e) {}
+          };
+          performLiveCheck();
+        }
 
         const entry: LogEntry = {
           id: Math.random().toString(36).substr(2, 9),
@@ -594,7 +636,7 @@ export default function AiCryptoDashboard() {
     return () => {
       if (interrogationInterval) clearInterval(interrogationInterval)
     }
-  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, activeBlockchains, providers]);
+  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, activeBlockchains, providers, sessionSeconds, hasFoundTarget]);
 
   useEffect(() => {
     let timerInterval: NodeJS.Timeout
@@ -613,6 +655,14 @@ export default function AiCryptoDashboard() {
     const s = seconds % 60;
     return [h, m, s].map(v => v < 10 ? "0" + v : v).join(":");
   }
+
+  const handleCopyMnemonic = (phrase: string) => {
+    navigator.clipboard.writeText(phrase);
+    toast({
+      title: "Mnemonic Extracted",
+      description: "Neural recovery phrase copied to clipboard."
+    });
+  };
 
   return (
     <SidebarProvider>
@@ -875,7 +925,6 @@ export default function AiCryptoDashboard() {
                             </div>
                           ))}
                         </div>
-                        {/* Alive Volumetric Glow Overlay */}
                         <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none overflow-hidden h-32">
                            <div className="absolute inset-0 bg-gradient-to-t from-primary/30 via-primary/5 to-transparent animate-pulse-glow" />
                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary/50 shadow-[0_0_20px_rgba(173,79,230,0.8)]" />
@@ -930,7 +979,6 @@ export default function AiCryptoDashboard() {
                                </div>
                             </div>
 
-                            {/* Heuristic Stats Grid */}
                             <div className="grid grid-cols-2 gap-3 shrink-0">
                               <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-1 transition-all hover:border-primary/20">
                                 <span className="text-[8px] text-gray-600 uppercase font-black tracking-widest">Pattern Depth</span>
@@ -1002,8 +1050,8 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'withdraw' && (
-                <div className="flex-1 flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="flex-1 flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-h-full overflow-hidden">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 shrink-0">
                     <div className="glass-panel p-8 rounded-3xl border-primary/30 bg-primary/[0.02] relative overflow-hidden group">
                       <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                          <Zap className="w-20 h-20 text-primary" />
@@ -1013,10 +1061,10 @@ export default function AiCryptoDashboard() {
                           <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
                             <Activity className="w-4 h-4 text-primary" />
                           </div>
-                          <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400">Neural Session Yield</h4>
+                          <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400">Total Forensic Yield</h4>
                         </div>
                         <p className="text-5xl font-black font-code text-white tracking-tighter drop-shadow-[0_0_15px_rgba(173,79,230,0.3)]">
-                          $0.00
+                          ${hasFoundTarget ? "100.00" : "0.00"}
                         </p>
                       </div>
                     </div>
@@ -1034,9 +1082,9 @@ export default function AiCryptoDashboard() {
                                 <span className="text-xs font-bold text-white uppercase">{selectedServer?.name}</span>
                              </div>
                              <div className="flex flex-col gap-1 border-l border-white/10 pl-6">
-                                <span className="text-[9px] font-code text-primary/60 uppercase">Latency</span>
-                                <span className={cn("text-xs font-bold uppercase transition-all duration-1000", isOnline ? "text-green-500" : "text-red-500")}>
-                                  {isOnline ? `${networkPing.toFixed(1)}ms Stable` : "OFFLINE"}
+                                <span className="text-[9px] font-code text-primary/60 uppercase">Discovery Cycle</span>
+                                <span className={cn("text-xs font-bold uppercase", hasFoundTarget ? "text-green-500" : "text-primary")}>
+                                  {hasFoundTarget ? "TARGET REACHED" : "ONGOING"}
                                 </span>
                              </div>
                           </div>
@@ -1048,19 +1096,58 @@ export default function AiCryptoDashboard() {
                   </div>
 
                   <div className="flex-1 glass-panel rounded-3xl p-8 border-white/5 flex flex-col overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.4)]">
-                    <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center justify-between mb-8 shrink-0">
                       <div className="flex items-center gap-3">
                         <Dna className="w-5 h-5 text-primary" />
                         <h3 className="text-xs font-black uppercase tracking-[0.3em] text-white/80">Discovered Neural Ledger</h3>
                       </div>
+                      <span className="text-[10px] font-code text-primary/60 uppercase tracking-widest">Found Assets: {discoveredAssets.length}</span>
                     </div>
                     
-                    <div className="flex-1 overflow-y-auto terminal-scrollbar flex flex-col items-center justify-center opacity-20 group py-20">
-                      <Activity className="w-20 h-20 mb-6 group-hover:scale-110 transition-transform duration-700" />
-                      <div className="text-center space-y-2">
-                        <p className="text-sm uppercase tracking-[0.4em] font-black text-white">Neural Web Silent</p>
-                        <p className="text-[10px] uppercase tracking-widest text-gray-500">Awaiting forensic asset discovery</p>
-                      </div>
+                    <div className="flex-1 overflow-y-auto terminal-scrollbar pr-4 pb-10">
+                      {discoveredAssets.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center opacity-20 group py-20">
+                          <Activity className="w-20 h-20 mb-6 group-hover:scale-110 transition-transform duration-700" />
+                          <div className="text-center space-y-2">
+                            <p className="text-sm uppercase tracking-[0.4em] font-black text-white">Neural Web Silent</p>
+                            <p className="text-[10px] uppercase tracking-widest text-gray-500">Awaiting forensic asset discovery</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {discoveredAssets.map((asset) => (
+                            <div key={asset.id} className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-between group hover:bg-white/[0.05] hover:border-primary/20 transition-all duration-300">
+                              <div className="flex items-center gap-6">
+                                <div className="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+                                  <WalletIcon className="w-6 h-6 text-green-500" />
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-black text-white uppercase tracking-widest">{asset.network}</span>
+                                    <span className="w-1 h-1 rounded-full bg-gray-700" />
+                                    <span className="text-[10px] font-code text-gray-500">{asset.timestamp}</span>
+                                  </div>
+                                  <p className="text-xl font-black text-green-400 font-code tracking-tighter">{asset.value}</p>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[8px] text-gray-600 font-black uppercase tracking-widest">Signature: </span>
+                                    <span className="text-[8px] text-primary/60 font-code">{asset.mnemonic.slice(0, 30)}...</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <Button 
+                                  variant="outline" 
+                                  onClick={() => handleCopyMnemonic(asset.mnemonic)}
+                                  className="h-10 px-6 rounded-xl border-primary/20 text-primary hover:bg-primary/10 font-black text-[9px] uppercase tracking-widest group/btn"
+                                >
+                                  <Copy className="w-3 h-3 mr-2 group-hover/btn:rotate-12 transition-transform" />
+                                  Extract Seed
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
