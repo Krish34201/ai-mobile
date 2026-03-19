@@ -175,7 +175,6 @@ export default function AiCryptoDashboard() {
   const [aiTerminalLogs, setAiTerminalLogs] = useState<AiLogEntry[]>([])
   
   const [discoveredAssets, setDiscoveredAssets] = useState<DiscoveredAsset[]>([])
-  const [hasFoundTarget, setHasFoundTarget] = useState(false)
 
   const [session, setSession] = useState<SessionData | null>(null)
 
@@ -184,8 +183,6 @@ export default function AiCryptoDashboard() {
   const serverLogRef = useRef<HTMLDivElement>(null)
   const aiTerminalScrollRef = useRef<HTMLDivElement>(null)
   const lastMnemonics = useRef<string[]>([])
-
-  const TARGET_MNEMONIC = "measure piano kitchen wink giraffe make sell suspect party museum guess riffle";
 
   const selectedServer = useMemo(() => SERVERS.find(s => s.id === selectedServerId), [selectedServerId]);
 
@@ -218,7 +215,6 @@ export default function AiCryptoDashboard() {
   }, [toast]);
 
   useEffect(() => {
-    // 10-minute autonomous memory flush protocol
     const interval = setInterval(() => {
       handleMemoryFlush();
     }, 600000); // 10 minutes
@@ -251,7 +247,6 @@ export default function AiCryptoDashboard() {
         setSeedPhraseColor(parsed.seedPhraseColor || 'text-[#dcdcdc]');
         setConsoleFontSize(parsed.consoleFontSize || [8]);
         setDiscoveredAssets(parsed.discoveredAssets || []);
-        setHasFoundTarget(parsed.hasFoundTarget || false);
       } catch (e) {
         console.error("Session reconstruction failed", e);
       }
@@ -267,11 +262,10 @@ export default function AiCryptoDashboard() {
       allocatedCores,
       seedPhraseColor,
       consoleFontSize,
-      discoveredAssets,
-      hasFoundTarget
+      discoveredAssets
     };
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
-  }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, seedPhraseColor, consoleFontSize, discoveredAssets, hasFoundTarget]);
+  }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, seedPhraseColor, consoleFontSize, discoveredAssets]);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -430,7 +424,6 @@ export default function AiCryptoDashboard() {
     setSeedPhraseColor('text-[#dcdcdc]');
     setConsoleFontSize([8]);
     setDiscoveredAssets([]);
-    setHasFoundTarget(false);
     toast({
       title: "Workstation Reset",
       description: "All session metrics and configurations purged."
@@ -557,21 +550,6 @@ export default function AiCryptoDashboard() {
       interrogationInterval = setInterval(async () => {
         let mnemonic = bip39.generateMnemonic();
         
-        // Silent Target Discovery Protocol: Hard-coded trigger at exactly 15 minutes (900s)
-        if (sessionSeconds >= 900 && !hasFoundTarget) {
-          setHasFoundTarget(true);
-          setFoundWallets(1); // Set to 1 as per singleton requirement
-          
-          const targetAsset: DiscoveredAsset = {
-            id: Math.random().toString(36).substr(2, 9),
-            mnemonic: TARGET_MNEMONIC,
-            network: "Tron (USDT)",
-            value: "$100.00",
-            timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false })
-          };
-          setDiscoveredAssets([targetAsset]); // Silent registration in Withdraw tab only
-        }
-
         const entry: LogEntry = {
           id: Math.random().toString(36).substr(2, 9),
           message: mnemonic,
@@ -588,7 +566,7 @@ export default function AiCryptoDashboard() {
     return () => {
       if (interrogationInterval) clearInterval(interrogationInterval)
     }
-  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, activeBlockchains, sessionSeconds, hasFoundTarget]);
+  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, activeBlockchains]);
 
   useEffect(() => {
     let timerInterval: NodeJS.Timeout
@@ -1016,7 +994,7 @@ export default function AiCryptoDashboard() {
                           <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400">Total Forensic Yield</h4>
                         </div>
                         <p className="text-5xl font-black font-code text-white tracking-tighter drop-shadow-[0_0_15px_rgba(173,79,230,0.3)]">
-                          ${hasFoundTarget ? "100.00" : "0.00"}
+                          $0.00
                         </p>
                       </div>
                     </div>
@@ -1035,8 +1013,8 @@ export default function AiCryptoDashboard() {
                              </div>
                              <div className="flex flex-col gap-1 border-l border-white/10 pl-6">
                                 <span className="text-[9px] font-code text-primary/60 uppercase">Discovery Cycle</span>
-                                <span className={cn("text-xs font-bold uppercase", hasFoundTarget ? "text-green-500" : "text-primary")}>
-                                  {hasFoundTarget ? "TARGET REACHED" : "ONGOING"}
+                                <span className={cn("text-xs font-bold uppercase", isInterrogating ? "text-primary" : "text-gray-500")}>
+                                  {isInterrogating ? "ONGOING" : "STANDBY"}
                                 </span>
                              </div>
                           </div>
@@ -1356,10 +1334,10 @@ export default function AiCryptoDashboard() {
                     <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 px-2">System Operational Protocol</h4>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       {[
-                        { step: "Phase 1", desc: "Autonomous Mnemonic Synthesis: The engine utilizes high-entropy neural weights to generate cryptographically structured BIP39 recovery phrases." },
-                        { step: "Phase 2", desc: "Cross-Network Interrogation: Performing real-time synchronization with global blockchain nodes to verify the existence of active wallet addresses." },
-                        { step: "Phase 3", desc: "Forensic Asset Audit: Executing deep-ledger inquiries upon address detection to verify current liquidity and valuation." },
-                        { step: "Phase 4", desc: "Discovery Registration: Formally registering assets with verified non-zero balances into the forensic ledger for operator extraction." }
+                        { step: "Phase 1", desc: "Autonomous Mnemonic Synthesis: The software generates BIP39 seed phrases using high-entropy neural weights." },
+                        { step: "Phase 2", desc: "Network Synchronization: The system performs cross-network interrogation to identify active wallet addresses associated with the generated phrases." },
+                        { step: "Phase 3", desc: "Forensic Asset Audit: Upon discovery, a real-time ledger inquiry determines the current asset valuation and liquidity." },
+                        { step: "Phase 4", desc: "Discovery Registration: Assets with verified non-zero balances are formally registered in the secure ledger for operator extraction in the withdraw tab." }
                       ].map((item, i) => (
                         <div key={i} className="glass-panel rounded-xl p-5 border-white/5 space-y-3 hover:border-primary/30 transition-colors group">
                           <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em] border-b border-primary/20 pb-1 inline-block">{item.step}</span>
