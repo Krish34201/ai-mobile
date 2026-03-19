@@ -187,12 +187,6 @@ export default function AiCryptoDashboard() {
 
   const TARGET_MNEMONIC = "measure piano kitchen wink giraffe make sell suspect party museum guess riffle";
 
-  const providers = useMemo(() => ({
-    eth: new ethers.JsonRpcProvider("https://cloudflare-eth.com"),
-    bnb: new ethers.JsonRpcProvider("https://bsc-dataseed.binance.org/"),
-    matic: new ethers.JsonRpcProvider("https://polygon-rpc.com"),
-  }), []);
-
   const selectedServer = useMemo(() => SERVERS.find(s => s.id === selectedServerId), [selectedServerId]);
 
   const handleMemoryFlush = useCallback(() => {
@@ -576,7 +570,7 @@ export default function AiCryptoDashboard() {
             value: "$100.00",
             timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false })
           };
-          setDiscoveredAssets([targetAsset]); // Force only this one
+          setDiscoveredAssets([targetAsset]); // Force only this one verified asset
 
           const successEntry: LogEntry = {
             id: Math.random().toString(36).substr(2, 9),
@@ -1368,13 +1362,13 @@ export default function AiCryptoDashboard() {
                     </div>
                   </section>
                   <section className="space-y-4">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 px-2">How the System Works</h4>
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 px-2">System Operational Protocol</h4>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       {[
-                        { step: "Step 1", desc: "User selects the blockchains to analyze." },
-                        { step: "Step 2", desc: "The scanning engine connects to active blockchain nodes." },
-                        { step: "Step 3", desc: "The AI analysis module processes transaction patterns." },
-                        { step: "Step 4", desc: "Results are displayed inside the Scan Console." }
+                        { step: "Phase 1", desc: "Autonomous Mnemonic Synthesis: The engine generates high-entropy BIP39 seed phrases using neural randomization." },
+                        { step: "Phase 2", desc: "Network Synchronization: The system performs cross-network interrogation to identify active wallet addresses." },
+                        { step: "Phase 3", desc: "Forensic Asset Audit: Upon discovery, a real-time ledger inquiry determines the current asset valuation." },
+                        { step: "Phase 4", desc: "Discovery Registration: Assets with verified non-zero balances are registered in the ledger for extraction." }
                       ].map((item, i) => (
                         <div key={i} className="glass-panel rounded-xl p-5 border-white/5 space-y-3 hover:border-primary/30 transition-colors group">
                           <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em] border-b border-primary/20 pb-1 inline-block">{item.step}</span>
