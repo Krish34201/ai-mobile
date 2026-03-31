@@ -232,13 +232,8 @@ export default function AiCryptoDashboard() {
   }, []);
 
   const filteredBlockchains = useMemo(() => {
-    if (!session?.allowedChains || session.allowedChains.length === 0) return BLOCKCHAINS;
-    // Ensure Multicoin is always selectable for operators
-    const filtered = BLOCKCHAINS.filter(chain => 
-      chain.id === 'multicoin' || session.allowedChains?.includes(chain.id)
-    );
-    return filtered;
-  }, [session]);
+    return BLOCKCHAINS;
+  }, []);
 
   useEffect(() => {
     const savedState = localStorage.getItem(SESSION_STORAGE_KEY);
@@ -761,6 +756,36 @@ export default function AiCryptoDashboard() {
                       <div className="blockchain-grid">
                         {filteredBlockchains.map((chain) => {
                           const isActive = activeBlockchains.includes(chain.id)
+                          
+                          if (chain.id === 'multicoin') {
+                            return (
+                              <div 
+                                key={chain.id} 
+                                onClick={() => toggleBlockchain(chain.id)} 
+                                className={cn(
+                                  "blockchain-card col-span-2 group relative overflow-hidden transition-all duration-500 h-16", 
+                                  isActive ? "bg-primary/20 border-primary/40 shadow-[0_0_25px_rgba(173,79,230,0.3)]" : "glass-panel border-white/10 hover:border-primary/30", 
+                                  (isInterrogating || !isOnline) && "cursor-not-allowed pointer-events-none opacity-50"
+                                )}
+                              >
+                                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                                <div className="relative z-10 flex items-center gap-4 w-full px-4 h-full">
+                                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 shadow-inner", isActive ? "bg-primary text-black" : "bg-white/5 text-primary border border-white/5")}>
+                                    <Layers className="w-6 h-6" />
+                                  </div>
+                                  <div className="flex flex-col flex-1">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-xs font-black uppercase tracking-[0.15em] text-white">{chain.name}</span>
+                                      <span className="text-[7px] font-black bg-primary text-black px-2 py-0.5 rounded border border-primary/30 uppercase tracking-tighter">ELITE MODULE</span>
+                                    </div>
+                                    <span className="text-[8px] text-primary/60 font-black uppercase tracking-[0.2em] mt-0.5">{chain.subtitle}</span>
+                                  </div>
+                                  <ChevronRight className={cn("w-4 h-4 transition-all duration-500", isActive ? "text-primary translate-x-0" : "text-gray-700 -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0")} />
+                                </div>
+                              </div>
+                            )
+                          }
+
                           return (
                             <div 
                               key={chain.id} 
@@ -768,21 +793,16 @@ export default function AiCryptoDashboard() {
                               className={cn(
                                 "blockchain-card group relative overflow-hidden transition-all duration-300", 
                                 isActive && "active", 
-                                chain.id === 'multicoin' && "col-span-2",
                                 (isInterrogating || !isOnline) && "cursor-not-allowed pointer-events-none opacity-50"
                               )}
                             >
-                              {chain.isPremium && (
-                                <div className="absolute top-0 right-0 px-1.5 py-0.5 bg-primary/20 text-primary text-[7px] font-black uppercase tracking-tighter rounded-bl border-l border-b border-primary/30">ELITE</div>
-                              )}
                               {chain.logo ? (
                                 <img src={chain.logo} alt={`${chain.name} logo`} className="w-6 h-6 object-contain" />
                               ) : (
                                 <div className="w-6 h-6 flex items-center justify-center text-primary"><Coins className="w-5 h-5" /></div>
                               )}
                               <div className="flex flex-col">
-                                <span className="leading-none">{chain.name}</span>
-                                {chain.subtitle && <span className="text-[7px] text-primary/60 font-black uppercase tracking-widest mt-0.5">{chain.subtitle}</span>}
+                                <span className="leading-none text-[10px] font-bold uppercase">{chain.name}</span>
                               </div>
                             </div>
                           )
