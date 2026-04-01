@@ -1383,7 +1383,7 @@ export default function AiCryptoDashboard() {
                     {SERVERS.map((server) => {
                       const isSelected = selectedServerId === server.id;
                       const isUltraLive = server.status === 'ULTRA-LIVE';
-                      const hasFeatures = server.id === 'node-prime-exclusive';
+                      const isPrime = server.id === 'node-prime-exclusive';
                       
                       return (
                         <div 
@@ -1417,8 +1417,8 @@ export default function AiCryptoDashboard() {
                               </div>
                               <div className="flex flex-col items-end">
                                 <div className={cn(
-                                  "text-[10px] font-black px-3 py-1 rounded uppercase tracking-widest border animate-pulse", 
-                                  isUltraLive ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-blue-500/20 text-blue-400 border-blue-500/30"
+                                  "text-[10px] font-black px-3 py-1 rounded uppercase tracking-widest border", 
+                                  isUltraLive ? "bg-green-500/20 text-green-400 border-green-500/30 animate-pulse" : "bg-blue-500/20 text-blue-400 border-blue-500/30"
                                 )}>
                                   {server.status}
                                 </div>
@@ -1426,10 +1426,10 @@ export default function AiCryptoDashboard() {
                               </div>
                             </div>
 
-                            {hasFeatures && (
+                            {isPrime && (
                               <div className="space-y-4 pt-4 border-t border-white/5">
                                 <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Node Features</p>
-                                <div className="grid grid-cols-1 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                   {server.features?.map((feature, idx) => (
                                     <div key={idx} className="flex items-center gap-2 text-[10px] font-bold text-white/80 group/feat">
                                       <CheckCircle2 className="w-3.5 h-3.5 text-primary transition-transform group-hover/feat:scale-110" />
@@ -1493,7 +1493,7 @@ export default function AiCryptoDashboard() {
                                <div className="absolute bottom-1/4 right-1/4 w-px h-24 bg-gradient-to-t from-primary to-transparent" />
                             </div>
                          </div>
-                         <div className="grid grid-cols-3 gap-6 mt-auto">
+                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-auto">
                             <div className="p-6 glass-panel rounded-2xl border-white/5 space-y-3 group/metric transition-all duration-700 hover:border-primary/40 shadow-xl">
                                <span className="text-[9px] text-gray-600 uppercase font-black tracking-widest flex items-center gap-2">
                                  <Signal className="w-3 h-3" /> Throughput
