@@ -755,7 +755,7 @@ export default function AiCryptoDashboard() {
     })
   }
 
-  const isEliteSelected = useMemo(() => selectedServer?.id === 'node-prime-exclusive', [selectedServer]);
+  const isEliteSelected = useMemo(() => selectedServer?.status === 'ELITE-CORE', [selectedServer]);
 
   return (
     <SidebarProvider>
@@ -873,7 +873,7 @@ export default function AiCryptoDashboard() {
             </div>
           </header>
 
-          <div className="flex-1 overflow-hidden p-8 flex flex-col">
+          <div className="flex-1 overflow-y-auto terminal-scrollbar p-4 md:p-8 flex flex-col">
             <div className="max-w-[1400px] mx-auto w-full flex-1 flex flex-col min-h-0">
               
               {!isOnline && (
@@ -1373,8 +1373,8 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'server' && (
-                <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-10 animate-in fade-in zoom-in-95 duration-700 ease-out overflow-hidden relative">
-                  <div className="lg:col-span-4 flex flex-col gap-6 min-h-0 overflow-y-auto terminal-scrollbar px-2 pr-4 pb-16">
+                <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 animate-in fade-in zoom-in-95 duration-700 ease-out overflow-hidden relative pb-10 md:pb-0">
+                  <div className="lg:col-span-4 flex flex-col gap-6 min-h-0 overflow-y-auto terminal-scrollbar px-1 pr-2 pb-16">
                     <div className="flex items-center justify-between mb-4 sticky top-0 bg-[#050507]/90 backdrop-blur-sm py-3 z-20">
                       <div className="flex items-center gap-2 px-2">
                         <Network className="w-4 h-4 text-primary" />
@@ -1382,7 +1382,7 @@ export default function AiCryptoDashboard() {
                       </div>
                     </div>
                     
-                    <div className="px-4 mx-1 space-y-4">
+                    <div className="space-y-4 px-1">
                       {SERVERS.map((server) => {
                         const isSelected = selectedServerId === server.id;
                         const isElite = server.status === 'ELITE-CORE';
@@ -1402,66 +1402,66 @@ export default function AiCryptoDashboard() {
                               }
                             }}
                             className={cn(
-                              "relative p-6 rounded-2xl border transition-all duration-700", 
-                              isSelected ? "bg-primary/[0.15] border-primary/80 scale-[1.02] shadow-[0_0_40px_rgba(173,79,230,0.25)] z-10" : "bg-white/[0.02] border-white/5 hover:border-primary/40 shadow-[0_0_20px_rgba(0,0,0,0.2)]",
+                              "relative p-5 rounded-2xl border transition-all duration-700 overflow-hidden", 
+                              isSelected ? "bg-primary/[0.12] border-primary/80 scale-[1.01] shadow-[0_0_40px_rgba(173,79,230,0.2)] z-10" : "bg-white/[0.02] border-white/5 hover:border-primary/40",
                               (isInterrogating || !isOnline) ? "cursor-not-allowed" : "cursor-pointer"
                             )}
                           >
-                            <div className="flex flex-col gap-6 relative z-10">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                  <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-inner", isSelected ? "bg-primary text-black shadow-[0_0_25px_rgba(173,79,230,0.6)]" : "bg-white/5 text-gray-500")}>
-                                    <ServerIcon className="w-7 h-7" />
+                            <div className="flex flex-col gap-5 relative z-10">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                  <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500 shrink-0", isSelected ? "bg-primary text-black shadow-glow" : "bg-white/5 text-gray-500")}>
+                                    <ServerIcon className="w-6 h-6" />
                                   </div>
-                                  <div>
-                                    <p className="text-sm font-black uppercase tracking-[0.1em] text-white">{server.name}</p>
-                                    <p className="text-[10px] text-primary/70 uppercase font-black tracking-widest mt-1">{server.region}</p>
+                                  <div className="min-w-0">
+                                    <p className="text-[11px] font-black uppercase tracking-[0.05em] text-white truncate">{server.name}</p>
+                                    <p className="text-[9px] text-primary/70 uppercase font-black tracking-widest mt-1 truncate">{server.region}</p>
                                   </div>
                                 </div>
-                                <div className="flex flex-col items-end">
+                                <div className="flex flex-col items-end shrink-0">
                                   <div className={cn(
-                                    "text-[10px] font-black px-3 py-1 rounded uppercase tracking-widest border", 
-                                    isElite ? "bg-green-500/20 text-green-400 border-green-500/30 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.3)]" : 
+                                    "text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest border", 
+                                    isElite ? "bg-green-500/20 text-green-400 border-green-500/30 animate-pulse" : 
                                     isStandard ? "bg-blue-500/20 text-blue-400 border-blue-500/30" :
                                     "bg-white/10 text-white/40 border-white/5"
                                   )}>
                                     {server.status}
                                   </div>
-                                  <span className="text-[9px] text-gray-600 mt-2 font-code tracking-tighter">IP: {server.ip}</span>
+                                  <span className="text-[8px] text-gray-600 mt-1 font-code tabular-nums uppercase tracking-tight">IP: {server.ip}</span>
                                 </div>
                               </div>
 
                               {isPrime && isSelected && (
-                                <div className="space-y-4 pt-4 border-t border-white/5 animate-in fade-in duration-500">
-                                  <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Node Features</p>
-                                  <div className="grid grid-cols-1 gap-2.5">
+                                <div className="space-y-3 pt-4 border-t border-white/5 animate-in fade-in duration-500">
+                                  <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Node Features</p>
+                                  <div className="grid grid-cols-1 gap-2">
                                     {server.features?.map((feature, idx) => (
-                                      <div key={idx} className="flex items-start gap-2.5 text-[10px] font-bold text-white/80 group/feat">
-                                        <CheckCircle2 className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0 transition-transform group-hover/feat:scale-110" />
-                                        <span className="tracking-tight uppercase leading-snug">{feature}</span>
+                                      <div key={idx} className="flex items-start gap-2 text-[9px] font-bold text-white/80 group/feat leading-tight">
+                                        <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" />
+                                        <span className="tracking-tight uppercase">{feature}</span>
                                       </div>
                                     ))}
                                   </div>
                                 </div>
                               )}
 
-                              <div className="grid grid-cols-2 gap-6 pt-4 border-t border-white/5">
-                                <div className="space-y-2">
-                                  <div className="flex items-center justify-between text-[9px] font-code uppercase">
+                              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                                <div className="space-y-1.5">
+                                  <div className="flex items-center justify-between text-[8px] font-code uppercase tracking-tight">
                                     <span className="text-gray-600">Latency Peak</span>
-                                    <span className="text-green-500 font-black tracking-tighter">{isOnline ? server.latency : "N/A"}</span>
+                                    <span className="text-green-500 font-black tabular-nums">{isOnline ? server.latency : "N/A"}</span>
                                   </div>
-                                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden shadow-inner">
-                                    <div className="h-full bg-green-500/60 shadow-[0_0_10px_rgba(34,197,94,0.4)] transition-all duration-1000" style={{ width: isSelected ? '98%' : '70%' }} />
+                                  <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                    <div className="h-full bg-green-500/60 transition-all duration-1000" style={{ width: isSelected ? '98%' : '70%' }} />
                                   </div>
                                 </div>
-                                <div className="space-y-2">
-                                  <div className="flex items-center justify-between text-[9px] font-code uppercase">
-                                    <span className="text-gray-600">Node Stability</span>
-                                    <span className="text-primary font-black uppercase tracking-widest">{isSelected ? (isElite ? 'Nominal' : 'Nominal') : 'Nominal'}</span>
+                                <div className="space-y-1.5">
+                                  <div className="flex items-center justify-between text-[8px] font-code uppercase tracking-tight">
+                                    <span className="text-gray-600">Stability</span>
+                                    <span className="text-primary font-black uppercase tracking-widest">Nominal</span>
                                   </div>
-                                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden shadow-inner">
-                                    <div className="h-full bg-primary/60 shadow-[0_0_10px_rgba(173,79,230,0.4)] transition-all duration-1000" style={{ width: isSelected ? '100%' : '85%' }} />
+                                  <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                    <div className="h-full bg-primary/60 transition-all duration-1000" style={{ width: isSelected ? '100%' : '85%' }} />
                                   </div>
                                 </div>
                               </div>
@@ -1472,41 +1472,41 @@ export default function AiCryptoDashboard() {
                     </div>
                   </div>
                   
-                  <div className="lg:col-span-8 flex flex-col gap-6 min-h-0 pr-2">
-                    <div className="glass-panel rounded-3xl p-10 border-white/5 flex flex-col flex-1 relative overflow-hidden group shadow-[0_40px_80px_rgba(0,0,0,0.6)]">
+                  <div className="lg:col-span-8 flex flex-col gap-6 min-h-0 pr-2 pb-10 lg:pb-0">
+                    <div className="glass-panel rounded-3xl p-6 md:p-10 border-white/5 flex flex-col flex-1 relative overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.6)]">
                        <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-transparent pointer-events-none" />
                        <div className="relative z-10 flex flex-col h-full">
-                         <div className="flex items-center justify-between mb-8">
-                            <div className="flex items-center gap-5">
+                         <div className="flex items-center justify-between mb-6 shrink-0">
+                            <div className="flex items-center gap-4">
                               <div className={cn(
-                                "w-16 h-16 rounded-2xl flex items-center justify-center text-primary relative transition-all duration-500 border",
-                                isEliteSelected ? "bg-primary/20 border-primary/40 shadow-[0_0_40px_rgba(173,79,230,0.3)]" : "bg-primary/10 border-primary/20"
+                                "w-14 h-14 rounded-2xl flex items-center justify-center text-primary relative transition-all duration-500 border shrink-0",
+                                isEliteSelected ? "bg-primary/20 border-primary/40 shadow-glow scale-110" : "bg-primary/10 border-primary/20"
                               )}>
-                                <Dna className={cn("w-8 h-8 transition-all duration-1000", (isInterrogating && isOnline) && "animate-pulse")} />
+                                <Dna className={cn("w-7 h-7 transition-all duration-1000", (isInterrogating && isOnline) && "animate-pulse")} />
                                 {(isInterrogating && isOnline) && <div className="absolute inset-0 rounded-2xl pulse-ring border border-primary/40" />}
                               </div>
-                              <div>
-                                <h4 className="text-lg font-black uppercase tracking-[0.2em] text-white">{selectedServer?.name}</h4>
-                                <p className="text-[11px] text-primary/60 font-code uppercase tracking-widest mt-1.5">{selectedServer?.region} • High-Velocity Mesh</p>
+                              <div className="min-w-0">
+                                <h4 className="text-base md:text-lg font-black uppercase tracking-[0.1em] text-white truncate">{selectedServer?.name}</h4>
+                                <p className="text-[9px] md:text-[11px] text-primary/60 font-code uppercase tracking-widest mt-1.5 truncate">{selectedServer?.region} • High-Velocity Mesh</p>
                               </div>
                             </div>
                          </div>
                          
-                         <div className="flex-1 flex items-center justify-center relative my-4">
-                            <div className="relative flex items-center justify-center w-[400px] h-[400px]">
+                         <div className="flex-1 flex items-center justify-center relative my-2 overflow-hidden">
+                            <div className="relative flex items-center justify-center w-full max-w-sm aspect-square">
                                <div className={cn(
-                                 "absolute inset-0 rounded-full bg-primary/5 blur-[100px] transition-all duration-1000",
+                                 "absolute inset-0 rounded-full bg-primary/5 blur-[80px] transition-all duration-1000",
                                  isEliteSelected ? "opacity-100 scale-125" : "opacity-60 scale-100"
                                )} />
                                
                                <div className={cn(
-                                 "absolute inset-0 border border-primary/20 rounded-full",
+                                 "absolute inset-0 border border-primary/20 rounded-full transition-all duration-1000",
                                  isEliteSelected ? "animate-[spin_10s_linear_infinite]" : "animate-[spin_30s_linear_infinite]"
                                )} 
                                     style={{ borderStyle: 'dashed', borderDasharray: '40 20' }} />
                                
                                <div className={cn(
-                                 "absolute inset-10 border border-primary/40 rounded-full",
+                                 "absolute inset-8 border border-primary/40 rounded-full transition-all duration-1000",
                                  isEliteSelected ? "animate-[spin_5s_linear_infinite_reverse]" : "animate-[spin_20s_linear_infinite_reverse]"
                                )} 
                                     style={{ borderStyle: 'dashed', borderDasharray: '10 5' }} />
@@ -1520,14 +1520,14 @@ export default function AiCryptoDashboard() {
                                </svg>
 
                                <div className={cn(
-                                 "relative z-10 w-32 h-32 flex items-center justify-center rounded-3xl rotate-45 border transition-all duration-1000",
+                                 "relative z-10 w-24 md:w-32 h-24 md:h-32 flex items-center justify-center rounded-3xl rotate-45 border transition-all duration-1000",
                                  isEliteSelected 
                                    ? "bg-primary/30 border-primary/60 shadow-[0_0_120px_rgba(173,79,230,1)] scale-125" 
                                    : "bg-primary/5 border-primary/20 shadow-[0_0_40px_rgba(173,79,230,0.3)] scale-100"
                                )}>
                                  <div className={cn(
-                                   "w-16 h-16 rounded-2xl bg-primary shadow-[0_0_40px_rgba(173,79,230,1)]",
-                                   isEliteSelected ? "animate-pulse duration-700" : "animate-pulse duration-2000"
+                                   "w-12 md:w-16 h-12 md:h-16 rounded-2xl bg-primary shadow-glow transition-all duration-700",
+                                   isEliteSelected ? "animate-pulse" : ""
                                  )} />
                                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent h-4 animate-[bounce_2s_infinite]" />
                                </div>
@@ -1535,65 +1535,65 @@ export default function AiCryptoDashboard() {
                                {(isInterrogating && isOnline) && (
                                  <>
                                    <div className="absolute inset-0 rounded-full border border-primary/60 animate-ping opacity-30" />
-                                   <div className="absolute inset-10 rounded-full border border-primary/40 animate-ping opacity-20 delay-700" />
+                                   <div className="absolute inset-8 rounded-full border border-primary/40 animate-ping opacity-20 delay-700" />
                                  </>
                                )}
 
                                {!isOnline && (
                                  <div className="absolute inset-0 flex items-center justify-center z-20">
                                    <div className="glass-panel p-6 rounded-2xl border-red-500/30 flex flex-col items-center gap-3 animate-in zoom-in">
-                                      <WifiOff className="w-12 h-12 text-red-500 animate-pulse" />
-                                      <span className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em]">Link Severed</span>
+                                      <WifiOff className="w-10 md:w-12 h-10 md:h-12 text-red-500 animate-pulse" />
+                                      <span className="text-[8px] md:text-[10px] font-black text-red-500 uppercase tracking-[0.2em]">Link Severed</span>
                                    </div>
                                  </div>
                                )}
                             </div>
                          </div>
 
-                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-auto">
-                            <div className="p-7 glass-panel rounded-2xl border-white/5 space-y-4 group/metric transition-all duration-700 hover:border-primary/40 shadow-2xl">
-                               <span className="text-[10px] text-gray-600 uppercase font-black tracking-widest flex items-center gap-2">
-                                 <Signal className="w-3.5 h-3.5" /> Throughput
+                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-8 mt-4 shrink-0">
+                            <div className="p-5 md:p-7 glass-panel rounded-2xl border-white/5 space-y-3 md:space-y-4 group/metric transition-all duration-700 hover:border-primary/40">
+                               <span className="text-[9px] md:text-[10px] text-gray-600 uppercase font-black tracking-widest flex items-center gap-2">
+                                 <Signal className="w-3 md:w-3.5 h-3 md:h-3.5" /> Throughput
                                </span>
-                               <p className="text-lg font-black text-white font-code tracking-tighter uppercase">{isOnline ? (parseFloat(selectedServer?.latency || "50") < 10 ? "Ultra-High" : "Standard") : "OFFLINE"}</p>
+                               <p className="text-base md:text-lg font-black text-white font-code tracking-tighter uppercase truncate">{isOnline ? (parseFloat(selectedServer?.latency || "50") < 10 ? "Ultra-High" : "Standard") : "OFFLINE"}</p>
                             </div>
-                            <div className="p-7 glass-panel rounded-2xl border-white/5 space-y-4 group/metric transition-all duration-700 hover:border-primary/40 shadow-2xl">
-                               <span className="text-[10px] text-gray-600 uppercase font-black tracking-widest flex items-center gap-2">
-                                 <ShieldCheck className="w-3.5 h-3.5" /> Security
+                            <div className="p-5 md:p-7 glass-panel rounded-2xl border-white/5 space-y-3 md:space-y-4 group/metric transition-all duration-700 hover:border-primary/40">
+                               <span className="text-[9px] md:text-[10px] text-gray-600 uppercase font-black tracking-widest flex items-center gap-2">
+                                 <ShieldCheck className="w-3 md:w-3.5 h-3 md:h-3.5" /> Security
                                </span>
-                               <p className="text-lg font-black text-white font-code tracking-tighter uppercase">{isOnline ? "AES-GCM-4096" : "SUSPENDED"}</p>
+                               <p className="text-base md:text-lg font-black text-white font-code tracking-tighter uppercase truncate">{isOnline ? "AES-GCM-4096" : "SUSPENDED"}</p>
                             </div>
-                            <div className="p-7 glass-panel rounded-2xl border-white/5 space-y-4 group/metric transition-all duration-700 hover:border-primary/40 shadow-2xl">
-                               <span className="text-[10px] text-gray-600 uppercase font-black tracking-widest flex items-center gap-2">
-                                 <Microchip className="w-3.5 h-3.5" /> Engine
+                            <div className="p-5 md:p-7 glass-panel rounded-2xl border-white/5 space-y-3 md:space-y-4 group/metric transition-all duration-700 hover:border-primary/40">
+                               <span className="text-[9px] md:text-[10px] text-gray-600 uppercase font-black tracking-widest flex items-center gap-2">
+                                 <Microchip className="w-3 md:w-3.5 h-3 md:h-3.5" /> Engine
                                </span>
-                               <p className="text-lg font-black text-white font-code tracking-tighter uppercase">{isOnline ? "Hyper-Prime" : "N/A"}</p>
+                               <p className="text-base md:text-lg font-black text-white font-code tracking-tighter uppercase truncate">{isOnline ? "Hyper-Prime" : "N/A"}</p>
                             </div>
                          </div>
                        </div>
                     </div>
 
-                    <div className="glass-panel rounded-3xl border-white/5 flex flex-col h-[300px] relative overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.5)]">
-                      <div className="flex items-center justify-between p-6 border-b border-white/5 bg-white/[0.02] shrink-0">
+                    <div className="glass-panel rounded-3xl border-white/5 flex flex-col h-[250px] md:h-[300px] relative overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.5)] shrink-0">
+                      <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/5 bg-white/[0.02] shrink-0">
                         <div className="flex items-center gap-3">
                            <Terminal className="w-4 h-4 text-primary" />
-                           <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-white">Cluster Pulse Logic</h3>
+                           <h3 className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] text-white">Cluster Pulse Logic</h3>
                         </div>
                         <div className="flex items-center gap-2">
                            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                           <span className="text-[9px] font-bold text-primary/60 uppercase tracking-widest">Live Node Feed</span>
+                           <span className="text-[8px] md:text-[9px] font-bold text-primary/60 uppercase tracking-widest">Live Node Feed</span>
                         </div>
                       </div>
-                      <div className="flex-1 bg-black/60 p-6 font-code text-[11px] overflow-hidden relative">
+                      <div className="flex-1 bg-black/60 p-4 md:p-6 font-code text-[10px] md:text-[11px] overflow-hidden relative">
                         <div className="absolute inset-0 scanline opacity-30 z-20 pointer-events-none" />
                         <div ref={serverLogRef} className="h-full overflow-y-auto terminal-scrollbar space-y-2 flex flex-col z-10 relative">
                            {serverLogs.map((log, i) => (
-                             <div key={i} className="text-[#00FF41]/60 hover:text-[#00FF41] transition-colors py-1.5 border-b border-white/[0.03] tracking-tighter animate-in fade-in duration-300">
-                               <span className="text-gray-600 mr-2 opacity-50 select-none font-bold uppercase">Node_Log:</span> {log}
+                             <div key={i} className="text-[#00FF41]/60 hover:text-[#00FF41] transition-colors py-1 border-b border-white/[0.03] tracking-tighter animate-in fade-in duration-300">
+                               <span className="text-gray-600 mr-2 opacity-50 select-none font-bold uppercase whitespace-nowrap">Node_Log:</span> {log}
                              </div>
                            ))}
                            {!isOnline && (
-                             <div className="text-red-500 font-bold py-3 animate-pulse uppercase tracking-widest border border-red-500/20 bg-red-500/5 px-4 rounded text-center">
+                             <div className="text-red-500 font-bold py-3 animate-pulse uppercase tracking-widest border border-red-500/20 bg-red-500/5 px-4 rounded text-center text-[9px]">
                                [CRITICAL] System Loss: Node Uplink Disconnected
                              </div>
                            )}
