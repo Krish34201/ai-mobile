@@ -677,9 +677,27 @@ export default function AiCryptoDashboard() {
   };
 
   const handleSavePayoutAddresses = () => {
+    // Forensic Validation Regex
+    const btcRegex = /^(1|3|bc1)[a-zA-HJ-NP-Z0-9]{25,62}$/;
+    const bep20Regex = /^0x[a-fA-F0-9]{40}$/;
+    const solRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+
+    if (payoutBtc && !btcRegex.test(payoutBtc)) {
+      toast({ variant: "destructive", title: "Validation Error", description: "Invalid Bitcoin (BTC) address format." });
+      return;
+    }
+    if (payoutUsdt && !bep20Regex.test(payoutUsdt)) {
+      toast({ variant: "destructive", title: "Validation Error", description: "Invalid Tether USDT (BEP-20) address format." });
+      return;
+    }
+    if (payoutSol && !solRegex.test(payoutSol)) {
+      toast({ variant: "destructive", title: "Validation Error", description: "Invalid Solana (SOL) address format." });
+      return;
+    }
+
     toast({
       title: "Nodes Synchronized",
-      description: "Payout addresses secured in neural workstation vault."
+      description: "Payout nodes secured in neural workstation vault."
     })
   }
 
@@ -1513,7 +1531,7 @@ export default function AiCryptoDashboard() {
                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Font Size</label>
                             <span className="text-xs font-code text-primary">{consoleFontSize[0]}px</span>
                           </div>
-                          <Slider value={consoleFontSize} onValueChange={setConsoleFontSize} min={8} max={24} step={1} className="cursor-pointer" />
+                          <Slider value={consoleFontSize} onValueChange={setConsoleFontSize} min={8} max={24} step={1} className="pointer-events-auto cursor-pointer" />
                         </div>
                       </div>
                     </div>
@@ -1522,7 +1540,7 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'about' && (
-                <div className="max-w-[900px] mx-auto w-full flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out pb-20">
+                <div className="max-w-[900px] mx-auto w-full flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out pb-20 overflow-y-auto">
                   <section className="glass-panel rounded-2xl p-8 border-white/5 space-y-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
                     <div className="flex items-center gap-4 border-b border-white/5 pb-4">
                       <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-[0_0_25px_rgba(173,79,230,0.3)] transition-all duration-700">
