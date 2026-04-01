@@ -763,23 +763,25 @@ export default function AiCryptoDashboard() {
                                 key={chain.id} 
                                 onClick={() => toggleBlockchain(chain.id)} 
                                 className={cn(
-                                  "blockchain-card col-span-2 group relative overflow-hidden transition-all duration-500 h-16", 
+                                  "blockchain-card col-span-2 group relative overflow-hidden transition-all duration-700 h-16 cursor-pointer", 
                                   isActive ? "bg-primary/20 border-primary/40 shadow-[0_0_25px_rgba(173,79,230,0.3)]" : "glass-panel border-white/10 hover:border-primary/30", 
                                   (isInterrogating || !isOnline) && "cursor-not-allowed pointer-events-none opacity-50"
                                 )}
                               >
-                                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                                <div className="relative z-10 flex items-center gap-4 w-full px-4 h-full">
-                                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 shadow-inner", isActive ? "bg-primary text-black" : "bg-white/5 text-primary border border-white/5")}>
-                                    <Layers className="w-6 h-6" />
+                                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                                <div className="relative z-10 flex items-center gap-4 w-full px-5 h-full">
+                                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-700 shadow-inner border", isActive ? "bg-primary text-black border-primary" : "bg-white/5 text-primary border-white/10")}>
+                                    <Layers className="w-5 h-5" />
                                   </div>
                                   <div className="flex flex-col flex-1">
                                     <div className="flex items-center justify-between">
-                                      <span className="text-xs font-black uppercase tracking-[0.15em] text-white">{chain.name}</span>
-                                      <span className="text-[7px] font-black bg-primary text-black px-2 py-0.5 rounded border border-primary/30 uppercase tracking-tighter">ELITE MODULE</span>
+                                      <span className="text-[11px] font-black uppercase tracking-[0.2em] text-white">{chain.name}</span>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-[7px] font-black bg-primary text-black px-2 py-0.5 rounded-sm border border-primary/30 uppercase tracking-tighter animate-pulse shadow-[0_0_8px_rgba(173,79,230,0.4)]">ELITE MODULE</span>
+                                        <ChevronRight className={cn("w-3 h-3 transition-all duration-700", isActive ? "text-primary translate-x-0" : "text-gray-700 -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0")} />
+                                      </div>
                                     </div>
                                   </div>
-                                  <ChevronRight className={cn("w-4 h-4 transition-all duration-500", isActive ? "text-primary translate-x-0" : "text-gray-700 -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0")} />
                                 </div>
                               </div>
                             )
@@ -790,7 +792,7 @@ export default function AiCryptoDashboard() {
                               key={chain.id} 
                               onClick={() => toggleBlockchain(chain.id)} 
                               className={cn(
-                                "blockchain-card group relative overflow-hidden transition-all duration-300", 
+                                "blockchain-card group relative overflow-hidden transition-all duration-500", 
                                 isActive && "active", 
                                 (isInterrogating || !isOnline) && "cursor-not-allowed pointer-events-none opacity-50"
                               )}
