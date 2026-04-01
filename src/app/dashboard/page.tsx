@@ -82,70 +82,57 @@ const SERVERS = [
   { 
     id: 'node-prime-exclusive', 
     name: 'NEURAL CORE PRIME', 
-    region: 'Geneva, Switzerland', 
+    region: 'GENEVA, SWITZERLAND', 
     latency: '2.4ms', 
-    status: 'Ultra-Live', 
+    status: 'ULTRA-LIVE', 
     load: 0.8, 
     ip: '45.13.252.1',
     features: [
-      "Quantum-GCM 4096-bit Encryption",
-      "Tier-1 Hyper-Fiber Neural Uplink",
-      "Hardware-Accelerated Entropy Core",
-      "Zero-Jitter Forensic Protocol"
+      "QUANTUM-GCM 4096-BIT ENCRYPTION",
+      "TIER-1 HYPER-FIBER NEURAL UPLINK",
+      "HARDWARE-ACCELERATED ENTROPY CORE",
+      "ZERO-JITTER FORENSIC PROTOCOL"
     ]
   },
   { 
     id: 'quantum-uplink', 
     name: 'QUANTUM UPLINK', 
-    region: 'Luxembourg', 
+    region: 'LUXEMBOURG', 
     latency: '5.2ms', 
-    status: 'Basic', 
+    status: 'BASIC', 
     load: 0.4, 
     ip: '102.13.4.88',
-    features: [
-      "Superluminal Data Flow",
-      "QKD Key Exchange",
-      "High-Density Cache"
-    ]
+    features: []
   },
   { 
     id: 'na-east', 
     name: 'NORTH AMERICA EAST', 
-    region: 'Virginia, USA', 
-    latency: '28.5ms', 
-    status: 'Basic', 
+    region: 'VIRGINIA, USA', 
+    latency: '28.1ms', 
+    status: 'BASIC', 
     load: 0.6, 
     ip: '34.2.145.11',
-    features: [
-      "Standard Node Sync",
-      "AES-256 Support"
-    ]
+    features: []
   },
   { 
     id: 'asia-se', 
     name: 'ASIA SOUTHEAST', 
-    region: 'Singapore', 
+    region: 'SINGAPORE', 
     latency: '56.2ms', 
-    status: 'Basic', 
+    status: 'BASIC', 
     load: 0.7, 
     ip: '172.10.45.9',
-    features: [
-      "Regional Mesh Node",
-      "Multi-Path Routing"
-    ]
+    features: []
   },
   { 
     id: 'asia-ne', 
     name: 'ASIA NORTHEAST', 
-    region: 'Tokyo, Japan', 
+    region: 'TOKYO, JAPAN', 
     latency: '42.1ms', 
-    status: 'Basic', 
+    status: 'BASIC', 
     load: 0.5, 
     ip: '192.168.12.1',
-    features: [
-      "Low-Noise Environment",
-      "Isolated Cluster"
-    ]
+    features: []
   }
 ]
 
@@ -1395,7 +1382,9 @@ export default function AiCryptoDashboard() {
                     
                     {SERVERS.map((server) => {
                       const isSelected = selectedServerId === server.id;
-                      const isUltraLive = server.id === 'node-prime-exclusive';
+                      const isUltraLive = server.status === 'ULTRA-LIVE';
+                      const hasFeatures = server.id === 'node-prime-exclusive';
+                      
                       return (
                         <div 
                           key={server.id} 
@@ -1418,7 +1407,7 @@ export default function AiCryptoDashboard() {
                           <div className="flex flex-col gap-6 relative z-10">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-4">
-                                <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500", isSelected ? "bg-primary text-black shadow-[0_0_25px_rgba(173,79,230,0.6)]" : "bg-white/5 text-gray-500")}>
+                                <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-inner", isSelected ? "bg-primary text-black shadow-[0_0_25px_rgba(173,79,230,0.6)]" : "bg-white/5 text-gray-500")}>
                                   <ServerIcon className="w-7 h-7" />
                                 </div>
                                 <div>
@@ -1431,19 +1420,19 @@ export default function AiCryptoDashboard() {
                                   "text-[10px] font-black px-3 py-1 rounded uppercase tracking-widest border animate-pulse", 
                                   isUltraLive ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-blue-500/20 text-blue-400 border-blue-500/30"
                                 )}>
-                                  {isUltraLive ? "Ultra-Live" : "Basic"}
+                                  {server.status}
                                 </div>
                                 <span className="text-[9px] text-gray-500 mt-2 font-code">IP: {server.ip}</span>
                               </div>
                             </div>
 
-                            {isUltraLive && (
+                            {hasFeatures && (
                               <div className="space-y-4 pt-4 border-t border-white/5">
                                 <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Node Features</p>
                                 <div className="grid grid-cols-1 gap-2">
                                   {server.features?.map((feature, idx) => (
-                                    <div key={idx} className="flex items-center gap-2 text-[10px] font-bold text-white/80">
-                                      <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                                    <div key={idx} className="flex items-center gap-2 text-[10px] font-bold text-white/80 group/feat">
+                                      <CheckCircle2 className="w-3.5 h-3.5 text-primary transition-transform group-hover/feat:scale-110" />
                                       <span className="tracking-tight uppercase">{feature}</span>
                                     </div>
                                   ))}
@@ -1464,7 +1453,7 @@ export default function AiCryptoDashboard() {
                               <div className="space-y-2">
                                 <div className="flex items-center justify-between text-[9px] font-code uppercase">
                                   <span className="text-gray-500">Node Stability</span>
-                                  <span className="text-primary font-black">{isSelected ? 'ULTRA-SMOOTH' : 'NOMINAL'}</span>
+                                  <span className="text-primary font-black uppercase">{isSelected ? (isUltraLive ? 'Ultra-Smooth' : 'Nominal') : 'Nominal'}</span>
                                 </div>
                                 <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden shadow-inner">
                                   <div className="h-full bg-primary/60 shadow-[0_0_10px_rgba(173,79,230,0.4)] transition-all duration-1000" style={{ width: isSelected ? '100%' : '85%' }} />
