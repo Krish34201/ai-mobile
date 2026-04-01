@@ -47,7 +47,8 @@ import {
   Copy,
   Eye,
   CheckCircle2,
-  Coins
+  Coins,
+  Rocket
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
@@ -176,6 +177,9 @@ export default function AiCryptoDashboard() {
   const [aiSearchLogs, setAiSearchLogs] = useState<string[]>([])
   const [aiTerminalLogs, setAiTerminalLogs] = useState<AiLogEntry[]>([])
   
+  const [isBoosterActive, setIsBoosterActive] = useState(false)
+  const [boosterTimeRemaining, setBoosterTimeRemaining] = useState(3600)
+
   const [discoveredAssets, setDiscoveredAssets] = useState<DiscoveredAsset[]>([])
 
   const [session, setSession] = useState<SessionData | null>(null)
@@ -332,7 +336,7 @@ export default function AiCryptoDashboard() {
   useEffect(() => {
     const flushLogs = () => {
       if (logBuffer.current.length > 0) {
-        const entriesToFlush = Math.min(logBuffer.current.length, 25);
+        const entriesToFlush = Math.min(logBuffer.current.length, isBoosterActive ? 100 : 25);
         const batch: LogEntry[] = [];
         let aiIncrement = 0;
 
@@ -365,7 +369,7 @@ export default function AiCryptoDashboard() {
 
     const animationId = requestAnimationFrame(flushLogs);
     return () => cancelAnimationFrame(animationId);
-  }, [isInterrogating]);
+  }, [isInterrogating, isBoosterActive]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -449,6 +453,39 @@ export default function AiCryptoDashboard() {
     setAiTerminalLogs(prev => [...prev, entry].slice(-50));
   }, []);
 
+  const activateBooster = useCallback(() => {
+    if (!isOnline || !isInterrogating) {
+      toast({
+        variant: "destructive",
+        title: "Booster Error",
+        description: "Interrogation must be active to engage Neural Booster."
+      })
+      return
+    }
+    setIsBoosterActive(true)
+    setBoosterTimeRemaining(3600)
+    toast({
+      title: "Neural Booster Engaged",
+      description: "Forensic velocity pushed to maximum depth for 1 hour."
+    })
+  }, [isOnline, isInterrogating, toast])
+
+  useEffect(() => {
+    let boosterTimer: NodeJS.Timeout
+    if (isBoosterActive && boosterTimeRemaining > 0) {
+      boosterTimer = setInterval(() => {
+        setBoosterTimeRemaining(prev => {
+          if (prev <= 1) {
+            setIsBoosterActive(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000)
+    }
+    return () => clearInterval(boosterTimer)
+  }, [isBoosterActive, boosterTimeRemaining])
+
   const connectAiSearch = useCallback(async () => {
     if (session?.aiSearchEnabled !== true) {
       toast({
@@ -476,6 +513,7 @@ export default function AiCryptoDashboard() {
     setIsAiSearchConnected(false)
     setAiSearchLogs([])
     setAiTerminalLogs([])
+    setIsBoosterActive(false)
     toast({
       title: "AI Search Severed",
       description: "Neural engine speed normalized."
@@ -502,27 +540,30 @@ export default function AiCryptoDashboard() {
         }
       };
 
-      const analysisInterval = setInterval(performAnalysis, 5000);
+      const analysisInterval = setInterval(performAnalysis, isBoosterActive ? 2000 : 5000);
       return () => clearInterval(analysisInterval);
     }
-  }, [isAiSearchConnected, isInterrogating, isOnline, addAiLog]);
+  }, [isAiSearchConnected, isInterrogating, isOnline, addAiLog, isBoosterActive]);
 
   useEffect(() => {
     if (isAiSearchConnected && isInterrogating && isOnline) {
       const msgs = [
         "[SYSTEM] Synchronizing neural weights...",
-        "[DATA] Batch checksum verification in progress.",
+        "[DATA] Batch checksum verification: PASSED",
         "[AI] Pattern recognition module operating at peak load.",
         "[HUB] Heuristic cluster TX-09 reporting steady entropy.",
         "[INFO] Entropy depth 256-bit confirmed.",
-        "[SEC] AES-256 session integrity verified."
+        "[SEC] AES-256 session integrity verified.",
+        "[NETWORK] Multi-region node sync active.",
+        "[AI] Probabilistic recovery matrix calibrated.",
+        "[DATA] Scanning derivation paths: m/44'/60'/0'/0/0"
       ];
       const interval = setInterval(() => {
         addAiLog(msgs[Math.floor(Math.random() * msgs.length)]);
-      }, 3000);
+      }, isBoosterActive ? 1000 : 3000);
       return () => clearInterval(interval);
     }
-  }, [isAiSearchConnected, isInterrogating, isOnline, addAiLog]);
+  }, [isAiSearchConnected, isInterrogating, isOnline, addAiLog, isBoosterActive]);
 
   useEffect(() => {
     const updateTimeAndPing = () => {
@@ -556,7 +597,8 @@ export default function AiCryptoDashboard() {
       const coreFactor = allocatedCores[0] / 8;
       const isMulticoin = activeBlockchains.includes('multicoin');
       const multicoinFactor = isMulticoin ? 1.4 : 1;
-      const baseDelay = Math.max(1, ((100 - (95 * intensity * coreFactor)) / (1.4 * multicoinFactor)));
+      const boosterFactor = isBoosterActive ? 10 : 1;
+      const baseDelay = Math.max(1, ((100 - (95 * intensity * coreFactor)) / (1.4 * multicoinFactor * boosterFactor)));
 
       interrogationInterval = setInterval(async () => {
         let mnemonic = bip39.generateMnemonic();
@@ -568,7 +610,7 @@ export default function AiCryptoDashboard() {
           type: "ai"
         };
         logBuffer.current.push(entry);
-        setCpuLoad(Math.min(100, (systemIntensity[0] * (allocatedCores[0] / 8)) + (Math.random() * 3)));
+        setCpuLoad(Math.min(100, (systemIntensity[0] * (allocatedCores[0] / 8)) + (Math.random() * 3) + (isBoosterActive ? 15 : 0)));
       }, baseDelay);
     } else {
       setCpuLoad(0)
@@ -577,7 +619,7 @@ export default function AiCryptoDashboard() {
     return () => {
       if (interrogationInterval) clearInterval(interrogationInterval)
     }
-  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, activeBlockchains]);
+  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, activeBlockchains, isBoosterActive]);
 
   useEffect(() => {
     let timerInterval: NodeJS.Timeout
@@ -872,9 +914,10 @@ export default function AiCryptoDashboard() {
                       </div>
                     </div>
                     
-                    <div className="scan-wrapper flex-1 min-h-0 shadow-[0_0_60px_rgba(0,0,0,0.6)] rounded-xl">
+                    <div className={cn("scan-wrapper flex-1 min-h-0 shadow-[0_0_60px_rgba(0,0,0,0.6)] rounded-xl transition-all duration-500", isBoosterActive && "border-primary/60 shadow-primary/20 scale-[1.005]")}>
                       <div className="h-full scan-console terminal-scrollbar flex flex-col relative rounded-xl overflow-hidden">
                         <div className="absolute inset-0 scanline opacity-30 z-20 pointer-events-none" />
+                        {isBoosterActive && <div className="absolute inset-0 bg-primary/5 animate-pulse z-10 pointer-events-none" />}
                         <div 
                           ref={scrollRef} 
                           className={cn(
@@ -924,7 +967,16 @@ export default function AiCryptoDashboard() {
                       <BrainCircuit className="w-4 h-4 text-primary" />
                       <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-white/60">AI Search</h3>
                     </div>
-                    <div className="flex-1 glass-panel rounded-2xl p-6 flex flex-col min-h-0 overflow-hidden shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
+                    <div className="flex-1 glass-panel rounded-2xl p-6 flex flex-col min-h-0 overflow-hidden shadow-[0_20px_40px_rgba(0,0,0,0.4)] relative">
+                       {isBoosterActive && (
+                         <div className="absolute top-0 right-0 p-2 z-20">
+                            <div className="flex items-center gap-2 bg-primary/20 border border-primary/40 px-3 py-1 rounded-full animate-pulse shadow-glow">
+                               <Rocket className="w-3 h-3 text-primary" />
+                               <span className="text-[9px] font-code text-white font-bold">{formatTime(boosterTimeRemaining).slice(3)}</span>
+                            </div>
+                         </div>
+                       )}
+
                        {!isAiSearchConnected ? (
                          <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
                            <div className="relative mb-6 group">
@@ -968,11 +1020,11 @@ export default function AiCryptoDashboard() {
                             <div className="grid grid-cols-2 gap-3 shrink-0">
                               <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-1 transition-all duration-300 hover:border-primary/20">
                                 <span className="text-[8px] text-gray-600 uppercase font-black tracking-widest">Pattern Depth</span>
-                                <span className="text-[10px] font-code text-primary font-bold">12-BIT SYNC</span>
+                                <span className="text-[10px] font-code text-primary font-bold">{isBoosterActive ? '24-BIT SYNC' : '12-BIT SYNC'}</span>
                               </div>
                               <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-1 transition-all duration-300 hover:border-primary/20">
                                 <span className="text-[8px] text-gray-600 uppercase font-black tracking-widest">Heuristic Load</span>
-                                <span className="text-[10px] font-code text-primary font-bold">{isInterrogating ? '82.4%' : '0.0%'}</span>
+                                <span className="text-[10px] font-code text-primary font-bold">{isInterrogating ? (isBoosterActive ? '98.8%' : '82.4%') : '0.0%'}</span>
                               </div>
                               <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-1 transition-all duration-300 hover:border-primary/20">
                                 <span className="text-[8px] text-gray-600 uppercase font-black tracking-widest">Entropy Sync</span>
@@ -980,11 +1032,26 @@ export default function AiCryptoDashboard() {
                               </div>
                               <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-1 transition-all duration-300 hover:border-primary/20">
                                 <span className="text-[8px] text-gray-600 uppercase font-black tracking-widest">AI Threads</span>
-                                <span className="text-[10px] font-code text-primary font-bold">16 ACTIVE</span>
+                                <span className="text-[10px] font-code text-primary font-bold">{isBoosterActive ? '64 ACTIVE' : '16 ACTIVE'}</span>
                               </div>
                             </div>
 
-                            <div className="h-[200px] flex flex-col min-h-0 overflow-hidden bg-black/60 border border-white/5 rounded-xl shadow-inner">
+                            <div className="space-y-3">
+                               <Button 
+                                 onClick={activateBooster}
+                                 disabled={!isInterrogating || isBoosterActive}
+                                 className={cn(
+                                   "w-full h-10 font-black text-[10px] uppercase tracking-widest transition-all duration-500 rounded-xl border",
+                                   isBoosterActive ? "bg-primary text-black border-primary shadow-glow" : "bg-primary/5 text-primary border-primary/20 hover:bg-primary/10"
+                                 )}
+                               >
+                                 <Rocket className={cn("w-3 h-3 mr-2", isBoosterActive && "animate-bounce")} />
+                                 {isBoosterActive ? "Neural Booster Engaged" : "Activate Neural Booster"}
+                               </Button>
+                            </div>
+
+                            <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-black/60 border border-white/5 rounded-xl shadow-inner relative">
+                              <div className="absolute inset-0 scanline opacity-30 z-20 pointer-events-none" />
                               <div className="px-3 py-2 border-b border-white/10 bg-white/[0.03] flex items-center justify-between shrink-0">
                                 <div className="flex items-center gap-2">
                                   <Terminal className="w-3 h-3 text-primary/70" />
@@ -1009,7 +1076,8 @@ export default function AiCryptoDashboard() {
                                       <span className={cn(
                                         "text-white/70",
                                         log.message.includes('[ALERT]') && "text-yellow-400/90 font-bold",
-                                        log.message.includes('[MATCH]') && "text-primary/90 font-black tracking-tight"
+                                        log.message.includes('[MATCH]') && "text-primary/90 font-black tracking-tight",
+                                        log.message.includes('[HEURISTIC]') && "text-cyan-400/80 font-bold"
                                       )}>
                                         {log.message}
                                       </span>
@@ -1470,7 +1538,7 @@ export default function AiCryptoDashboard() {
           <footer className="h-10 border-t border-white/5 bg-black/60 backdrop-blur-md flex items-center justify-between px-8 shrink-0">
             <div className="ticker-wrap flex-1 mr-8 overflow-hidden whitespace-nowrap">
               <p className="ticker-content text-[8px] text-primary/60 uppercase tracking-[0.4em] font-code">
-                Status: {!isOnline ? "CONNECTION SEVERED" : isInterrogating ? "SCANNING" : isBooting ? "INITIALIZING" : "STANDBY"} • Active Node: {selectedServer?.name} • Logic: BIP39-Elite • Encryption: AES-256 Verified
+                Status: {!isOnline ? "CONNECTION SEVERED" : isInterrogating ? (isBoosterActive ? "BOOSTER ACTIVE" : "SCANNING") : isBooting ? "INITIALIZING" : "STANDBY"} • Active Node: {selectedServer?.name} • Logic: BIP39-Elite • Encryption: AES-256 Verified
               </p>
             </div>
           </footer>
