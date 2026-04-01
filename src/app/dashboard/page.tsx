@@ -585,7 +585,7 @@ export default function AiCryptoDashboard() {
   }
 
   useEffect(() => {
-    let analysisInterval: NodeJS.Timeout | null = null;
+    let analysisIntervalId: NodeJS.Timeout | null = null;
     if (isAiSearchConnected && isInterrogating && isOnline) {
       const performAnalysis = async () => {
         if (lastMnemonics.current.length > 0) {
@@ -605,14 +605,15 @@ export default function AiCryptoDashboard() {
         }
       };
 
-      analysisInterval = setInterval(performAnalysis, isBoosterActive ? 2000 : 5000);
+      analysisIntervalId = setInterval(performAnalysis, isBoosterActive ? 2000 : 5000);
     }
     return () => {
-      if (analysisInterval) clearInterval(analysisInterval);
+      if (analysisIntervalId) clearInterval(analysisIntervalId);
     };
   }, [isAiSearchConnected, isInterrogating, isOnline, addAiLog, isBoosterActive]);
 
   useEffect(() => {
+    let messageInterval: NodeJS.Timeout;
     if (isAiSearchConnected && isInterrogating && isOnline) {
       const msgs = [
         "[SYSTEM] Synchronizing neural weights...",
@@ -625,10 +626,12 @@ export default function AiCryptoDashboard() {
         "[AI] Probabilistic recovery matrix calibrated.",
         "[DATA] Scanning derivation paths: m/44'/60'/0'/0/0"
       ];
-      const interval = setInterval(() => {
+      messageInterval = setInterval(() => {
         addAiLog(msgs[Math.floor(Math.random() * msgs.length)]);
       }, isBoosterActive ? 1000 : 3000);
-      return () => clearInterval(interval);
+    }
+    return () => {
+      if (messageInterval) clearInterval(messageInterval);
     }
   }, [isAiSearchConnected, isInterrogating, isOnline, addAiLog, isBoosterActive]);
 
@@ -741,6 +744,8 @@ export default function AiCryptoDashboard() {
       description: "Payout nodes secured in neural workstation vault."
     })
   }
+
+  const isUltraLiveSelected = useMemo(() => selectedServer?.status === 'ULTRA-LIVE', [selectedServer]);
 
   return (
     <SidebarProvider>
@@ -1367,101 +1372,106 @@ export default function AiCryptoDashboard() {
                       </div>
                     </div>
                     
-                    {SERVERS.map((server) => {
-                      const isSelected = selectedServerId === server.id;
-                      const isUltraLive = server.status === 'ULTRA-LIVE';
-                      const isPrime = server.id === 'node-prime-exclusive';
-                      
-                      return (
-                        <div 
-                          key={server.id} 
-                          onClick={() => {
-                            if (!isInterrogating && isOnline) {
-                              setSelectedServerId(server.id);
-                              toast({
-                                title: "Cluster Migration",
-                                description: `Neural uplink transferred to ${server.name}.`
-                              });
-                            }
-                          }}
-                          className={cn(
-                            "relative mx-1 p-6 rounded-2xl border transition-all duration-700 mb-4", 
-                            isSelected ? "bg-primary/[0.15] border-primary/80 scale-[1.02] shadow-[0_0_40px_rgba(173,79,230,0.25)] z-10" : "bg-white/[0.02] border-white/5 hover:border-primary/40 shadow-[0_0_20px_rgba(0,0,0,0.2)]",
-                            (isInterrogating || !isOnline) ? "cursor-not-allowed" : "cursor-pointer"
-                          )}
-                        >
-                          <div className="flex flex-col gap-6 relative z-10">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-4">
-                                <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-inner", isSelected ? "bg-primary text-black shadow-[0_0_25px_rgba(173,79,230,0.6)]" : "bg-white/5 text-gray-500")}>
-                                  <ServerIcon className="w-7 h-7" />
-                                </div>
-                                <div>
-                                  <p className="text-sm font-black uppercase tracking-[0.1em] text-white">{server.name}</p>
-                                  <p className="text-[10px] text-primary/70 uppercase font-black tracking-widest mt-1">{server.region}</p>
-                                </div>
-                              </div>
-                              <div className="flex flex-col items-end">
-                                <div className={cn(
-                                  "text-[10px] font-black px-3 py-1 rounded uppercase tracking-widest border", 
-                                  isUltraLive ? "bg-green-500/20 text-green-400 border-green-500/30 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.3)]" : 
-                                  "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                                )}>
-                                  {server.status}
-                                </div>
-                                <span className="text-[9px] text-gray-600 mt-2 font-code tracking-tighter">IP: {server.ip}</span>
-                              </div>
-                            </div>
-
-                            {isPrime && (
-                              <div className="space-y-4 pt-4 border-t border-white/5">
-                                <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Node Features</p>
-                                <div className="grid grid-cols-1 gap-2.5">
-                                  {server.features?.map((feature, idx) => (
-                                    <div key={idx} className="flex items-start gap-2.5 text-[10px] font-bold text-white/80 group/feat">
-                                      <CheckCircle2 className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0 transition-transform group-hover/feat:scale-110" />
-                                      <span className="tracking-tight uppercase leading-snug">{feature}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
+                    <div className="px-4 mx-1 space-y-4">
+                      {SERVERS.map((server) => {
+                        const isSelected = selectedServerId === server.id;
+                        const isUltraLive = server.status === 'ULTRA-LIVE';
+                        const isPrime = server.id === 'node-prime-exclusive';
+                        
+                        return (
+                          <div 
+                            key={server.id} 
+                            onClick={() => {
+                              if (!isInterrogating && isOnline) {
+                                setSelectedServerId(server.id);
+                                toast({
+                                  title: "Cluster Migration",
+                                  description: `Neural uplink transferred to ${server.name}.`
+                                });
+                              }
+                            }}
+                            className={cn(
+                              "relative p-6 rounded-2xl border transition-all duration-700", 
+                              isSelected ? "bg-primary/[0.15] border-primary/80 scale-[1.02] shadow-[0_0_40px_rgba(173,79,230,0.25)] z-10" : "bg-white/[0.02] border-white/5 hover:border-primary/40 shadow-[0_0_20px_rgba(0,0,0,0.2)]",
+                              (isInterrogating || !isOnline) ? "cursor-not-allowed" : "cursor-pointer"
                             )}
-
-                            <div className="grid grid-cols-2 gap-6 pt-4 border-t border-white/5">
-                              <div className="space-y-2">
-                                <div className="flex items-center justify-between text-[9px] font-code uppercase">
-                                  <span className="text-gray-600">Latency Peak</span>
-                                  <span className="text-green-500 font-black tracking-tighter">{isOnline ? server.latency : "N/A"}</span>
+                          >
+                            <div className="flex flex-col gap-6 relative z-10">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                  <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-inner", isSelected ? "bg-primary text-black shadow-[0_0_25px_rgba(173,79,230,0.6)]" : "bg-white/5 text-gray-500")}>
+                                    <ServerIcon className="w-7 h-7" />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-black uppercase tracking-[0.1em] text-white">{server.name}</p>
+                                    <p className="text-[10px] text-primary/70 uppercase font-black tracking-widest mt-1">{server.region}</p>
+                                  </div>
                                 </div>
-                                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden shadow-inner">
-                                  <div className="h-full bg-green-500/60 shadow-[0_0_10px_rgba(34,197,94,0.4)] transition-all duration-1000" style={{ width: isSelected ? '98%' : '70%' }} />
+                                <div className="flex flex-col items-end">
+                                  <div className={cn(
+                                    "text-[10px] font-black px-3 py-1 rounded uppercase tracking-widest border", 
+                                    isUltraLive ? "bg-green-500/20 text-green-400 border-green-500/30 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.3)]" : 
+                                    "bg-blue-500/20 text-blue-400 border-blue-500/30"
+                                  )}>
+                                    {server.status}
+                                  </div>
+                                  <span className="text-[9px] text-gray-600 mt-2 font-code tracking-tighter">IP: {server.ip}</span>
                                 </div>
                               </div>
-                              <div className="space-y-2">
-                                <div className="flex items-center justify-between text-[9px] font-code uppercase">
-                                  <span className="text-gray-600">Node Stability</span>
-                                  <span className="text-primary font-black uppercase tracking-widest">{isSelected ? (isUltraLive ? 'Nominal' : 'Nominal') : 'Nominal'}</span>
+
+                              {isPrime && isSelected && (
+                                <div className="space-y-4 pt-4 border-t border-white/5 animate-in fade-in duration-500">
+                                  <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Node Features</p>
+                                  <div className="grid grid-cols-1 gap-2.5">
+                                    {server.features?.map((feature, idx) => (
+                                      <div key={idx} className="flex items-start gap-2.5 text-[10px] font-bold text-white/80 group/feat">
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0 transition-transform group-hover/feat:scale-110" />
+                                        <span className="tracking-tight uppercase leading-snug">{feature}</span>
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
-                                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden shadow-inner">
-                                  <div className="h-full bg-primary/60 shadow-[0_0_10px_rgba(173,79,230,0.4)] transition-all duration-1000" style={{ width: isSelected ? '100%' : '85%' }} />
+                              )}
+
+                              <div className="grid grid-cols-2 gap-6 pt-4 border-t border-white/5">
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between text-[9px] font-code uppercase">
+                                    <span className="text-gray-600">Latency Peak</span>
+                                    <span className="text-green-500 font-black tracking-tighter">{isOnline ? server.latency : "N/A"}</span>
+                                  </div>
+                                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden shadow-inner">
+                                    <div className="h-full bg-green-500/60 shadow-[0_0_10px_rgba(34,197,94,0.4)] transition-all duration-1000" style={{ width: isSelected ? '98%' : '70%' }} />
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between text-[9px] font-code uppercase">
+                                    <span className="text-gray-600">Node Stability</span>
+                                    <span className="text-primary font-black uppercase tracking-widest">{isSelected ? (isUltraLive ? 'Nominal' : 'Nominal') : 'Nominal'}</span>
+                                  </div>
+                                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden shadow-inner">
+                                    <div className="h-full bg-primary/60 shadow-[0_0_10px_rgba(173,79,230,0.4)] transition-all duration-1000" style={{ width: isSelected ? '100%' : '85%' }} />
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      )
-                    })}
+                        )
+                      })}
+                    </div>
                   </div>
                   
-                  <div className="lg:col-span-8 flex flex-col gap-6 min-h-0">
+                  <div className="lg:col-span-8 flex flex-col gap-6 min-h-0 pr-2">
                     <div className="glass-panel rounded-3xl p-10 border-white/5 flex flex-col flex-1 relative overflow-hidden group shadow-[0_40px_80px_rgba(0,0,0,0.6)]">
                        <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-transparent pointer-events-none" />
                        <div className="relative z-10 flex flex-col h-full">
                          <div className="flex items-center justify-between mb-8">
                             <div className="flex items-center gap-5">
-                              <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary relative transition-all duration-500 shadow-[0_0_40px_rgba(173,79,230,0.3)]">
-                                <Dna className={cn("w-8 h-8 transition-all duration-1000", isInterrogating && isOnline && "animate-pulse")} />
-                                {isInterrogating && isOnline && <div className="absolute inset-0 rounded-2xl pulse-ring border border-primary/40" />}
+                              <div className={cn(
+                                "w-16 h-16 rounded-2xl flex items-center justify-center text-primary relative transition-all duration-500 border",
+                                isUltraLiveSelected ? "bg-primary/20 border-primary/40 shadow-[0_0_40px_rgba(173,79,230,0.3)]" : "bg-primary/10 border-primary/20"
+                              )}>
+                                <Dna className={cn("w-8 h-8 transition-all duration-1000", (isInterrogating && isOnline) && "animate-pulse")} />
+                                {(isInterrogating && isOnline) && <div className="absolute inset-0 rounded-2xl pulse-ring border border-primary/40" />}
                               </div>
                               <div>
                                 <h4 className="text-lg font-black uppercase tracking-[0.2em] text-white">{selectedServer?.name}</h4>
@@ -1472,12 +1482,21 @@ export default function AiCryptoDashboard() {
                          
                          <div className="flex-1 flex items-center justify-center relative my-4">
                             <div className="relative flex items-center justify-center w-[400px] h-[400px]">
-                               <div className="absolute inset-0 rounded-full bg-primary/5 blur-[100px] animate-pulse" />
+                               <div className={cn(
+                                 "absolute inset-0 rounded-full bg-primary/5 blur-[100px] transition-all duration-1000",
+                                 isUltraLiveSelected ? "opacity-100 scale-125" : "opacity-60 scale-100"
+                               )} />
                                
-                               <div className="absolute inset-0 border border-primary/20 rounded-full animate-[spin_30s_linear_infinite]" 
+                               <div className={cn(
+                                 "absolute inset-0 border border-primary/20 rounded-full",
+                                 isUltraLiveSelected ? "animate-[spin_10s_linear_infinite]" : "animate-[spin_30s_linear_infinite]"
+                               )} 
                                     style={{ borderStyle: 'dashed', borderDasharray: '40 20' }} />
                                
-                               <div className="absolute inset-10 border border-primary/40 rounded-full animate-[spin_20s_linear_infinite_reverse]" 
+                               <div className={cn(
+                                 "absolute inset-10 border border-primary/40 rounded-full",
+                                 isUltraLiveSelected ? "animate-[spin_5s_linear_infinite_reverse]" : "animate-[spin_20s_linear_infinite_reverse]"
+                               )} 
                                     style={{ borderStyle: 'dashed', borderDasharray: '10 5' }} />
 
                                <svg className="absolute w-full h-full opacity-60" viewBox="0 0 100 100">
@@ -1489,14 +1508,19 @@ export default function AiCryptoDashboard() {
                                </svg>
 
                                <div className={cn(
-                                 "relative z-10 w-32 h-32 flex items-center justify-center rounded-3xl rotate-45 border border-primary/40 transition-all duration-1000",
-                                 isInterrogating && isOnline ? "bg-primary/20 shadow-[0_0_80px_rgba(173,79,230,0.8)] scale-110" : "bg-primary/5"
+                                 "relative z-10 w-32 h-32 flex items-center justify-center rounded-3xl rotate-45 border transition-all duration-1000",
+                                 isUltraLiveSelected 
+                                   ? "bg-primary/30 border-primary/60 shadow-[0_0_120px_rgba(173,79,230,1)] scale-125" 
+                                   : "bg-primary/5 border-primary/20 shadow-[0_0_40px_rgba(173,79,230,0.3)] scale-100"
                                )}>
-                                 <div className="w-16 h-16 rounded-2xl bg-primary shadow-[0_0_40px_rgba(173,79,230,1)] animate-pulse" />
-                                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/20 to-transparent h-4 animate-[bounce_2s_infinite]" />
+                                 <div className={cn(
+                                   "w-16 h-16 rounded-2xl bg-primary shadow-[0_0_40px_rgba(173,79,230,1)]",
+                                   isUltraLiveSelected ? "animate-pulse duration-700" : "animate-pulse duration-2000"
+                                 )} />
+                                 <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent h-4 animate-[bounce_2s_infinite]" />
                                </div>
 
-                               {isInterrogating && isOnline && (
+                               {(isInterrogating && isOnline) && (
                                  <>
                                    <div className="absolute inset-0 rounded-full border border-primary/60 animate-ping opacity-30" />
                                    <div className="absolute inset-10 rounded-full border border-primary/40 animate-ping opacity-20 delay-700" />
