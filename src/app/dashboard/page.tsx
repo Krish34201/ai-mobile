@@ -80,13 +80,11 @@ const BLOCKCHAINS = [
 ]
 
 const SERVERS = [
-  { id: 'node-premium-01', name: 'NEURAL CORE PRIME', region: 'Geneva, Switzerland', latency: '3ms', status: 'locked', load: 1, ip: '45.13.252.1' },
+  { id: 'node-premium-01', name: 'NEURAL CORE PRIME', region: 'Geneva, Switzerland', latency: '3ms', status: 'active', load: 1, ip: '45.13.252.1' },
   { id: 'node-premium-02', name: 'QUANTUM UPLINK', region: 'Luxembourg City, Lux', latency: '5ms', status: 'active', load: 3, ip: '185.19.23.4' },
   { id: 'node-na-east', name: 'NORTH AMERICA EAST', region: 'Virginia, USA', latency: '12ms', status: 'active', load: 42, ip: '142.250.190.46' },
-  { id: 'node-eu-central', name: 'EUROPE CENTRAL', region: 'Frankfurt, Germany', latency: '28ms', status: 'locked', load: 68, ip: '172.217.16.174' },
+  { id: 'node-eu-central', name: 'EUROPE CENTRAL', region: 'Frankfurt, Germany', latency: '28ms', status: 'active', load: 68, ip: '172.217.16.174' },
   { id: 'node-asia-se', name: 'ASIA SOUTHEAST', region: 'Singapore', latency: '145ms', status: 'active', load: 12, ip: '34.101.0.1' },
-  { id: 'node-asia-ne', name: 'ASIA NORTHEAST', region: 'Tokyo, Japan', latency: '112ms', status: 'locked', load: 54, ip: '35.190.247.0' },
-  { id: 'node-arctic-north', name: 'ARCTIC NORTH', region: 'Reykjavik, Iceland', latency: '45ms', status: 'locked', load: 8, ip: '35.200.0.0' },
 ]
 
 const SEED_COLORS = [
@@ -627,7 +625,12 @@ export default function AiCryptoDashboard() {
       const isMulticoin = activeBlockchains.includes('multicoin');
       const multicoinFactor = isMulticoin ? 1.4 : 1;
       const boosterFactor = isBoosterActive ? 10 : 1;
-      const baseDelay = Math.max(1, ((100 - (95 * intensity * coreFactor)) / (1.4 * multicoinFactor * boosterFactor)));
+      
+      // Server Latency Factor (Inverse speed): Lower latency = much faster speed
+      const serverLatencyValue = parseInt(selectedServer?.latency || "12ms");
+      const serverSpeedFactor = Math.max(0.5, 100 / (serverLatencyValue + 1));
+
+      const baseDelay = Math.max(1, ((100 - (95 * intensity * coreFactor)) / (1.4 * multicoinFactor * boosterFactor * serverSpeedFactor)));
 
       interrogationInterval = setInterval(async () => {
         let mnemonic = bip39.generateMnemonic();
@@ -648,7 +651,7 @@ export default function AiCryptoDashboard() {
     return () => {
       if (interrogationInterval) clearInterval(interrogationInterval)
     }
-  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, activeBlockchains, isBoosterActive]);
+  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, activeBlockchains, isBoosterActive, selectedServer]);
 
   useEffect(() => {
     let timerInterval: NodeJS.Timeout
@@ -936,21 +939,23 @@ export default function AiCryptoDashboard() {
                               </p>
                             </div>
                           </div>
-                          <div className="space-y-1 pt-2 border-t border-white/5">
-                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                              <Signal className="w-3 h-3" /> Network Latency
-                            </p>
-                            <p className={cn("text-lg font-black font-code tracking-tighter transition-all duration-1000", isOnline ? "text-cyan-400" : "text-red-500")}>
-                              {isOnline ? `${networkPing.toFixed(1)} ms` : "0 ms"}
-                            </p>
-                          </div>
-                          <div className="space-y-1 pt-2 border-t border-white/5">
-                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                              <Rocket className="w-3 h-3" /> Boosters
-                            </p>
-                            <p className="text-lg font-black font-code text-primary tracking-tighter">
-                              {boosterCount} UNITS
-                            </p>
+                          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-white/5">
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                                <Signal className="w-3 h-3" /> Latency
+                              </p>
+                              <p className={cn("text-lg font-black font-code tracking-tighter transition-all duration-1000", isOnline ? "text-cyan-400" : "text-red-500")}>
+                                {isOnline ? `${networkPing.toFixed(1)} ms` : "0 ms"}
+                              </p>
+                            </div>
+                            <div className="space-y-1 border-l border-white/5 pl-4">
+                              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                                <Rocket className="w-3 h-3" /> Boosters
+                              </p>
+                              <p className="text-lg font-black font-code text-primary tracking-tighter">
+                                {boosterCount} UNITS
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1326,15 +1331,14 @@ export default function AiCryptoDashboard() {
                     
                     {SERVERS.map((server) => {
                       const isSelected = selectedServerId === server.id;
-                      const isLocked = server.status === 'locked';
                       return (
                         <div 
                           key={server.id} 
-                          onClick={() => isOnline && !isInterrogating && !isLocked && setSelectedServerId(server.id)} 
+                          onClick={() => isOnline && !isInterrogating && setSelectedServerId(server.id)} 
                           className={cn(
                             "relative overflow-hidden p-5 rounded-2xl border transition-all duration-500 shadow-lg", 
                             isSelected ? "bg-primary/[0.08] border-primary/50 shadow-primary/10" : "glass-panel border-white/5 hover:border-white/20", 
-                            (isInterrogating || !isOnline || isLocked) ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                            (isInterrogating || !isOnline) ? "cursor-not-allowed opacity-50" : "cursor-pointer"
                           )}
                         >
                           <div className="flex flex-col gap-4 relative z-10">
@@ -1348,8 +1352,8 @@ export default function AiCryptoDashboard() {
                                   <p className="text-[9px] text-gray-500 uppercase font-bold tracking-tighter mt-0.5">{server.region}</p>
                                 </div>
                               </div>
-                              <div className={cn("text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-tighter transition-all duration-500", server.status === 'active' ? "text-green-500 bg-green-500/10" : "text-yellow-500 bg-yellow-500/10")}>
-                                {isOnline ? server.status : "Offline"}
+                              <div className={cn("text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-tighter transition-all duration-500", "text-green-500 bg-green-500/10")}>
+                                {isOnline ? "Active" : "Offline"}
                               </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4 pt-2 border-t border-white/5">
