@@ -178,7 +178,7 @@ export default function AiCryptoDashboard() {
   const [aiTerminalLogs, setAiTerminalLogs] = useState<AiLogEntry[]>([])
   
   const [isBoosterActive, setIsBoosterActive] = useState(false)
-  const [boosterTimeRemaining, setBoosterTimeRemaining] = useState(3600)
+  const [boosterTimeRemaining, setBoosterTimeRemaining] = useState(3600) // 1 Hour in seconds
 
   const [discoveredAssets, setDiscoveredAssets] = useState<DiscoveredAsset[]>([])
 
