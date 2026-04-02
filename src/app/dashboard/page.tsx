@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
@@ -1065,20 +1066,31 @@ export default function AiCryptoDashboard() {
                           </div>
                         </div>
 
-                        <Button 
-                          onClick={activateBooster}
-                          disabled={!isInterrogating || isBoosterActive || boosterCount <= 0}
-                          className={cn(
-                            "w-full h-14 font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-500 rounded-xl border mt-4 relative overflow-hidden group",
-                            isBoosterActive 
-                              ? "bg-primary text-black border-primary shadow-glow scale-[1.02]" 
-                              : "bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-gradient text-white border-primary/40 hover:scale-[1.02] active:scale-95 shadow-[0_10px_30px_rgba(173,79,230,0.3)]"
+                        <div className="space-y-3 mt-4">
+                          <Button 
+                            onClick={activateBooster}
+                            disabled={!isInterrogating || isBoosterActive || boosterCount <= 0}
+                            className={cn(
+                              "w-full h-14 font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-500 rounded-xl border relative overflow-hidden group",
+                              isBoosterActive 
+                                ? "bg-primary/20 text-primary border-primary/40 cursor-default" 
+                                : "bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-gradient text-white border-primary/40 hover:scale-[1.02] active:scale-95 shadow-[0_10px_30px_rgba(173,79,230,0.3)]"
+                            )}
+                          >
+                            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                            <Rocket className={cn("w-4 h-4 mr-3", isBoosterActive && "animate-bounce", !isBoosterActive && "group-hover:-translate-y-1 transition-transform")} />
+                            {isBoosterActive ? "Booster Active" : "Activate Booster"}
+                          </Button>
+                          
+                          {isBoosterActive && (
+                            <div className="flex items-center justify-center gap-2 py-1 animate-in fade-in slide-in-from-top-1 duration-500">
+                              <Timer className="w-3 h-3 text-primary animate-pulse" />
+                              <span className="text-[10px] font-code font-bold text-primary tracking-[0.2em]">
+                                TIME REMAINING: {formatTime(boosterTimeRemaining).slice(3)}
+                              </span>
+                            </div>
                           )}
-                        >
-                          <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                          <Rocket className={cn("w-4 h-4 mr-3", isBoosterActive && "animate-bounce", !isBoosterActive && "group-hover:-translate-y-1 transition-transform")} />
-                          {isBoosterActive ? `Neural Booster Engaged (${formatTime(boosterTimeRemaining).slice(3)})` : "Activate Neural Booster"}
-                        </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
