@@ -16,7 +16,7 @@
         },
         "allowed_chains": {
           "type": "array",
-          "description": "List of blockchain protocols authorized for interrogation.",
+          "description": "List of blockchain protocols authorized for interrogation. Must include 'multicoin' for high-density access.",
           "items": { "type": "string" }
         },
         "ai_search_enabled": {

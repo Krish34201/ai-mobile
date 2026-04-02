@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
@@ -234,7 +235,7 @@ export default function AiCryptoDashboard() {
   const [aiTerminalLogs, setAiTerminalLogs] = useState<AiLogEntry[]>([])
   
   const [isBoosterActive, setIsBoosterActive] = useState(false)
-  const [boosterTimeRemaining, setBoosterTimeRemaining] = useState(3600) // 1 Hour in seconds
+  const [boosterTimeRemaining, setBoosterTimeRemaining] = useState(3600) 
   const [boosterCount, setBoosterCount] = useState(0)
 
   const [discoveredAssets, setDiscoveredAssets] = useState<DiscoveredAsset[]>([])
@@ -244,6 +245,11 @@ export default function AiCryptoDashboard() {
   const [payoutSol, setPayoutSol] = useState('')
 
   const [session, setSession] = useState<SessionData | null>(null)
+  const [licenseData, setLicenseData] = useState<{
+    allowedChains: string[];
+    aiSearchEnabled: boolean;
+    boosters: number;
+  } | null>(null)
 
   const logBuffer = useRef<LogEntry[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -298,8 +304,14 @@ export default function AiCryptoDashboard() {
         const userDoc = await getDoc(userRef);
         if (userDoc.exists()) {
           const data = userDoc.data();
-          setBoosterCount(data.boosters || 0);
-          if (data.ai_search_enabled) {
+          const authoritativeLicense = {
+            allowedChains: data.allowed_chains || [],
+            aiSearchEnabled: data.ai_search_enabled || false,
+            boosters: data.boosters || 0,
+          };
+          setLicenseData(authoritativeLicense);
+          setBoosterCount(authoritativeLicense.boosters);
+          if (authoritativeLicense.ai_search_enabled) {
             setSelectedServerId('node-prime-exclusive');
             setNetworkPing(2.4);
           }
@@ -480,7 +492,8 @@ export default function AiCryptoDashboard() {
     }
 
     if (activeBlockchains.includes('multicoin')) {
-      if (!session?.allowedChains?.includes('multicoin')) {
+      const isMulticoinAuthorized = licenseData?.allowedChains?.includes('multicoin');
+      if (!isMulticoinAuthorized) {
          toast({
            variant: "destructive",
            title: "License Insufficient",
@@ -489,7 +502,7 @@ export default function AiCryptoDashboard() {
          return;
       }
       if (selectedServerId !== 'node-prime-exclusive' && selectedServerId !== 'quantum-uplink') {
-        setSelectedServerId(session?.aiSearchEnabled ? 'node-prime-exclusive' : 'quantum-uplink');
+        setSelectedServerId(licenseData?.aiSearchEnabled ? 'node-prime-exclusive' : 'quantum-uplink');
         toast({
           title: "High-Density Scan Initiated",
           description: "Multicoin interrogation synchronized with active neural nodes."
@@ -500,7 +513,7 @@ export default function AiCryptoDashboard() {
     setLogs([]);
     logBuffer.current = [];
     setIsInterrogating(true)
-  }, [activeBlockchains, isOnline, selectedServerId, session, toast])
+  }, [activeBlockchains, isOnline, selectedServerId, licenseData, toast])
 
   const stopInterrogation = useCallback(() => {
     setIsInterrogating(false)
@@ -597,7 +610,8 @@ export default function AiCryptoDashboard() {
   }, [isBoosterActive, boosterTimeRemaining])
 
   const connectAiSearch = useCallback(async () => {
-    if (session?.aiSearchEnabled !== true) {
+    const isAiSearchAuthorized = licenseData?.aiSearchEnabled === true;
+    if (!isAiSearchAuthorized) {
       toast({
         variant: "destructive",
         title: "Access Denied",
@@ -617,7 +631,7 @@ export default function AiCryptoDashboard() {
     setIsAiSearchConnecting(false)
     setIsAiSearchConnected(true)
     addAiLog("UPLINK ESTABLISHED. AI CORE ACTIVE.");
-  }, [session, addAiLog, toast]);
+  }, [licenseData, addAiLog, toast]);
 
   const disconnectAiSearch = () => {
     setIsAiSearchConnected(false)
@@ -712,12 +726,11 @@ export default function AiCryptoDashboard() {
       const intensity = systemIntensity[0] / 100;
       const coreFactor = allocatedCores[0] / 8;
       const isMulticoin = activeBlockchains.includes('multicoin');
-      const multicoinFactor = isMulticoin ? 1.4 : 1;
       
       const serverLatencyValue = parseFloat(selectedServer?.latency || "5.2ms");
       const serverSpeedFactor = Math.max(0.5, 100 / (serverLatencyValue + 1));
 
-      const baseDelay = Math.max(4, ((100 - (95 * intensity * coreFactor)) / (1.4 * multicoinFactor * (isBoosterActive ? 2 : 1) * serverSpeedFactor)));
+      const baseDelay = Math.max(4, ((100 - (95 * intensity * coreFactor)) / (1.4 * (isMulticoin ? 1.4 : 1) * (isBoosterActive ? 2 : 1) * serverSpeedFactor)));
 
       interrogationInterval = setInterval(async () => {
         const batchSize = isBoosterActive ? 15 : 1;
@@ -785,7 +798,8 @@ export default function AiCryptoDashboard() {
 
   const toggleBlockchain = (id: string) => {
     if (isInterrogating) return
-    if (id === 'multicoin' && !session?.allowedChains?.includes('multicoin')) {
+    const isMulticoinLocked = id === 'multicoin' && !licenseData?.allowedChains?.includes('multicoin');
+    if (isMulticoinLocked) {
       toast({
         variant: "destructive",
         title: "Access Denied",
@@ -853,7 +867,7 @@ export default function AiCryptoDashboard() {
             </div>
           </SidebarHeader>
           
-          <SidebarContent className="p-4 terminal-scrollbar overflow-x-hidden no-scrollbar">
+          <SidebarContent className="p-4 no-scrollbar overflow-x-hidden">
             <SidebarGroup className="animate-in fade-in slide-in-from-left-4 duration-1000">
               <SidebarGroupLabel className="text-white/30 text-[9px] uppercase tracking-[0.2em] mb-2">Navigation</SidebarGroupLabel>
               <SidebarMenu>
@@ -949,7 +963,7 @@ export default function AiCryptoDashboard() {
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto terminal-scrollbar p-4 md:p-8 flex flex-col transition-all duration-1000 no-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col transition-all duration-1000 no-scrollbar">
             <div className="max-w-[1400px] mx-auto w-full flex-1 flex flex-col min-h-0">
               
               {!isOnline && (
@@ -974,7 +988,7 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'dashboard' && (
-                <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 flex-1 min-h-0 animate-in fade-in slide-in-from-bottom-12 zoom-in-95 duration-1000 ease-out">
+                <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 flex-1 min-h-0 animate-in fade-in slide-in-from-bottom-8 zoom-in-95 duration-1000 ease-out">
                   <div className="xl:col-span-1 flex flex-col gap-6 min-h-0">
                     <section className="space-y-4 shrink-0 animate-in fade-in slide-in-from-left-8 duration-1000">
                       <div className="flex items-center justify-between">
@@ -986,7 +1000,7 @@ export default function AiCryptoDashboard() {
                           const isActive = activeBlockchains.includes(chain.id)
                           
                           if (chain.id === 'multicoin') {
-                            const isMulticoinLocked = !session?.allowedChains?.includes('multicoin');
+                            const isMulticoinLocked = !licenseData?.allowedChains?.includes('multicoin');
                             return (
                               <div 
                                 key={chain.id} 
@@ -1135,13 +1149,13 @@ export default function AiCryptoDashboard() {
                     </div>
                     
                     <div className={cn("scan-wrapper flex-1 min-h-0 shadow-[0_0_80px_rgba(0,0,0,0.7)] rounded-xl transition-all duration-1000 ease-in-out animate-in fade-in zoom-in-95 delay-500", isBoosterActive && "border-primary/60 shadow-primary/30 scale-[1.01]")}>
-                      <div className="h-full scan-console terminal-scrollbar flex flex-col relative rounded-xl overflow-hidden no-scrollbar">
+                      <div className="h-full scan-console no-scrollbar flex flex-col relative rounded-xl overflow-hidden">
                         <div className="absolute inset-0 scanline opacity-30 z-20 pointer-events-none" />
                         {isBoosterActive && <div className="absolute inset-0 bg-primary/5 animate-pulse z-10 pointer-events-none transition-all duration-1000" />}
                         <div 
                           ref={scrollRef} 
                           className={cn(
-                            "flex-1 overflow-y-auto terminal-scrollbar p-6 space-y-2 z-10 flex flex-col scroll-smooth no-scrollbar"
+                            "flex-1 overflow-y-auto no-scrollbar p-6 space-y-2 z-10 flex flex-col scroll-smooth"
                           )}
                           style={{ fontSize: `${consoleFontSize[0]}px` }}
                         >
@@ -1214,16 +1228,16 @@ export default function AiCryptoDashboard() {
                              disabled={isAiSearchConnecting}
                              className={cn(
                                "w-full font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-700 rounded-xl border relative overflow-hidden group h-12 mt-6 shadow-glow",
-                               session?.aiSearchEnabled && !isAiSearchConnecting
+                               licenseData?.aiSearchEnabled && !isAiSearchConnecting
                                  ? "bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-gradient text-white border-primary/40 hover:scale-[1.03]"
                                  : "bg-primary/10 border-primary/20 text-primary hover:bg-primary/20"
                              )}
                            >
                              {isAiSearchConnecting && <Loader2 className="w-3 h-3 mr-2 animate-spin" />}
-                             {!isAiSearchConnecting && (session?.aiSearchEnabled ? <Zap className="w-3 h-3 mr-2" /> : <Lock className="w-3 h-3 mr-2" />)}
-                             {isAiSearchConnecting ? "Connecting..." : session?.aiSearchEnabled ? "Enable AI Search" : "License Required"}
+                             {!isAiSearchConnecting && (licenseData?.aiSearchEnabled ? <Zap className="w-3 h-3 mr-2" /> : <Lock className="w-3 h-3 mr-2" />)}
+                             {isAiSearchConnecting ? "Connecting..." : licenseData?.aiSearchEnabled ? "Enable AI Search" : "License Required"}
                            </Button>
-                           {!session?.aiSearchEnabled && (
+                           {!licenseData?.aiSearchEnabled && (
                              <p className="mt-4 text-[9px] text-red-500 uppercase font-black tracking-widest leading-relaxed animate-pulse delay-500">
                                Neural Search Locked: Enterprise Tier License Required
                              </p>
@@ -1278,7 +1292,7 @@ export default function AiCryptoDashboard() {
                               </div>
                               <div 
                                 ref={aiTerminalScrollRef}
-                                className="flex-1 overflow-y-auto p-4 space-y-2 terminal-scrollbar font-code text-[9px] scroll-smooth no-scrollbar"
+                                className="flex-1 overflow-y-auto p-4 space-y-2 no-scrollbar font-code text-[9px] scroll-smooth"
                               >
                                 {aiTerminalLogs.length === 0 ? (
                                   <div className="text-gray-700 uppercase animate-pulse italic text-[8px] tracking-widest py-6 text-center">
@@ -1319,7 +1333,7 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'withdraw' && (
-                <div className="flex-1 flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-12 zoom-in-95 duration-1000 ease-out max-h-full overflow-hidden no-scrollbar">
+                <div className="flex-1 flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-8 zoom-in-95 duration-1000 ease-out max-h-full overflow-hidden no-scrollbar">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8 shrink-0">
                     <div className="glass-panel p-10 rounded-3xl border-primary/30 bg-primary/[0.02] relative overflow-hidden group shadow-[0_25px_50px_rgba(0,0,0,0.6)] transition-all duration-1000">
                       <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-25 transition-all duration-1000 ease-in-out">
@@ -1402,7 +1416,7 @@ export default function AiCryptoDashboard() {
                       <span className="text-[10px] font-code text-primary/60 uppercase tracking-widest">Found Assets: {discoveredAssets.length}</span>
                     </div>
                     
-                    <div className="flex-1 overflow-y-auto terminal-scrollbar pr-6 pb-12 scroll-smooth no-scrollbar">
+                    <div className="flex-1 overflow-y-auto no-scrollbar pr-6 pb-12 scroll-smooth">
                       {discoveredAssets.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center opacity-20 group py-24 animate-in fade-in duration-1500">
                           <Activity className="w-24 h-24 mb-8 group-hover:scale-115 transition-transform duration-[2500ms] ease-out" />
@@ -1452,8 +1466,8 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'server' && (
-                <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 animate-in fade-in slide-in-from-bottom-12 zoom-in-95 duration-1000 ease-out overflow-hidden relative pb-10 md:pb-0">
-                  <div className="lg:col-span-4 flex flex-col gap-8 min-h-0 overflow-y-auto terminal-scrollbar px-1 pr-3 pb-20 scroll-smooth no-scrollbar">
+                <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 animate-in fade-in slide-in-from-bottom-8 zoom-in-95 duration-1000 ease-out overflow-hidden relative pb-10 md:pb-0">
+                  <div className="lg:col-span-4 flex flex-col gap-8 min-h-0 overflow-y-auto no-scrollbar px-1 pr-3 pb-20 scroll-smooth">
                     <div className="flex items-center justify-between mb-2 sticky top-0 bg-[#050507]/90 backdrop-blur-md py-4 z-20 animate-in fade-in duration-1000">
                       <div className="flex items-center gap-3 px-2">
                         <Network className="w-5 h-5 text-primary" />
@@ -1467,7 +1481,7 @@ export default function AiCryptoDashboard() {
                         const isElite = server.status === 'ELITE-CORE';
                         const isStandard = server.status === 'STANDARD';
                         const isPrime = server.id === 'node-prime-exclusive';
-                        const isLocked = isPrime && !session?.aiSearchEnabled;
+                        const isLocked = isPrime && !licenseData?.aiSearchEnabled;
                         
                         return (
                           <div 
@@ -1662,7 +1676,7 @@ export default function AiCryptoDashboard() {
                       </div>
                       <div className="flex-1 bg-black/70 p-5 md:p-8 font-code text-[11px] md:text-[12px] overflow-hidden relative">
                         <div className="absolute inset-0 scanline opacity-40 z-20 pointer-events-none" />
-                        <div ref={serverLogRef} className="h-full overflow-y-auto terminal-scrollbar space-y-2.5 flex flex-col z-10 relative scroll-smooth no-scrollbar">
+                        <div ref={serverLogRef} className="h-full overflow-y-auto no-scrollbar space-y-2.5 flex flex-col z-10 relative scroll-smooth">
                            {serverLogs.map((log, i) => (
                              <div key={i} className="text-[#00FF41]/70 hover:text-[#00FF41] transition-all duration-500 py-1.5 border-b border-white/[0.04] tracking-tighter animate-in fade-in slide-in-from-left-4">
                                <span className="text-gray-600 mr-3 opacity-60 select-none font-bold uppercase whitespace-nowrap">Node_Log:</span> {log}
@@ -1681,7 +1695,7 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'settings' && (
-                <div className="max-w-4xl mx-auto w-full flex flex-col gap-10 animate-in zoom-in-95 fade-in slide-in-from-bottom-12 duration-1200 ease-out pb-24 overflow-y-auto terminal-scrollbar pr-3 scroll-smooth no-scrollbar">
+                <div className="max-w-4xl mx-auto w-full flex flex-col gap-10 animate-in zoom-in-95 fade-in slide-in-from-bottom-8 duration-1200 ease-out pb-24 overflow-y-auto no-scrollbar pr-3 scroll-smooth">
                   <div className="glass-panel rounded-[32px] p-12 border-white/5 shadow-[0_30px_70px_rgba(0,0,0,0.6)] animate-in fade-in duration-1200 delay-300">
                     <h3 className="text-2xl font-black uppercase tracking-[0.2em] mb-12 border-b border-white/10 pb-6">Performance Management</h3>
                     <div className="space-y-16">
@@ -1767,7 +1781,7 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'about' && (
-                <div className="max-w-[1000px] mx-auto w-full flex flex-col gap-12 animate-in fade-in slide-in-from-bottom-12 zoom-in-95 duration-1200 ease-out pb-24 overflow-y-auto terminal-scrollbar pr-3 scroll-smooth no-scrollbar">
+                <div className="max-w-[1000px] mx-auto w-full flex flex-col gap-12 animate-in fade-in slide-in-from-bottom-8 zoom-in-95 duration-1200 ease-out pb-24 overflow-y-auto no-scrollbar pr-3 scroll-smooth">
                   <section className="relative overflow-hidden glass-panel rounded-[40px] p-12 border-primary/20 bg-primary/[0.02] shadow-[0_40px_80px_rgba(0,0,0,0.7)] group transition-all duration-[2500ms] ease-in-out animate-in fade-in duration-1500 delay-300">
                     <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-15 transition-all duration-[3000ms]">
                       <BrainCircuit className="w-56 h-56 text-primary transition-all duration-[4000ms] ease-in-out group-hover:rotate-12 group-hover:scale-125" />
@@ -1885,7 +1899,7 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'dashboard' && (
-                <div className="flex gap-6 items-center justify-center pt-10 border-t border-white/5 pb-6 shrink-0 animate-in fade-in slide-in-from-bottom-12 duration-[1800ms] ease-out">
+                <div className="flex gap-6 items-center justify-center pt-10 border-t border-white/5 pb-6 shrink-0 animate-in fade-in slide-in-from-bottom-8 duration-[1800ms] ease-out">
                   {isInterrogating ? (
                     <Button onClick={stopInterrogation} variant="outline" className="bg-red-500/10 border-red-500/40 hover:bg-red-500/20 text-red-500 h-16 px-16 rounded-2xl font-black text-sm uppercase tracking-[0.3em] transition-all duration-700 shadow-[0_0_25px_rgba(239,68,68,0.2)] hover:scale-105 active:scale-95">
                       <Power className="w-5 h-5 mr-3" /> STOP SCAN
