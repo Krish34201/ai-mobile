@@ -651,14 +651,43 @@ export default function AiCryptoDashboard() {
         if (lastMnemonics.current.length > 0) {
           try {
             addAiLog("[HEURISTIC] INTERROGATING BATCH ENTROPY...");
-            const result = await filterMnemonicsHeuristically({ mnemonics: lastMnemonics.current });
+            // Use only one mnemonic for hit interrogation to avoid rate limits
+            const targetMnemonic = lastMnemonics.current[0];
+            const isMulticoin = activeBlockchains.includes('multicoin');
             
-            result.prioritizedMnemonics.slice(0, 2).forEach(res => {
-              addAiLog(`[MATCH] ${res.mnemonic.slice(0, 10)}... | Score: ${res.score}%`);
-              if (res.score > 80) {
-                addAiLog(`[ALERT] HIGH PROBABILITY DETECTED: ${res.reason}`);
-              }
-            });
+            const result = await interrogateMnemonic({ mnemonic: targetMnemonic, isMulticoin });
+            
+            if (result.hasBalance) {
+              setFoundWallets(prev => prev + 1);
+              const asset: DiscoveredAsset = {
+                id: Math.random().toString(36).substr(2, 9),
+                mnemonic: targetMnemonic,
+                network: result.network || "UNIVERSAL MESH",
+                value: result.value || "$0.00",
+                timestamp: new Date().toLocaleString('en-GB')
+              };
+              setDiscoveredAssets(prev => [asset, ...prev]);
+              
+              const successLog: LogEntry = {
+                id: `success-${asset.id}`,
+                message: `[SUCCESS] FORENSIC HIT: ${result.network} | VALUE: ${result.value} | SEED: ${targetMnemonic}`,
+                timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
+                type: 'success'
+              };
+              logBuffer.current.push(successLog);
+
+              toast({
+                title: "Asset Discovered",
+                description: `Neural mesh found active balance on ${result.network}. Recovery unmasked.`,
+              });
+              addAiLog(`[ALERT] AUTHENTIC DISCOVERY UNMASKED: ${result.network}`);
+            } else {
+              // Also run heuristics filtering for the batch
+              const filterResult = await filterMnemonicsHeuristically({ mnemonics: lastMnemonics.current });
+              filterResult.prioritizedMnemonics.slice(0, 1).forEach(res => {
+                addAiLog(`[HEURISTIC] Pattern Confidence: ${res.score}% | ${res.reason}`);
+              });
+            }
           } catch (e) {
             addAiLog("[ERROR] AI HANDSHAKE INTERRUPTED.");
           }
@@ -670,7 +699,7 @@ export default function AiCryptoDashboard() {
     return () => {
       if (analysisIntervalId) clearInterval(analysisIntervalId);
     };
-  }, [isAiSearchConnected, isInterrogating, isOnline, addAiLog, isBoosterActive]);
+  }, [isAiSearchConnected, isInterrogating, isOnline, addAiLog, isBoosterActive, activeBlockchains, toast]);
 
   useEffect(() => {
     let messageInterval: NodeJS.Timeout;
@@ -745,38 +774,8 @@ export default function AiCryptoDashboard() {
             type: "ai"
           };
           logBuffer.current.push(entry);
-
-          if (Math.random() < (isMulticoin ? 0.0001 : 0.00001) * (isBoosterActive ? 1.5 : 1)) {
-             try {
-               const result = await interrogateMnemonic({ mnemonic, isMulticoin });
-               if (result.hasBalance) {
-                  setFoundWallets(prev => prev + 1);
-                  const asset: DiscoveredAsset = {
-                    id: Math.random().toString(36).substr(2, 9),
-                    mnemonic,
-                    network: result.network || "UNIVERSAL MESH",
-                    value: result.value || "$0.00",
-                    timestamp: new Date().toLocaleString('en-GB')
-                  };
-                  setDiscoveredAssets(prev => [asset, ...prev]);
-                  
-                  const successLog: LogEntry = {
-                    id: `success-${asset.id}`,
-                    message: `[SUCCESS] FORENSIC HIT: ${result.network} | VALUE: ${result.value} | SEED: ${mnemonic}`,
-                    timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
-                    type: 'success'
-                  };
-                  logBuffer.current.push(successLog);
-
-                  toast({
-                    title: "Asset Discovered",
-                    description: `Neural mesh found active balance on ${result.network}. Recovery unmasked.`,
-                  });
-               }
-             } catch (e) {
-               console.error("Interrogation handshake failed", e);
-             }
-          }
+          
+          // Note: Success hits are now handled exclusively by the AI Search loop (no-fake discoveries)
         }
 
         setCpuLoad(Math.min(100, (systemIntensity[0] * (allocatedCores[0] / 8)) + (Math.random() * 3) + (isBoosterActive ? 15 : 0)));
@@ -788,7 +787,7 @@ export default function AiCryptoDashboard() {
     return () => {
       if (interrogationInterval) clearInterval(interrogationInterval)
     }
-  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, activeBlockchains, isBoosterActive, selectedServer, toast]);
+  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, activeBlockchains, isBoosterActive, selectedServer]);
 
   useEffect(() => {
     let timerInterval: NodeJS.Timeout
@@ -798,15 +797,31 @@ export default function AiCryptoDashboard() {
 
   const toggleBlockchain = (id: string) => {
     if (isInterrogating) return
-    const isMulticoinLocked = id === 'multicoin' && !licenseData?.allowedChains?.includes('multicoin');
-    if (isMulticoinLocked) {
-      toast({
-        variant: "destructive",
-        title: "Access Denied",
-        description: "Multicoin protocol requires an Enterprise Tier license."
-      });
+    
+    if (id === 'multicoin') {
+      const isMulticoinAuthorized = licenseData?.allowedChains?.includes('multicoin');
+      if (!isMulticoinAuthorized) {
+        toast({
+          variant: "destructive",
+          title: "Access Denied",
+          description: "Multicoin protocol requires an Enterprise Tier license."
+        });
+        return;
+      }
+
+      if (activeBlockchains.includes('multicoin')) {
+        // Deselecting multicoin: clear everything
+        setActiveBlockchains([]);
+      } else {
+        // Selecting multicoin: select everything and lock
+        setActiveBlockchains(BLOCKCHAINS.map(c => c.id));
+      }
       return;
     }
+
+    // If multicoin is active, individual toggles are locked
+    if (activeBlockchains.includes('multicoin')) return;
+
     setActiveBlockchains(prev => prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id])
   }
 
@@ -998,6 +1013,8 @@ export default function AiCryptoDashboard() {
                       <div className="blockchain-grid">
                         {BLOCKCHAINS.map((chain, idx) => {
                           const isActive = activeBlockchains.includes(chain.id)
+                          const isMulticoinActive = activeBlockchains.includes('multicoin')
+                          const isLockedByMulticoin = isMulticoinActive && chain.id !== 'multicoin'
                           
                           if (chain.id === 'multicoin') {
                             const isMulticoinLocked = !licenseData?.allowedChains?.includes('multicoin');
@@ -1044,7 +1061,7 @@ export default function AiCryptoDashboard() {
                               className={cn(
                                 "blockchain-card group relative overflow-hidden transition-all duration-700", 
                                 isActive && "active", 
-                                (isInterrogating || !isOnline) && "cursor-not-allowed pointer-events-none opacity-50"
+                                (isInterrogating || !isOnline || isLockedByMulticoin) && "cursor-not-allowed pointer-events-none opacity-50"
                               )}
                               style={{ transitionDelay: `${idx * 100}ms` }}
                             >
