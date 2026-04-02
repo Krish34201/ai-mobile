@@ -106,8 +106,8 @@ export default function LoginPage() {
 
       <div className="w-full max-w-md relative z-10 animate-in fade-in zoom-in-95 duration-1000">
         <div className="flex flex-col items-center mb-10 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center shadow-[0_0_30px_rgba(173,79,230,0.5)] mb-6">
-            <Cpu className="w-10 h-10 text-black" />
+          <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center shadow-[0_0_30px_rgba(173,79,230,0.5)] mb-6 animate-in zoom-in duration-1000">
+            <Cpu className="w-10 h-10 text-black animate-smooth-spin" />
           </div>
           <h1 className="text-3xl font-black tracking-tighter uppercase text-white mb-1">Ai Crypto</h1>
           

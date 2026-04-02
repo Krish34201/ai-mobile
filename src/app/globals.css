@@ -101,14 +101,23 @@
   }
 
   @keyframes pulse-glow {
-    0% { opacity: 0.4; transform: scaleY(1); }
-    50% { opacity: 0.8; transform: scaleY(1.05); }
-    100% { opacity: 0.4; transform: scaleY(1); }
+    0% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.05); }
+    100% { opacity: 0.4; transform: scale(1); }
   }
 
   .animate-pulse-glow {
     animation: pulse-glow 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    transform-origin: bottom;
+    transform-origin: center;
+  }
+
+  @keyframes smooth-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .animate-smooth-spin {
+    animation: smooth-spin 10s linear infinite;
   }
 
   @keyframes bgFlow {
