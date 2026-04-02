@@ -409,11 +409,9 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  // Optimized log flushing for million-dollar smoothness
   useEffect(() => {
     const flushLogs = () => {
       if (logBuffer.current.length > 0) {
-        // Higher threshold when booster is active, but keep it smooth
         const entriesToFlush = Math.min(logBuffer.current.length, isBoosterActive ? 150 : 25);
         const batch: LogEntry[] = [];
         let aiIncrement = 0;
@@ -424,7 +422,6 @@ export default function AiCryptoDashboard() {
             batch.push(entry);
             if (entry.type === 'ai') {
               aiIncrement++;
-              // Update last mnemonics for AI Search interrogation
               if (Math.random() > 0.8) {
                 lastMnemonics.current = [entry.message, ...lastMnemonics.current].slice(0, 5);
               }
@@ -434,7 +431,6 @@ export default function AiCryptoDashboard() {
 
         if (batch.length > 0) {
           setLogs(prev => {
-            // Keep only recent successful hits or latest AI checks to prevent DOM bloat
             const filteredPrev = isInterrogating 
               ? prev.filter(l => l.type === 'success' || l.type === 'info') 
               : prev;
@@ -484,6 +480,14 @@ export default function AiCryptoDashboard() {
     }
 
     if (activeBlockchains.includes('multicoin')) {
+      if (!session?.allowedChains?.includes('multicoin')) {
+         toast({
+           variant: "destructive",
+           title: "License Insufficient",
+           description: "Multicoin interrogation requires a premium license key."
+         });
+         return;
+      }
       if (selectedServerId !== 'node-prime-exclusive' && selectedServerId !== 'quantum-uplink') {
         setSelectedServerId(session?.aiSearchEnabled ? 'node-prime-exclusive' : 'quantum-uplink');
         toast({
@@ -701,7 +705,6 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(interval);
   }, [isOnline]);
 
-  // High-performance interrogation loop with kinetic batching
   useEffect(() => {
     let interrogationInterval: NodeJS.Timeout
 
@@ -710,16 +713,13 @@ export default function AiCryptoDashboard() {
       const coreFactor = allocatedCores[0] / 8;
       const isMulticoin = activeBlockchains.includes('multicoin');
       const multicoinFactor = isMulticoin ? 1.4 : 1;
-      const boosterFactor = isBoosterActive ? 50 : 1; // Overclocking
       
       const serverLatencyValue = parseFloat(selectedServer?.latency || "5.2ms");
       const serverSpeedFactor = Math.max(0.5, 100 / (serverLatencyValue + 1));
 
-      // Calculate delay, minimum 4ms due to browser clamping
       const baseDelay = Math.max(4, ((100 - (95 * intensity * coreFactor)) / (1.4 * multicoinFactor * (isBoosterActive ? 2 : 1) * serverSpeedFactor)));
 
       interrogationInterval = setInterval(async () => {
-        // Kinetic batching: generate multiple mnemonics per tick if booster is active
         const batchSize = isBoosterActive ? 15 : 1;
         
         for (let b = 0; b < batchSize; b++) {
@@ -733,7 +733,6 @@ export default function AiCryptoDashboard() {
           };
           logBuffer.current.push(entry);
 
-          // Probabilistic hit detection
           if (Math.random() < (isMulticoin ? 0.0001 : 0.00001) * (isBoosterActive ? 1.5 : 1)) {
              try {
                const result = await interrogateMnemonic({ mnemonic, isMulticoin });
@@ -786,6 +785,14 @@ export default function AiCryptoDashboard() {
 
   const toggleBlockchain = (id: string) => {
     if (isInterrogating) return
+    if (id === 'multicoin' && !session?.allowedChains?.includes('multicoin')) {
+      toast({
+        variant: "destructive",
+        title: "Access Denied",
+        description: "Multicoin protocol requires an Enterprise Tier license."
+      });
+      return;
+    }
     setActiveBlockchains(prev => prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id])
   }
 
@@ -979,6 +986,7 @@ export default function AiCryptoDashboard() {
                           const isActive = activeBlockchains.includes(chain.id)
                           
                           if (chain.id === 'multicoin') {
+                            const isMulticoinLocked = !session?.allowedChains?.includes('multicoin');
                             return (
                               <div 
                                 key={chain.id} 
@@ -986,21 +994,27 @@ export default function AiCryptoDashboard() {
                                 className={cn(
                                   "blockchain-card col-span-2 group relative overflow-hidden transition-all duration-1000 h-16 cursor-pointer", 
                                   isActive ? "bg-primary/20 border-primary/40 shadow-[0_0_30px_rgba(173,79,230,0.4)]" : "glass-panel border-white/10 hover:border-primary/40", 
-                                  (isInterrogating || !isOnline) && "cursor-not-allowed pointer-events-none opacity-50"
+                                  (isInterrogating || !isOnline) && "cursor-not-allowed pointer-events-none opacity-50",
+                                  isMulticoinLocked && "opacity-60 grayscale-[0.5]"
                                 )}
                                 style={{ transitionDelay: `${idx * 100}ms` }}
                               >
                                 <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                                 <div className="relative z-10 flex items-center gap-4 w-full px-5 h-full">
                                   <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-1000 shadow-inner border", isActive ? "bg-primary text-black border-primary" : "bg-white/5 text-primary border-white/10")}>
-                                    <Layers className="w-5 h-5" />
+                                    {isMulticoinLocked ? <Lock className="w-5 h-5" /> : <Layers className="w-5 h-5" />}
                                   </div>
                                   <div className="flex flex-col flex-1">
                                     <div className="flex items-center justify-between">
                                       <span className="text-[11px] font-black uppercase tracking-[0.2em] text-white">{chain.name}</span>
                                       <div className="flex items-center gap-2">
-                                        <span className="text-[7px] font-black bg-primary text-black px-2 py-0.5 rounded-sm border border-primary/30 uppercase tracking-tighter animate-pulse shadow-[0_0_10px_rgba(173,79,230,0.5)]">ELITE MODULE</span>
-                                        <ChevronRight className={cn("w-3 h-3 transition-all duration-700", isActive ? "text-primary translate-x-0" : "text-gray-700 -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0")} />
+                                        <span className={cn(
+                                          "text-[7px] font-black px-2 py-0.5 rounded-sm border uppercase tracking-tighter shadow-[0_0_10px_rgba(173,79,230,0.5)]",
+                                          isMulticoinLocked ? "bg-gray-800 text-gray-400 border-gray-700" : "bg-primary text-black border-primary/30 animate-pulse"
+                                        )}>
+                                          {isMulticoinLocked ? "LICENSE REQUIRED" : "ELITE MODULE"}
+                                        </span>
+                                        {!isMulticoinLocked && <ChevronRight className={cn("w-3 h-3 transition-all duration-700", isActive ? "text-primary translate-x-0" : "text-gray-700 -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0")} />}
                                       </div>
                                     </div>
                                   </div>
@@ -1199,9 +1213,9 @@ export default function AiCryptoDashboard() {
                              onClick={connectAiSearch} 
                              disabled={isAiSearchConnecting}
                              className={cn(
-                               "w-full font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-700 rounded-xl border relative overflow-hidden group h-12 mt-6",
+                               "w-full font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-700 rounded-xl border relative overflow-hidden group h-12 mt-6 shadow-glow",
                                session?.aiSearchEnabled && !isAiSearchConnecting
-                                 ? "bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-gradient text-white border-primary/40 shadow-glow hover:scale-[1.03]"
+                                 ? "bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-gradient text-white border-primary/40 hover:scale-[1.03]"
                                  : "bg-primary/10 border-primary/20 text-primary hover:bg-primary/20"
                              )}
                            >
@@ -1623,12 +1637,12 @@ export default function AiCryptoDashboard() {
                               { icon: Signal, label: 'Velocity', value: isOnline ? (parseFloat(selectedServer?.latency || "50") < 10 ? "ULTRA-ELITE" : "NOMINAL") : "OFFLINE" },
                               { icon: ShieldCheck, label: 'Encryption', value: isOnline ? "AES-GCM-4096" : "SUSPENDED" },
                               { icon: Microchip, label: 'Core Integrity', value: isOnline ? "SYNCHRONIZED" : "STALLED" }
-                            ].map((item, idx) => (
+                            ].map((info, idx) => (
                               <div key={idx} className="p-6 md:p-8 glass-panel rounded-3xl border-white/5 space-y-4 md:space-y-5 group/metric transition-all duration-1000 hover:border-primary/50 hover:scale-[1.05] shadow-lg" style={{ transitionDelay: `${idx * 200}ms` }}>
                                  <span className="text-[10px] md:text-[11px] text-gray-600 uppercase font-black tracking-widest flex items-center gap-3">
-                                   <item.icon className="w-4 md:w-5 h-4 md:h-5 transition-colors duration-700 group-hover/metric:text-primary" /> {item.label}
+                                   <info.icon className="w-4 md:w-5 h-4 md:h-5 transition-colors duration-700 group-hover/metric:text-primary" /> {info.label}
                                  </span>
-                                 <p className="text-lg md:text-xl font-black text-white font-code tracking-tighter uppercase truncate transition-all duration-1000">{item.value}</p>
+                                 <p className="text-lg md:text-xl font-black text-white font-code tracking-tighter uppercase truncate transition-all duration-1000">{info.value}</p>
                               </div>
                             ))}
                          </div>
@@ -1856,14 +1870,14 @@ export default function AiCryptoDashboard() {
                     <section className="glass-panel rounded-[32px] p-8 border-white/5 flex flex-col justify-between shadow-xl group hover:border-primary/30 transition-all duration-1000">
                       <div className="space-y-3">
                         <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-white/40 flex items-center gap-3">
-                          <Share2 className="w-4 h-4 transition-transform duration-1000 group-hover:rotate-12" /> External Communications
+                          <Share2 className="w-4 h-4 transition-transform duration-1000 group-hover:rotate-12" /> Communications
                         </h4>
                         <p className="text-[11px] text-gray-500 uppercase font-bold tracking-widest leading-relaxed">
                           Join the high-latency operator network for real-time node updates and technical support.
                         </p>
                       </div>
                       <a href="https://t.me/Ai_Crypto_Software" target="_blank" rel="noopener noreferrer" className="mt-6 flex items-center justify-center gap-3 w-full py-5 rounded-2xl bg-gradient-to-r from-primary to-accent text-white font-black text-[11px] uppercase tracking-[0.3em] hover:shadow-glow transition-all duration-1000 hover:scale-[1.03] active:scale-95 shadow-lg">
-                        <ExternalLink className="w-4 h-4 transition-transform duration-700 group-hover:translate-x-1 group-hover:-translate-y-1" /> SECURE TELEGRAM UPLINK
+                        <ExternalLink className="w-4 h-4 transition-transform duration-700 group-hover:translate-x-1 group-hover:-translate-y-1" /> TELEGRAM UPLINK
                       </a>
                     </section>
                   </div>
