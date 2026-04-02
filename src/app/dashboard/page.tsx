@@ -294,14 +294,12 @@ export default function AiCryptoDashboard() {
       const sess = await getSession();
       setSession(sess as SessionData);
       
-      // Critical: Fetch latest booster count directly from Firestore to prevent loops/resets
       if (sess.username) {
         const userRef = doc(db, 'licenses', sess.username);
         const userDoc = await getDoc(userRef);
         if (userDoc.exists()) {
           const data = userDoc.data();
           setBoosterCount(data.boosters || 0);
-          // Sync licensing-dependent features
           if (data.ai_search_enabled) {
             setSelectedServerId('node-prime-exclusive');
             setNetworkPing(2.4);
@@ -347,7 +345,6 @@ export default function AiCryptoDashboard() {
       payoutBtc,
       payoutUsdt,
       payoutSol
-      // boosterCount removed from localStorage to ensure strictly limited quantity from license
     };
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
   }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, seedPhraseColor, consoleFontSize, discoveredAssets, payoutBtc, payoutUsdt, payoutSol]);
@@ -556,7 +553,6 @@ export default function AiCryptoDashboard() {
       return
     }
 
-    // Persistent Firestore Sync - Decrement directly in DB to prevent resets/loops
     if (session?.username) {
       const userRef = doc(db, 'licenses', session.username);
       updateDoc(userRef, {
@@ -824,13 +820,13 @@ export default function AiCryptoDashboard() {
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full bg-[#050507] overflow-hidden text-foreground font-body select-none relative">
-        <Sidebar className="border-r border-white/5 bg-[#0a0a0a]/80 backdrop-blur-2xl z-30">
+        <Sidebar className="border-r border-white/5 bg-[#0a0a0a]/80 backdrop-blur-2xl z-30 transition-all duration-700 ease-in-out">
           <SidebarHeader className="p-6 border-b border-white/5 shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shadow-[0_0_20px_rgba(173,79,230,0.5)]">
+              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shadow-[0_0_20px_rgba(173,79,230,0.5)] animate-in fade-in zoom-in duration-1000">
                 <Cpu className="w-6 h-6 text-black" />
               </div>
-              <div>
+              <div className="animate-in fade-in slide-in-from-left-2 duration-1000">
                 <h1 className="text-sm font-black tracking-tight uppercase leading-none text-white">Ai Crypto</h1>
                 <p className="text-[10px] text-primary/70 font-code mt-1 tracking-widest uppercase">v4.0.0 Elite</p>
               </div>
@@ -838,7 +834,7 @@ export default function AiCryptoDashboard() {
           </SidebarHeader>
           
           <SidebarContent className="p-4 terminal-scrollbar overflow-x-hidden">
-            <SidebarGroup>
+            <SidebarGroup className="animate-in fade-in slide-in-from-left-4 duration-700">
               <SidebarGroupLabel className="text-white/30 text-[9px] uppercase tracking-[0.2em] mb-2">Navigation</SidebarGroupLabel>
               <SidebarMenu>
                 {[
@@ -847,15 +843,16 @@ export default function AiCryptoDashboard() {
                   { icon: Cloud, label: 'Server', id: 'server' },
                   { icon: Settings, label: 'Settings', id: 'settings' },
                   { icon: Info, label: 'About', id: 'about' },
-                ].map((item) => (
+                ].map((item, idx) => (
                   <SidebarMenuButton 
                     key={item.id}
                     isActive={activeTab === item.id} 
                     onClick={() => setActiveTab(item.id as TabType)}
                     className={cn(
-                      "transition-all duration-300 h-10 px-4 rounded-lg w-full flex items-center gap-3",
+                      "transition-all duration-500 h-10 px-4 rounded-lg w-full flex items-center gap-3",
                       activeTab === item.id ? "bg-primary/10 text-primary border border-primary/20 shadow-[0_0_15px_rgba(173,79,230,0.2)]" : "text-gray-500 hover:text-white hover:bg-white/5"
                     )}
+                    style={{ transitionDelay: `${idx * 50}ms` }}
                   >
                     <item.icon className="w-4 h-4" />
                     <span className="font-bold text-xs uppercase tracking-tighter">{item.label}</span>
@@ -864,7 +861,7 @@ export default function AiCryptoDashboard() {
               </SidebarMenu>
             </SidebarGroup>
 
-            <SidebarGroup>
+            <SidebarGroup className="animate-in fade-in slide-in-from-left-4 duration-700 delay-200">
               <SidebarGroupLabel className="text-white/30 text-[9px] uppercase tracking-[0.2em] mb-2">Telemetry</SidebarGroupLabel>
               <SidebarGroupContent className="space-y-6 px-1">
                 <div className="space-y-2">
@@ -872,30 +869,25 @@ export default function AiCryptoDashboard() {
                     <span className="text-gray-500 uppercase">Engine Load</span>
                     <span className="text-primary">{cpuLoad.toFixed(1)}%</span>
                   </div>
-                  <Progress value={cpuLoad} className="h-1 bg-white/5" />
+                  <Progress value={cpuLoad} className="h-1 bg-white/5 transition-all duration-700" />
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 pt-2">
-                   <div className="flex items-center justify-between text-[9px] font-code border-b border-white/5 pb-2">
-                      <span className="text-gray-500 uppercase flex items-center gap-2"><Zap className="w-3 h-3" /> Threads</span>
-                      <span className="text-white font-bold tracking-widest">32 ACTIVE</span>
-                   </div>
-                   <div className="flex items-center justify-between text-[9px] font-code border-b border-white/5 pb-2">
-                      <span className="text-gray-500 uppercase flex items-center gap-2"><Microchip className="w-3 h-3" /> Entropy</span>
-                      <span className="text-white font-bold tracking-widest">256-BIT</span>
-                   </div>
-                   <div className="flex items-center justify-between text-[9px] font-code border-b border-white/5 pb-2">
-                      <span className="text-gray-500 uppercase flex items-center gap-2"><Shield className="w-3 h-3" /> Encryption</span>
-                      <span className="text-white font-bold tracking-widest">AES-GCM</span>
-                   </div>
-                   <div className="flex items-center justify-between text-[9px] font-code border-b border-white/5 pb-2">
-                      <span className="text-gray-500 uppercase flex items-center gap-2"><History className="w-3 h-3" /> Uptime</span>
-                      <span className="text-white font-bold tracking-widest">{formatTime(sessionSeconds)}</span>
-                   </div>
+                   {[
+                     { icon: Zap, label: 'Threads', value: '32 ACTIVE' },
+                     { icon: Microchip, label: 'Entropy', value: '256-BIT' },
+                     { icon: Shield, label: 'Encryption', value: 'AES-GCM' },
+                     { icon: History, label: 'Uptime', value: formatTime(sessionSeconds) }
+                   ].map((item, idx) => (
+                     <div key={idx} className="flex items-center justify-between text-[9px] font-code border-b border-white/5 pb-2 animate-in fade-in slide-in-from-left-2 duration-500" style={{ transitionDelay: `${idx * 100}ms` }}>
+                        <span className="text-gray-500 uppercase flex items-center gap-2"><item.icon className="w-3 h-3" /> {item.label}</span>
+                        <span className="text-white font-bold tracking-widest">{item.value}</span>
+                     </div>
+                   ))}
                 </div>
                 
-                <div className="pt-4 flex items-center gap-3">
-                  <div className={cn("w-2 h-2 rounded-full transition-all duration-700", isOnline ? (isInterrogating ? "bg-green-500 animate-pulse shadow-[0_0_12px_rgba(34,197,94,0.6)]" : "bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.6)]") : "bg-red-500 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.2)]")} />
+                <div className="pt-4 flex items-center gap-3 animate-in fade-in duration-1000">
+                  <div className={cn("w-2 h-2 rounded-full transition-all duration-1000 ease-in-out", isOnline ? (isInterrogating ? "bg-green-500 animate-pulse shadow-[0_0_12px_rgba(34,197,94,0.6)]" : "bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.6)]") : "bg-red-500 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.2)]")} />
                   <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
                     {!isOnline ? "Offline" : isInterrogating ? "Scanning" : "Standby"}
                   </span>
@@ -904,45 +896,45 @@ export default function AiCryptoDashboard() {
             </SidebarGroup>
           </SidebarContent>
 
-          <SidebarFooter className="p-4 border-t border-white/5 shrink-0">
-            <Button variant="ghost" onClick={handleLogout} className="w-full justify-start text-gray-500 hover:text-red-500 hover:bg-red-500/10 h-10 px-4 transition-all duration-300">
+          <SidebarFooter className="p-4 border-t border-white/5 shrink-0 animate-in fade-in duration-1000">
+            <Button variant="ghost" onClick={handleLogout} className="w-full justify-start text-gray-500 hover:text-red-500 hover:bg-red-500/10 h-10 px-4 transition-all duration-500">
               <LogOut className="w-4 h-4 mr-3" />
               <span className="text-[10px] font-bold uppercase tracking-widest">Terminate</span>
             </Button>
           </SidebarFooter>
         </Sidebar>
 
-        <main className="flex-1 flex flex-col min-w-0 bg-transparent relative z-10">
-          <header className="h-16 border-b border-white/5 bg-black/40 backdrop-blur-xl flex items-center justify-between px-8 z-20 shrink-0">
+        <main className="flex-1 flex flex-col min-w-0 bg-transparent relative z-10 transition-all duration-1000">
+          <header className="h-16 border-b border-white/5 bg-black/40 backdrop-blur-xl flex items-center justify-between px-8 z-20 shrink-0 transition-all duration-700">
             <div className="flex items-center gap-8">
                <div className="flex items-center gap-3">
-                 <Activity className={cn("w-4 h-4 transition-all duration-500", isInterrogating ? "text-primary animate-pulse" : "text-gray-700")} />
+                 <Activity className={cn("w-4 h-4 transition-all duration-1000 ease-in-out", isInterrogating ? "text-primary animate-pulse" : "text-gray-700")} />
                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">System Status</span>
-                 <span className={cn("text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500", !isOnline ? "text-red-500" : isInterrogating ? "text-primary" : "text-gray-700")}>
+                 <span className={cn("text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-1000 ease-in-out", !isOnline ? "text-red-500" : isInterrogating ? "text-primary" : "text-gray-700")}>
                    {!isOnline ? "Disconnected" : isInterrogating ? "Active" : "Ready"}
                  </span>
                </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 mr-6">
+              <div className="flex items-center gap-2 mr-6 animate-in fade-in duration-1000">
                 {isOnline ? <Wifi className="w-4 h-4 text-green-500" /> : <WifiOff className="w-4 h-4 text-red-500" />}
-                <span className={cn("text-[9px] font-bold uppercase tracking-widest transition-all duration-500", isOnline ? "text-green-500/60" : "text-red-500")}>
+                <span className={cn("text-[9px] font-bold uppercase tracking-widest transition-all duration-1000 ease-in-out", isOnline ? "text-green-500/60" : "text-red-500")}>
                   {isOnline ? "Network Live" : "Network Error"}
                 </span>
               </div>
-              <div className="flex flex-col items-end">
+              <div className="flex flex-col items-end animate-in fade-in slide-in-from-right-2 duration-1000">
                 <span className="text-[9px] font-code text-gray-600 uppercase">System Time</span>
                 <span className="text-xs font-code text-white/80">{systemTime || "00:00:00"}</span>
               </div>
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto terminal-scrollbar p-4 md:p-8 flex flex-col">
+          <div className="flex-1 overflow-y-auto terminal-scrollbar p-4 md:p-8 flex flex-col transition-all duration-700">
             <div className="max-w-[1400px] mx-auto w-full flex-1 flex flex-col min-h-0">
               
               {!isOnline && (
-                <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-8 animate-in fade-in duration-700">
-                  <div className="max-w-md w-full glass-panel rounded-3xl p-10 border-red-500/20 text-center space-y-6 shadow-[0_0_50px_rgba(239,68,68,0.2)]">
+                <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-8 animate-in fade-in duration-1000">
+                  <div className="max-w-md w-full glass-panel rounded-3xl p-10 border-red-500/20 text-center space-y-6 shadow-[0_0_50px_rgba(239,68,68,0.2)] animate-in zoom-in-95 duration-700">
                     <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto border border-red-500/30">
                       <WifiOff className="w-10 h-10 text-red-500 animate-pulse" />
                     </div>
@@ -962,15 +954,15 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'dashboard' && (
-                <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 flex-1 min-h-0 animate-in fade-in zoom-in-95 duration-700 ease-out">
+                <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 flex-1 min-h-0 animate-in fade-in slide-in-from-bottom-4 zoom-in-95 duration-700 ease-out">
                   <div className="xl:col-span-1 flex flex-col gap-6 min-h-0">
-                    <section className="space-y-4 shrink-0">
+                    <section className="space-y-4 shrink-0 animate-in fade-in slide-in-from-left-4 duration-1000">
                       <div className="flex items-center justify-between">
                         <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Blockchains</h2>
                         <span className="text-[9px] font-code text-primary/60">{activeBlockchains.length} Selected</span>
                       </div>
                       <div className="blockchain-grid">
-                        {BLOCKCHAINS.map((chain) => {
+                        {BLOCKCHAINS.map((chain, idx) => {
                           const isActive = activeBlockchains.includes(chain.id)
                           
                           if (chain.id === 'multicoin') {
@@ -986,7 +978,7 @@ export default function AiCryptoDashboard() {
                               >
                                 <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                                 <div className="relative z-10 flex items-center gap-4 w-full px-5 h-full">
-                                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-700 shadow-inner border", isActive ? "bg-primary text-black border-primary" : "bg-white/5 text-primary border-white/10")}>
+                                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-1000 shadow-inner border", isActive ? "bg-primary text-black border-primary" : "bg-white/5 text-primary border-white/10")}>
                                     <Layers className="w-5 h-5" />
                                   </div>
                                   <div className="flex flex-col flex-1">
@@ -1012,6 +1004,7 @@ export default function AiCryptoDashboard() {
                                 isActive && "active", 
                                 (isInterrogating || !isOnline) && "cursor-not-allowed pointer-events-none opacity-50"
                               )}
+                              style={{ transitionDelay: `${idx * 50}ms` }}
                             >
                               {chain.logo ? (
                                 <img src={chain.logo} alt={`${chain.name} logo`} className="w-6 h-6 object-contain" />
@@ -1027,13 +1020,13 @@ export default function AiCryptoDashboard() {
                       </div>
                     </section>
 
-                    <div className="flex-1 glass-panel rounded-2xl p-6 flex flex-col justify-start overflow-hidden shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
+                    <div className="flex-1 glass-panel rounded-2xl p-6 flex flex-col justify-start overflow-hidden shadow-[0_20px_40px_rgba(0,0,0,0.4)] animate-in fade-in slide-in-from-left-4 duration-1000 delay-300">
                       <div className="space-y-6">
                         <div className="space-y-1">
                           <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
                             <Zap className="w-3 h-3" /> Seed phrases checked
                           </p>
-                          <p className="seed-counter font-code tracking-tighter">
+                          <p className="seed-counter font-code tracking-tighter transition-all duration-700">
                             {displayCount.toLocaleString()}
                           </p>
                         </div>
@@ -1088,12 +1081,12 @@ export default function AiCryptoDashboard() {
                             )}
                           >
                             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                            <Rocket className={cn("w-4 h-4 mr-3", isBoosterActive && "animate-bounce", !isBoosterActive && "group-hover:-translate-y-1 transition-transform")} />
+                            <Rocket className={cn("w-4 h-4 mr-3 transition-transform duration-500", isBoosterActive && "animate-bounce", !isBoosterActive && "group-hover:-translate-y-1")} />
                             {isBoosterActive ? "Booster Active" : "Activate Booster"}
                           </Button>
                           
                           {isBoosterActive && (
-                            <div className="flex items-center justify-center gap-2 py-1 animate-in fade-in slide-in-from-top-1 duration-500">
+                            <div className="flex items-center justify-center gap-2 py-1 animate-in fade-in slide-in-from-top-1 duration-700 ease-out">
                               <Timer className="w-3 h-3 text-primary animate-pulse" />
                               <span className="text-[10px] font-code font-bold text-primary tracking-[0.2em]">
                                 TIME REMAINING: {formatTime(boosterTimeRemaining).slice(3)}
@@ -1106,37 +1099,37 @@ export default function AiCryptoDashboard() {
                   </div>
 
                   <div className="xl:col-span-2 flex flex-col min-h-0">
-                    <div className="flex items-center justify-between mb-4 shrink-0">
+                    <div className="flex items-center justify-between mb-4 shrink-0 animate-in fade-in duration-1000">
                       <div className="flex items-center gap-3">
                         <SearchCode className="w-4 h-4 text-primary" />
                         <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-white/60">Scan Console</h3>
                       </div>
                     </div>
                     
-                    <div className={cn("scan-wrapper flex-1 min-h-0 shadow-[0_0_60px_rgba(0,0,0,0.6)] rounded-xl transition-all duration-500", isBoosterActive && "border-primary/60 shadow-primary/20 scale-[1.005]")}>
+                    <div className={cn("scan-wrapper flex-1 min-h-0 shadow-[0_0_60px_rgba(0,0,0,0.6)] rounded-xl transition-all duration-1000 ease-in-out animate-in fade-in zoom-in-95", isBoosterActive && "border-primary/60 shadow-primary/20 scale-[1.005]")}>
                       <div className="h-full scan-console terminal-scrollbar flex flex-col relative rounded-xl overflow-hidden">
                         <div className="absolute inset-0 scanline opacity-30 z-20 pointer-events-none" />
-                        {isBoosterActive && <div className="absolute inset-0 bg-primary/5 animate-pulse z-10 pointer-events-none" />}
+                        {isBoosterActive && <div className="absolute inset-0 bg-primary/5 animate-pulse z-10 pointer-events-none transition-all duration-1000" />}
                         <div 
                           ref={scrollRef} 
                           className={cn(
-                            "flex-1 overflow-y-auto terminal-scrollbar p-6 space-y-2 z-10 flex flex-col"
+                            "flex-1 overflow-y-auto terminal-scrollbar p-6 space-y-2 z-10 flex flex-col scroll-smooth"
                           )}
                           style={{ fontSize: `${consoleFontSize[0]}px` }}
                         >
                           {logs.map((log) => (
-                            <div key={log.id} className="console-line animate-in fade-in slide-in-from-bottom-1 duration-200">
+                            <div key={log.id} className="console-line animate-in fade-in slide-in-from-bottom-1 duration-300">
                               {log.type === 'ai' ? (
                                 <div className="flex items-center gap-1 font-code">
                                   <span className="balance">Balance: 0</span>
                                   <span className="text-gray-600 px-1 opacity-50">|</span>
                                   <span className="text-[#dcdcdc] shrink-0">Wallet check:</span>
-                                  <span className={cn("transition-colors duration-300 ml-1", seedPhraseColor)}>
+                                  <span className={cn("transition-colors duration-500 ml-1", seedPhraseColor)}>
                                     {log.message}
                                   </span>
                                 </div>
                               ) : log.type === 'success' ? (
-                                <div className="flex flex-col gap-2 font-code text-green-400 bg-green-500/10 p-4 rounded border border-green-500/20 animate-pulse-glow shadow-[0_0_30px_rgba(34,197,94,0.3)]">
+                                <div className="flex flex-col gap-2 font-code text-green-400 bg-green-500/10 p-4 rounded border border-green-500/20 animate-pulse-glow shadow-[0_0_30px_rgba(34,197,94,0.3)] duration-1000">
                                   <div className="flex justify-between items-center border-b border-green-500/20 pb-2 mb-1">
                                     <span className="text-[10px] font-black tracking-widest uppercase">Forensic Hit Detected</span>
                                     <span className="text-white/30 text-[9px]">[{log.timestamp}]</span>
@@ -1157,21 +1150,21 @@ export default function AiCryptoDashboard() {
                           ))}
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none overflow-hidden h-32">
-                           <div className="absolute inset-0 bg-gradient-to-t from-primary/30 via-primary/5 to-transparent animate-pulse-glow" />
+                           <div className="absolute inset-0 bg-gradient-to-t from-primary/30 via-primary/5 to-transparent animate-pulse-glow duration-[4000ms]" />
                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary/50 shadow-[0_0_20px_rgba(173,79,230,0.8)]" />
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="xl:col-span-1 flex flex-col gap-6 min-h-0">
+                  <div className="xl:col-span-1 flex flex-col gap-6 min-h-0 animate-in fade-in slide-in-from-right-4 duration-1000">
                     <div className="flex items-center gap-2 mb-1 shrink-0">
                       <BrainCircuit className="w-4 h-4 text-primary" />
                       <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-white/60">AI Search</h3>
                     </div>
-                    <div className="flex-1 glass-panel rounded-2xl p-6 flex flex-col min-h-0 overflow-hidden shadow-[0_20px_40px_rgba(0,0,0,0.4)] relative">
+                    <div className="flex-1 glass-panel rounded-2xl p-6 flex flex-col min-h-0 overflow-hidden shadow-[0_20px_40px_rgba(0,0,0,0.4)] relative transition-all duration-1000">
                        {isBoosterActive && (
-                         <div className="absolute top-0 right-0 p-2 z-20">
+                         <div className="absolute top-0 right-0 p-2 z-20 animate-in fade-in zoom-in duration-700">
                             <div className="flex items-center gap-2 bg-primary/20 border border-primary/40 px-3 py-1 rounded-full animate-pulse shadow-glow">
                                <Rocket className="w-3 h-3 text-primary" />
                                <span className="text-[9px] font-code text-white font-bold">{formatTime(boosterTimeRemaining).slice(3)}</span>
@@ -1182,29 +1175,29 @@ export default function AiCryptoDashboard() {
                        {!isAiSearchConnected ? (
                          <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
                            <div className="relative mb-6 group">
-                             <Globe className={cn("w-16 h-16 transition-all duration-1000", isAiSearchConnecting ? "text-primary animate-pulse drop-shadow-[0_0_25px_rgba(173,79,230,0.6)]" : "text-gray-800")} />
+                             <Globe className={cn("w-16 h-16 transition-all duration-[2000ms] ease-in-out", isAiSearchConnecting ? "text-primary animate-pulse drop-shadow-[0_0_25px_rgba(173,79,230,0.6)]" : "text-gray-800")} />
                              {isAiSearchConnecting && <div className="absolute inset-0 rounded-full pulse-ring border border-primary/40" />}
                            </div>
-                           <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-2">
+                           <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-2 animate-in fade-in duration-1000">
                              {isAiSearchConnecting ? "Negotiating Uplink" : "AI Search Standby"}
                            </h4>
                            <Button 
                              onClick={connectAiSearch} 
                              disabled={isAiSearchConnecting}
-                             className="w-full bg-primary/10 border border-primary/20 text-primary font-black text-[10px] uppercase hover:bg-primary/20 transition-all duration-300 h-10 mt-6 shadow-[0_0_15px_rgba(173,79,230,0.1)]"
+                             className="w-full bg-primary/10 border border-primary/20 text-primary font-black text-[10px] uppercase hover:bg-primary/20 transition-all duration-500 h-10 mt-6 shadow-[0_0_15px_rgba(173,79,230,0.1)]"
                            >
                              {session?.aiSearchEnabled ? <Zap className="w-3 h-3 mr-2" /> : <Lock className="w-3 h-3 mr-2" />}
                              {isAiSearchConnecting ? "Connecting..." : session?.aiSearchEnabled ? "Enable AI Search" : "License Required"}
                            </Button>
                            {!session?.aiSearchEnabled && (
-                             <p className="mt-4 text-[9px] text-red-500 uppercase font-black tracking-widest leading-relaxed">
+                             <p className="mt-4 text-[9px] text-red-500 uppercase font-black tracking-widest leading-relaxed animate-pulse">
                                Neural Search Locked: Enterprise Tier License Required
                              </p>
                            )}
                            {aiSearchLogs.length > 0 && (
                              <div className="mt-6 w-full text-left font-code text-[9px] space-y-1 border-t border-white/5 pt-4">
                                {aiSearchLogs.map((l, i) => (
-                                 <div key={i} className="text-primary/60 animate-in slide-in-from-bottom-1 duration-300">
+                                 <div key={i} className="text-primary/60 animate-in slide-in-from-bottom-1 duration-500" style={{ transitionDelay: `${i * 100}ms` }}>
                                    &gt; {l}
                                  </div>
                                ))}
@@ -1212,7 +1205,7 @@ export default function AiCryptoDashboard() {
                            )}
                          </div>
                        ) : (
-                         <div className="flex flex-col h-full space-y-4 animate-in fade-in duration-700">
+                         <div className="flex flex-col h-full space-y-4 animate-in fade-in zoom-in-95 duration-1000 ease-out">
                             <div className="flex items-center gap-3 p-2 shrink-0 border-b border-white/5 pb-4">
                                <div className="relative shrink-0">
                                  <Share2 className={cn("w-8 h-8 transition-all duration-1000 text-primary", isInterrogating && "animate-pulse")} />
@@ -1225,25 +1218,20 @@ export default function AiCryptoDashboard() {
                             </div>
 
                             <div className="grid grid-cols-2 gap-3 shrink-0">
-                              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-1 transition-all duration-300 hover:border-primary/20">
-                                <span className="text-[8px] text-gray-600 uppercase font-black tracking-widest">Pattern Depth</span>
-                                <span className="text-[10px] font-code text-primary font-bold">{isBoosterActive ? '24-BIT SYNC' : '12-BIT SYNC'}</span>
-                              </div>
-                              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-1 transition-all duration-300 hover:border-primary/20">
-                                <span className="text-[8px] text-gray-600 uppercase font-black tracking-widest">Heuristic Load</span>
-                                <span className="text-[10px] font-code text-primary font-bold">{isInterrogating ? (isBoosterActive ? '98.8%' : '82.4%') : '0.0%'}</span>
-                              </div>
-                              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-1 transition-all duration-300 hover:border-primary/20">
-                                <span className="text-[8px] text-gray-600 uppercase font-black tracking-widest">Entropy Sync</span>
-                                <span className="text-[10px] font-code text-primary font-bold">MASTERED</span>
-                              </div>
-                              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-1 transition-all duration-300 hover:border-primary/20">
-                                <span className="text-[8px] text-gray-600 uppercase font-black tracking-widest">AI Threads</span>
-                                <span className="text-[10px] font-code text-primary font-bold">{isBoosterActive ? '64 ACTIVE' : '16 ACTIVE'}</span>
-                              </div>
+                              {[
+                                { label: 'Pattern Depth', value: isBoosterActive ? '24-BIT SYNC' : '12-BIT SYNC' },
+                                { label: 'Heuristic Load', value: isInterrogating ? (isBoosterActive ? '98.8%' : '82.4%') : '0.0%' },
+                                { label: 'Entropy Sync', value: 'MASTERED' },
+                                { label: 'AI Threads', value: isBoosterActive ? '64 ACTIVE' : '16 ACTIVE' }
+                              ].map((item, idx) => (
+                                <div key={idx} className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col gap-1 transition-all duration-500 hover:border-primary/20 animate-in fade-in duration-700" style={{ transitionDelay: `${idx * 100}ms` }}>
+                                  <span className="text-[8px] text-gray-600 uppercase font-black tracking-widest">{item.label}</span>
+                                  <span className="text-[10px] font-code text-primary font-bold">{item.value}</span>
+                                </div>
+                              ))}
                             </div>
 
-                            <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-black/60 border border-white/5 rounded-xl shadow-inner relative">
+                            <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-black/60 border border-white/5 rounded-xl shadow-inner relative transition-all duration-1000">
                               <div className="absolute inset-0 scanline opacity-30 z-20 pointer-events-none" />
                               <div className="px-3 py-2 border-b border-white/10 bg-white/[0.03] flex items-center justify-between shrink-0">
                                 <div className="flex items-center gap-2">
@@ -1256,7 +1244,7 @@ export default function AiCryptoDashboard() {
                               </div>
                               <div 
                                 ref={aiTerminalScrollRef}
-                                className="flex-1 overflow-y-auto p-3 space-y-2 terminal-scrollbar font-code text-[9px]"
+                                className="flex-1 overflow-y-auto p-3 space-y-2 terminal-scrollbar font-code text-[9px] scroll-smooth"
                               >
                                 {aiTerminalLogs.length === 0 ? (
                                   <div className="text-gray-700 uppercase animate-pulse italic text-[8px] tracking-widest py-4 text-center">
@@ -1264,7 +1252,7 @@ export default function AiCryptoDashboard() {
                                   </div>
                                 ) : (
                                   aiTerminalLogs.map((log) => (
-                                    <div key={log.id} className="animate-in slide-in-from-bottom-1 duration-300 leading-normal border-b border-white/[0.02] pb-1">
+                                    <div key={log.id} className="animate-in slide-in-from-bottom-1 duration-500 leading-normal border-b border-white/[0.02] pb-1">
                                       <span className="text-primary/30 mr-2 tabular-nums">[{log.timestamp}]</span>
                                       <span className={cn(
                                         "text-white/70",
@@ -1284,9 +1272,9 @@ export default function AiCryptoDashboard() {
                               onClick={disconnectAiSearch} 
                               disabled={isInterrogating} 
                               variant="outline" 
-                              className="w-full shrink-0 mt-auto border-red-500/30 text-red-500/70 hover:text-red-500 hover:bg-red-500/10 font-black text-[11px] uppercase tracking-[0.1em] transition-all duration-300 h-11 hover:scale-[1.02] active:scale-95 group/disc shadow-[0_5px_15px_rgba(173,79,230,0.1)]"
+                              className="w-full shrink-0 mt-auto border-red-500/30 text-red-500/70 hover:text-red-500 hover:bg-red-500/10 font-black text-[11px] uppercase tracking-[0.1em] transition-all duration-500 h-11 hover:scale-[1.02] active:scale-95 group/disc shadow-[0_5px_15px_rgba(173,79,230,0.1)]"
                             >
-                               <Unplug className="w-4 h-4 mr-2 group-hover/disc:rotate-12 transition-transform" /> 
+                               <Unplug className="w-4 h-4 mr-2 group-hover/disc:rotate-12 transition-transform duration-500" /> 
                                Disconnect Link
                             </Button>
                          </div>
@@ -1297,54 +1285,50 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'withdraw' && (
-                <div className="flex-1 flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out max-h-full overflow-hidden">
+                <div className="flex-1 flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-8 zoom-in-95 duration-1000 ease-out max-h-full overflow-hidden">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 shrink-0">
-                    <div className="glass-panel p-8 rounded-3xl border-primary/30 bg-primary/[0.02] relative overflow-hidden group shadow-[0_20px_40px_rgba(0,0,0,0.5)]">
-                      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-25 transition-opacity duration-700">
+                    <div className="glass-panel p-8 rounded-3xl border-primary/30 bg-primary/[0.02] relative overflow-hidden group shadow-[0_20px_40px_rgba(0,0,0,0.5)] transition-all duration-700">
+                      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-25 transition-opacity duration-1000 ease-in-out">
                          <Zap className="w-20 h-20 text-primary" />
                       </div>
-                      <div className="relative z-10">
+                      <div className="relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
                         <div className="flex items-center gap-3 mb-4">
                           <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
                             <Activity className="w-4 h-4 text-primary" />
                           </div>
                           <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400">Total Forensic Yield</h4>
                         </div>
-                        <p className="text-5xl font-black font-code text-white tracking-tighter drop-shadow-[0_0_20px_rgba(173,79,230,0.4)]">
+                        <p className="text-5xl font-black font-code text-white tracking-tighter drop-shadow-[0_0_20px_rgba(173,79,230,0.4)] transition-all duration-1000">
                           $0.00
                         </p>
                       </div>
                     </div>
 
-                    <div className="md:col-span-2 glass-panel p-8 rounded-3xl border-white/5 flex items-center justify-between shadow-[0_20px_40px_rgba(0,0,0,0.3)]">
+                    <div className="md:col-span-2 glass-panel p-8 rounded-3xl border-white/5 flex items-center justify-between shadow-[0_20px_40px_rgba(0,0,0,0.3)] animate-in fade-in slide-in-from-right-4 duration-1000">
                        <div className="space-y-4">
                           <h4 className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em]">Uplink Status</h4>
                           <div className="flex items-center gap-6">
-                             <div className="flex flex-col gap-1">
-                                <span className="text-[9px] font-code text-primary/60 uppercase">Protocol</span>
-                                <span className="text-xs font-bold text-white uppercase tracking-wide">AES-256 SECURE</span>
-                             </div>
-                             <div className="flex flex-col gap-1 border-l border-white/10 pl-6">
-                                <span className="text-[9px] font-code text-primary/60 uppercase">Node</span>
-                                <span className="text-xs font-bold text-white uppercase tracking-wide">{selectedServer?.name}</span>
-                             </div>
-                             <div className="flex flex-col gap-1 border-l border-white/10 pl-6">
-                                <span className="text-[9px] font-code text-primary/60 uppercase">Discovery Cycle</span>
-                                <span className={cn("text-xs font-bold uppercase tracking-wide transition-all duration-500", isInterrogating ? "text-primary" : "text-gray-500")}>
-                                  {isInterrogating ? "ONGOING" : "STANDBY"}
-                                </span>
-                             </div>
+                             {[
+                               { label: 'Protocol', value: 'AES-256 SECURE' },
+                               { label: 'Node', value: selectedServer?.name },
+                               { label: 'Discovery Cycle', value: isInterrogating ? "ONGOING" : "STANDBY", colorClass: isInterrogating ? "text-primary" : "text-gray-500" }
+                             ].map((item, idx) => (
+                               <div key={idx} className={cn("flex flex-col gap-1", idx > 0 && "border-l border-white/10 pl-6 animate-in fade-in duration-1000")} style={{ transitionDelay: `${idx * 200}ms` }}>
+                                  <span className="text-[9px] font-code text-primary/60 uppercase">{item.label}</span>
+                                  <span className={cn("text-xs font-bold uppercase tracking-wide transition-all duration-700", item.colorClass || "text-white")}>{item.value}</span>
+                               </div>
+                             ))}
                           </div>
                        </div>
                        
                        <Dialog>
                          <DialogTrigger asChild>
-                            <Button disabled={!isOnline} className="bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 h-12 px-8 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all duration-300 shadow-[0_5px_15px_rgba(173,79,230,0.1)]">
+                            <Button disabled={!isOnline} className="bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 h-12 px-8 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all duration-500 shadow-[0_5px_15px_rgba(173,79,230,0.1)] hover:scale-105 active:scale-95">
                               <CreditCard className="w-4 h-4 mr-2" />
                               Configure Payout Nodes
                             </Button>
                          </DialogTrigger>
-                         <DialogContent className="bg-[#0a0a0f] border-white/10 text-white max-w-md rounded-3xl">
+                         <DialogContent className="bg-[#0a0a0f] border-white/10 text-white max-w-md rounded-3xl animate-in zoom-in-95 duration-500">
                            <DialogHeader>
                              <DialogTitle className="text-xl font-black uppercase tracking-widest flex items-center gap-3">
                                <ShieldCheck className="w-6 h-6 text-primary" />
@@ -1352,36 +1336,20 @@ export default function AiCryptoDashboard() {
                              </DialogTitle>
                            </DialogHeader>
                            <div className="space-y-6 py-6">
-                             <div className="space-y-2">
-                               <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Bitcoin (BTC) Address</label>
-                               <Input 
-                                 value={payoutBtc} 
-                                 onChange={(e) => setPayoutBtc(e.target.value)}
-                                 placeholder="Enter BTC address..."
-                                 className="bg-white/[0.02] border-white/5 h-12 rounded-xl font-code text-xs"
-                               />
-                             </div>
-                             <div className="space-y-2">
-                               <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Tether USDT (BEP-20)</label>
-                               <Input 
-                                 value={payoutUsdt} 
-                                 onChange={(e) => setPayoutUsdt(e.target.value)}
-                                 placeholder="Enter BEP-20 address..."
-                                 className="bg-white/[0.02] border-white/5 h-12 rounded-xl font-code text-xs"
-                               />
-                             </div>
-                             <div className="space-y-2">
-                               <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Solana (SOL)</label>
-                               <Input 
-                                 value={payoutSol} 
-                                 onChange={(e) => setPayoutSol(e.target.value)}
-                                 placeholder="Enter SOL address..."
-                                 className="bg-white/[0.02] border-white/5 h-12 rounded-xl font-code text-xs"
-                               />
-                             </div>
+                             {['Bitcoin (BTC) Address', 'Tether USDT (BEP-20)', 'Solana (SOL)'].map((label, i) => (
+                               <div key={i} className="space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ transitionDelay: `${i * 100}ms` }}>
+                                 <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{label}</label>
+                                 <Input 
+                                   value={i === 0 ? payoutBtc : i === 1 ? payoutUsdt : payoutSol} 
+                                   onChange={(e) => i === 0 ? setPayoutBtc(e.target.value) : i === 1 ? setPayoutUsdt(e.target.value) : setPayoutSol(e.target.value)}
+                                   placeholder={`Enter ${label.split(' ')[0]} address...`}
+                                   className="bg-white/[0.02] border-white/5 h-12 rounded-xl font-code text-xs focus:ring-primary/20 transition-all duration-300"
+                                 />
+                               </div>
+                             ))}
                            </div>
                            <DialogFooter>
-                             <Button onClick={handleSavePayoutAddresses} className="w-full h-12 rounded-xl bg-primary text-black font-black uppercase text-[10px] tracking-widest shadow-glow">
+                             <Button onClick={handleSavePayoutAddresses} className="w-full h-12 rounded-xl bg-primary text-black font-black uppercase text-[10px] tracking-widest shadow-glow transition-all duration-500 hover:scale-105">
                                <Save className="w-4 h-4 mr-2" />
                                Save Payout Configuration
                              </Button>
@@ -1391,7 +1359,7 @@ export default function AiCryptoDashboard() {
                     </div>
                   </div>
 
-                  <div className="flex-1 glass-panel rounded-3xl p-8 border-white/5 flex flex-col overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)]">
+                  <div className="flex-1 glass-panel rounded-3xl p-8 border-white/5 flex flex-col overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.6)] animate-in fade-in duration-1000 delay-300">
                     <div className="flex items-center justify-between mb-8 shrink-0">
                       <div className="flex items-center gap-3">
                         <Dna className="w-5 h-5 text-primary" />
@@ -1400,10 +1368,10 @@ export default function AiCryptoDashboard() {
                       <span className="text-[10px] font-code text-primary/60 uppercase tracking-widest">Found Assets: {discoveredAssets.length}</span>
                     </div>
                     
-                    <div className="flex-1 overflow-y-auto terminal-scrollbar pr-4 pb-10">
+                    <div className="flex-1 overflow-y-auto terminal-scrollbar pr-4 pb-10 scroll-smooth">
                       {discoveredAssets.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center opacity-20 group py-20 animate-in fade-in duration-1000">
-                          <Activity className="w-20 h-20 mb-6 group-hover:scale-110 transition-transform duration-1000 ease-out" />
+                          <Activity className="w-20 h-20 mb-6 group-hover:scale-110 transition-transform duration-[2000ms] ease-out" />
                           <div className="text-center space-y-2">
                             <p className="text-sm uppercase tracking-[0.4em] font-black text-white">Neural Web Silent</p>
                             <p className="text-[10px] uppercase tracking-widest text-gray-500">Awaiting forensic asset discovery</p>
@@ -1411,10 +1379,10 @@ export default function AiCryptoDashboard() {
                         </div>
                       ) : (
                         <div className="space-y-4">
-                          {discoveredAssets.map((asset) => (
-                            <div key={asset.id} className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-between group hover:bg-white/[0.05] hover:border-primary/20 transition-all duration-500 animate-in slide-in-from-bottom-2">
+                          {discoveredAssets.map((asset, idx) => (
+                            <div key={asset.id} className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-between group hover:bg-white/[0.05] hover:border-primary/20 transition-all duration-700 animate-in slide-in-from-bottom-4" style={{ transitionDelay: `${idx * 100}ms` }}>
                               <div className="flex items-center gap-6">
-                                <div className="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+                                <div className="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center transition-all duration-500 group-hover:bg-green-500/20">
                                   <WalletIcon className="w-6 h-6 text-green-500" />
                                 </div>
                                 <div className="space-y-1">
@@ -1434,9 +1402,9 @@ export default function AiCryptoDashboard() {
                                 <Button 
                                   variant="outline" 
                                   onClick={() => handleCopyMnemonic(asset.mnemonic)}
-                                  className="h-10 px-6 rounded-xl border-primary/20 text-primary hover:bg-primary/10 font-black text-[9px] uppercase tracking-widest group/btn transition-all duration-300"
+                                  className="h-10 px-6 rounded-xl border-primary/20 text-primary hover:bg-primary/10 font-black text-[9px] uppercase tracking-widest group/btn transition-all duration-500 hover:scale-105 active:scale-95"
                                 >
-                                  <Copy className="w-3 h-3 mr-2 group-hover/btn:rotate-12 transition-transform duration-500" />
+                                  <Copy className="w-3 h-3 mr-2 group-hover/btn:rotate-12 transition-transform duration-700" />
                                   Extract Seed
                                 </Button>
                               </div>
@@ -1450,9 +1418,9 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'server' && (
-                <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 animate-in fade-in zoom-in-95 duration-700 ease-out overflow-hidden relative pb-10 md:pb-0">
-                  <div className="lg:col-span-4 flex flex-col gap-6 min-h-0 overflow-y-auto terminal-scrollbar px-1 pr-2 pb-16">
-                    <div className="flex items-center justify-between mb-4 sticky top-0 bg-[#050507]/90 backdrop-blur-sm py-3 z-20">
+                <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 animate-in fade-in slide-in-from-bottom-8 zoom-in-95 duration-1000 ease-out overflow-hidden relative pb-10 md:pb-0">
+                  <div className="lg:col-span-4 flex flex-col gap-6 min-h-0 overflow-y-auto terminal-scrollbar px-1 pr-2 pb-16 scroll-smooth">
+                    <div className="flex items-center justify-between mb-4 sticky top-0 bg-[#050507]/90 backdrop-blur-sm py-3 z-20 animate-in fade-in duration-700">
                       <div className="flex items-center gap-2 px-2">
                         <Network className="w-4 h-4 text-primary" />
                         <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-white">Network Cluster</h3>
@@ -1460,7 +1428,7 @@ export default function AiCryptoDashboard() {
                     </div>
                     
                     <div className="space-y-4 px-1">
-                      {SERVERS.map((server) => {
+                      {SERVERS.map((server, idx) => {
                         const isSelected = selectedServerId === server.id;
                         const isElite = server.status === 'ELITE-CORE';
                         const isStandard = server.status === 'STANDARD';
@@ -1488,16 +1456,17 @@ export default function AiCryptoDashboard() {
                               }
                             }}
                             className={cn(
-                              "relative p-5 rounded-2xl border transition-all duration-700 overflow-hidden", 
+                              "relative p-5 rounded-2xl border transition-all duration-700 overflow-hidden animate-in fade-in slide-in-from-left-4", 
                               isSelected ? "bg-primary/[0.12] border-primary/80 scale-[1.01] shadow-[0_0_40px_rgba(173,79,230,0.2)] z-10" : "bg-white/[0.02] border-white/5 hover:border-primary/40",
                               (isInterrogating || !isOnline || isLocked) ? "cursor-not-allowed" : "cursor-pointer",
                               isLocked && "opacity-40 grayscale"
                             )}
+                            style={{ transitionDelay: `${idx * 150}ms` }}
                           >
                             <div className="flex flex-col gap-5 relative z-10">
                               <div className="flex items-start justify-between gap-3">
                                 <div className="flex items-center gap-3">
-                                  <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500 shrink-0", isSelected ? "bg-primary text-black shadow-glow" : "bg-white/5 text-gray-500")}>
+                                  <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-[1000ms] ease-in-out shrink-0", isSelected ? "bg-primary text-black shadow-glow" : "bg-white/5 text-gray-500")}>
                                     {isLocked ? <Lock className="w-6 h-6" /> : <ServerIcon className="w-6 h-6" />}
                                   </div>
                                   <div className="min-w-0">
@@ -1507,7 +1476,7 @@ export default function AiCryptoDashboard() {
                                 </div>
                                 <div className="flex flex-col items-end shrink-0">
                                   <div className={cn(
-                                    "text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest border", 
+                                    "text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest border transition-all duration-700", 
                                     isElite ? "bg-green-500/20 text-green-400 border-green-500/30 animate-pulse" : 
                                     isStandard ? "bg-blue-500/20 text-blue-400 border-blue-500/30" :
                                     "bg-white/10 text-white/40 border-white/5"
@@ -1519,11 +1488,11 @@ export default function AiCryptoDashboard() {
                               </div>
 
                               {isPrime && isSelected && !isLocked && (
-                                <div className="space-y-3 pt-4 border-t border-white/5 animate-in fade-in duration-500">
+                                <div className="space-y-3 pt-4 border-t border-white/5 animate-in fade-in slide-in-from-top-2 duration-1000">
                                   <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Node Features</p>
                                   <div className="grid grid-cols-1 gap-2">
                                     {server.features?.map((feature, idx) => (
-                                      <div key={idx} className="flex items-start gap-2 text-[9px] font-bold text-white/80 group/feat leading-tight">
+                                      <div key={idx} className="flex items-start gap-2 text-[9px] font-bold text-white/80 group/feat leading-tight animate-in fade-in duration-700" style={{ transitionDelay: `${idx * 150}ms` }}>
                                         <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" />
                                         <span className="tracking-tight uppercase">{feature}</span>
                                       </div>
@@ -1532,14 +1501,14 @@ export default function AiCryptoDashboard() {
                                 </div>
                               )}
 
-                              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5 animate-in fade-in duration-1000">
                                 <div className="space-y-1.5">
                                   <div className="flex items-center justify-between text-[8px] font-code uppercase tracking-tight">
                                     <span className="text-gray-600">Peak Latency</span>
                                     <span className="text-green-500 font-black tabular-nums">{isOnline && !isLocked ? server.latency : "N/A"}</span>
                                   </div>
                                   <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                                    <div className="h-full bg-green-500/60 transition-all duration-1000" style={{ width: isSelected && !isLocked ? '98%' : '70%' }} />
+                                    <div className="h-full bg-green-500/60 transition-all duration-[2000ms] ease-out" style={{ width: isSelected && !isLocked ? '98%' : '70%' }} />
                                   </div>
                                 </div>
                                 <div className="space-y-1.5">
@@ -1548,7 +1517,7 @@ export default function AiCryptoDashboard() {
                                     <span className="text-primary font-black uppercase tracking-widest">{isLocked ? "OFFLINE" : "Nominal"}</span>
                                   </div>
                                   <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                                    <div className="h-full bg-primary/60 transition-all duration-1000" style={{ width: isSelected && !isLocked ? '100%' : '85%' }} />
+                                    <div className="h-full bg-primary/60 transition-all duration-[2000ms] ease-out" style={{ width: isSelected && !isLocked ? '100%' : '85%' }} />
                                   </div>
                                 </div>
                               </div>
@@ -1559,17 +1528,17 @@ export default function AiCryptoDashboard() {
                     </div>
                   </div>
                   
-                  <div className="lg:col-span-8 flex flex-col gap-6 min-h-0 pr-2 pb-10 lg:pb-0">
-                    <div className="glass-panel rounded-3xl p-6 md:p-10 border-white/5 flex flex-col flex-1 relative overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.6)]">
+                  <div className="lg:col-span-8 flex flex-col gap-6 min-h-0 pr-2 pb-10 lg:pb-0 transition-all duration-1000">
+                    <div className="glass-panel rounded-3xl p-6 md:p-10 border-white/5 flex flex-col flex-1 relative overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.6)] animate-in fade-in zoom-in-95 duration-1000 ease-out">
                        <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-transparent pointer-events-none" />
                        <div className="relative z-10 flex flex-col h-full">
-                         <div className="flex items-center justify-between mb-6 shrink-0">
+                         <div className="flex items-center justify-between mb-6 shrink-0 animate-in fade-in slide-in-from-top-4 duration-1000">
                             <div className="flex items-center gap-4">
                               <div className={cn(
-                                "w-14 h-14 rounded-2xl flex items-center justify-center text-primary relative transition-all duration-500 border shrink-0",
+                                "w-14 h-14 rounded-2xl flex items-center justify-center text-primary relative transition-all duration-[1000ms] ease-in-out border shrink-0",
                                 isEliteSelected ? "bg-primary/20 border-primary/40 shadow-glow scale-110" : "bg-primary/10 border-primary/20"
                               )}>
-                                <Dna className={cn("w-7 h-7 transition-all duration-1000", (isInterrogating && isOnline) && "animate-pulse")} />
+                                <Dna className={cn("w-7 h-7 transition-all duration-[2000ms] ease-in-out", (isInterrogating && isOnline) && "animate-pulse")} />
                                 {(isInterrogating && isOnline) && <div className="absolute inset-0 rounded-2xl pulse-ring border border-primary/40" />}
                               </div>
                               <div className="min-w-0">
@@ -1579,21 +1548,21 @@ export default function AiCryptoDashboard() {
                             </div>
                          </div>
                          
-                         <div className="flex-1 flex items-center justify-center relative my-2 overflow-hidden">
+                         <div className="flex-1 flex items-center justify-center relative my-2 overflow-hidden animate-in fade-in duration-[2000ms]">
                             <div className="relative flex items-center justify-center w-full max-w-sm aspect-square">
                                <div className={cn(
-                                 "absolute inset-0 rounded-full bg-primary/5 blur-[80px] transition-all duration-1000",
+                                 "absolute inset-0 rounded-full bg-primary/5 blur-[80px] transition-all duration-[2000ms] ease-in-out",
                                  isEliteSelected ? "opacity-100 scale-125" : "opacity-60 scale-100"
                                )} />
                                
                                <div className={cn(
-                                 "absolute inset-0 border border-primary/20 rounded-full transition-all duration-1000",
+                                 "absolute inset-0 border border-primary/20 rounded-full transition-all duration-[2000ms] ease-in-out",
                                  isEliteSelected ? "animate-[spin_10s_linear_infinite]" : "animate-[spin_30s_linear_infinite]"
                                )} 
                                     style={{ borderStyle: 'dashed', borderDasharray: '40 20' }} />
                                
                                <div className={cn(
-                                 "absolute inset-8 border border-primary/40 rounded-full transition-all duration-1000",
+                                 "absolute inset-8 border border-primary/40 rounded-full transition-all duration-[2000ms] ease-in-out",
                                  isEliteSelected ? "animate-[spin_5s_linear_infinite_reverse]" : "animate-[spin_20s_linear_infinite_reverse]"
                                )} 
                                     style={{ borderStyle: 'dashed', borderDasharray: '10 5' }} />
@@ -1607,7 +1576,7 @@ export default function AiCryptoDashboard() {
                                </svg>
 
                                <div className={cn(
-                                 "relative z-10 w-24 md:w-32 h-24 md:h-32 flex items-center justify-center rounded-3xl rotate-45 border transition-all duration-1000",
+                                 "relative z-10 w-24 md:w-32 h-24 md:h-32 flex items-center justify-center rounded-3xl rotate-45 border transition-all duration-[1000ms] ease-in-out",
                                  isEliteSelected 
                                    ? "bg-primary/30 border-primary/60 shadow-[0_0_120px_rgba(173,79,230,1)] scale-125" 
                                    : "bg-primary/5 border-primary/20 shadow-[0_0_40px_rgba(173,79,230,0.3)] scale-100"
@@ -1621,14 +1590,14 @@ export default function AiCryptoDashboard() {
 
                                {(isInterrogating && isOnline) && (
                                  <>
-                                   <div className="absolute inset-0 rounded-full border border-primary/60 animate-ping opacity-30" />
-                                   <div className="absolute inset-8 rounded-full border border-primary/40 animate-ping opacity-20 delay-700" />
+                                   <div className="absolute inset-0 rounded-full border border-primary/60 animate-ping opacity-30 duration-[2000ms]" />
+                                   <div className="absolute inset-8 rounded-full border border-primary/40 animate-ping opacity-20 delay-700 duration-[2000ms]" />
                                  </>
                                )}
 
                                {!isOnline && (
                                  <div className="absolute inset-0 flex items-center justify-center z-20">
-                                   <div className="glass-panel p-6 rounded-2xl border-red-500/30 flex flex-col items-center gap-3 animate-in zoom-in">
+                                   <div className="glass-panel p-6 rounded-2xl border-red-500/30 flex flex-col items-center gap-3 animate-in zoom-in-95 duration-700">
                                       <WifiOff className="w-10 md:w-12 h-10 md:h-12 text-red-500 animate-pulse" />
                                       <span className="text-[8px] md:text-[10px] font-black text-red-500 uppercase tracking-[0.2em]">Link Severed</span>
                                    </div>
@@ -1637,30 +1606,24 @@ export default function AiCryptoDashboard() {
                             </div>
                          </div>
 
-                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-8 mt-4 shrink-0">
-                            <div className="p-5 md:p-7 glass-panel rounded-2xl border-white/5 space-y-3 md:space-y-4 group/metric transition-all duration-700 hover:border-primary/40">
-                               <span className="text-[9px] md:text-[10px] text-gray-600 uppercase font-black tracking-widest flex items-center gap-2">
-                                 <Signal className="w-3 md:w-3.5 h-3 md:h-3.5" /> Velocity
-                               </span>
-                               <p className="text-base md:text-lg font-black text-white font-code tracking-tighter uppercase truncate">{isOnline ? (parseFloat(selectedServer?.latency || "50") < 10 ? "Ultra-High" : "Standard") : "OFFLINE"}</p>
-                            </div>
-                            <div className="p-5 md:p-7 glass-panel rounded-2xl border-white/5 space-y-3 md:space-y-4 group/metric transition-all duration-700 hover:border-primary/40">
-                               <span className="text-[9px] md:text-[10px] text-gray-600 uppercase font-black tracking-widest flex items-center gap-2">
-                                 <ShieldCheck className="w-3 md:w-3.5 h-3 md:h-3.5" /> Encryption
-                               </span>
-                               <p className="text-base md:text-lg font-black text-white font-code tracking-tighter uppercase truncate">{isOnline ? "AES-GCM-4096" : "SUSPENDED"}</p>
-                            </div>
-                            <div className="p-5 md:p-7 glass-panel rounded-2xl border-white/5 space-y-3 md:space-y-4 group/metric transition-all duration-700 hover:border-primary/40">
-                               <span className="text-[9px] md:text-[10px] text-gray-600 uppercase font-black tracking-widest flex items-center gap-2">
-                                 <Microchip className="w-3 md:w-3.5 h-3 md:h-3.5" /> Core Status
-                               </span>
-                               <p className="text-base md:text-lg font-black text-white font-code tracking-tighter uppercase truncate">{isOnline ? "Hyper-Prime" : "N/A"}</p>
-                            </div>
+                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-8 mt-4 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                            {[
+                              { icon: Signal, label: 'Velocity', value: isOnline ? (parseFloat(selectedServer?.latency || "50") < 10 ? "Ultra-High" : "Standard") : "OFFLINE" },
+                              { icon: ShieldCheck, label: 'Encryption', value: isOnline ? "AES-GCM-4096" : "SUSPENDED" },
+                              { icon: Microchip, label: 'Core Status', value: isOnline ? "Hyper-Prime" : "N/A" }
+                            ].map((item, idx) => (
+                              <div key={idx} className="p-5 md:p-7 glass-panel rounded-2xl border-white/5 space-y-3 md:space-y-4 group/metric transition-all duration-700 hover:border-primary/40 hover:scale-[1.02] shadow-md" style={{ transitionDelay: `${idx * 150}ms` }}>
+                                 <span className="text-[9px] md:text-[10px] text-gray-600 uppercase font-black tracking-widest flex items-center gap-2">
+                                   <item.icon className="w-3 md:w-3.5 h-3 md:h-3.5 transition-colors group-hover/metric:text-primary" /> {item.label}
+                                 </span>
+                                 <p className="text-base md:text-lg font-black text-white font-code tracking-tighter uppercase truncate transition-all duration-500">{item.value}</p>
+                              </div>
+                            ))}
                          </div>
                        </div>
                     </div>
 
-                    <div className="glass-panel rounded-3xl border-white/5 flex flex-col h-[250px] md:h-[300px] relative overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.5)] shrink-0">
+                    <div className="glass-panel rounded-3xl border-white/5 flex flex-col h-[250px] md:h-[300px] relative overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.5)] shrink-0 animate-in fade-in duration-1000 delay-500">
                       <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/5 bg-white/[0.02] shrink-0">
                         <div className="flex items-center gap-3">
                            <Terminal className="w-4 h-4 text-primary" />
@@ -1673,14 +1636,14 @@ export default function AiCryptoDashboard() {
                       </div>
                       <div className="flex-1 bg-black/60 p-4 md:p-6 font-code text-[10px] md:text-[11px] overflow-hidden relative">
                         <div className="absolute inset-0 scanline opacity-30 z-20 pointer-events-none" />
-                        <div ref={serverLogRef} className="h-full overflow-y-auto terminal-scrollbar space-y-2 flex flex-col z-10 relative">
+                        <div ref={serverLogRef} className="h-full overflow-y-auto terminal-scrollbar space-y-2 flex flex-col z-10 relative scroll-smooth">
                            {serverLogs.map((log, i) => (
-                             <div key={i} className="text-[#00FF41]/60 hover:text-[#00FF41] transition-colors py-1 border-b border-white/[0.03] tracking-tighter animate-in fade-in duration-300">
+                             <div key={i} className="text-[#00FF41]/60 hover:text-[#00FF41] transition-colors py-1 border-b border-white/[0.03] tracking-tighter animate-in fade-in slide-in-from-left-2 duration-500">
                                <span className="text-gray-600 mr-2 opacity-50 select-none font-bold uppercase whitespace-nowrap">Node_Log:</span> {log}
                              </div>
                            ))}
                            {!isOnline && (
-                             <div className="text-red-500 font-bold py-3 animate-pulse uppercase tracking-widest border border-red-500/20 bg-red-500/5 px-4 rounded text-center text-[9px]">
+                             <div className="text-red-500 font-bold py-3 animate-pulse uppercase tracking-widest border border-red-500/20 bg-red-500/5 px-4 rounded text-center text-[9px] duration-1000">
                                [CRITICAL] System Loss: Node Uplink Disconnected
                              </div>
                            )}
@@ -1692,53 +1655,47 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'settings' && (
-                <div className="max-w-4xl mx-auto w-full flex flex-col gap-8 animate-in zoom-in-95 duration-700 ease-out pb-20 overflow-y-auto terminal-scrollbar pr-2">
-                  <div className="glass-panel rounded-2xl p-10 border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                <div className="max-w-4xl mx-auto w-full flex flex-col gap-8 animate-in zoom-in-95 duration-1000 ease-out pb-20 overflow-y-auto terminal-scrollbar pr-2 scroll-smooth">
+                  <div className="glass-panel rounded-2xl p-10 border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in slide-in-from-bottom-8 duration-1000">
                     <h3 className="text-xl font-black uppercase tracking-[0.2em] mb-8 border-b border-white/5 pb-4">Performance Management</h3>
                     <div className="space-y-12">
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Gauge className="w-4 h-4 text-primary" />
-                            <label className="text-sm font-bold text-white uppercase tracking-widest">Scan Throughput (Hz)</label>
+                      {[
+                        { icon: Gauge, label: 'Scan Throughput (Hz)', value: `${systemIntensity[0]}% Velocity`, state: systemIntensity, setState: setSystemIntensity, max: 100, step: 1, desc: 'Directly modulates the interrogation frequency and engine throughput.' },
+                        { icon: Layers, label: 'Neural Core Allocation', value: `${allocatedCores[0]} / 8 Cores`, state: allocatedCores, setState: setAllocatedCores, min: 1, max: 8, step: 1, desc: 'Allocates processing threads for forensic seed generation.' }
+                      ].map((item, idx) => (
+                        <div key={idx} className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-700" style={{ transitionDelay: `${idx * 200}ms` }}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <item.icon className="w-4 h-4 text-primary" />
+                              <label className="text-sm font-bold text-white uppercase tracking-widest">{item.label}</label>
+                            </div>
+                            <span className="text-xs font-code text-primary transition-all duration-500">{item.value}</span>
                           </div>
-                          <span className="text-xs font-code text-primary">{systemIntensity[0]}% Velocity</span>
+                          <Slider value={item.state} onValueChange={item.setState} min={item.min || 0} max={item.max} step={item.step} disabled={isInterrogating} className="cursor-pointer transition-all duration-300" />
+                          <p className="text-[9px] text-gray-500 uppercase tracking-widest leading-relaxed">{item.desc}</p>
                         </div>
-                        <Slider value={systemIntensity} onValueChange={setSystemIntensity} max={100} step={1} disabled={isInterrogating} className="cursor-pointer" />
-                        <p className="text-[9px] text-gray-500 uppercase tracking-widest">Directly modulates the interrogation frequency and engine throughput.</p>
-                      </div>
+                      ))}
 
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Layers className="w-4 h-4 text-primary" />
-                            <label className="text-sm font-bold text-white uppercase tracking-widest">Neural Core Allocation</label>
-                          </div>
-                          <span className="text-xs font-code text-primary">{allocatedCores[0]} / 8 Cores</span>
-                        </div>
-                        <Slider value={allocatedCores} onValueChange={setAllocatedCores} min={1} max={8} step={1} disabled={isInterrogating} className="cursor-pointer" />
-                      </div>
-
-                      <div className="space-y-6 pt-8 border-t border-white/5">
+                      <div className="space-y-6 pt-8 border-t border-white/5 animate-in fade-in duration-1000">
                         <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">System Optimization</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                           <div className="flex flex-col gap-3 p-5 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-all duration-300 group shadow-md">
+                           <div className="flex flex-col gap-3 p-5 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-all duration-700 group shadow-md hover:scale-[1.02] active:scale-95">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                  <Trash2 className="w-4 h-4 text-primary" />
+                                  <Trash2 className="w-4 h-4 text-primary group-hover:rotate-12 transition-transform duration-500" />
                                   <p className="text-[11px] font-bold text-white uppercase tracking-wider">Neural Memory Flush</p>
                                 </div>
-                                <Button variant="outline" size="sm" onClick={handleMemoryFlush} className="h-8 text-[9px] uppercase font-bold border-primary/20 text-primary hover:bg-primary/10 transition-all duration-300">Flush Memory</Button>
+                                <Button variant="outline" size="sm" onClick={handleMemoryFlush} className="h-8 text-[9px] uppercase font-bold border-primary/20 text-primary hover:bg-primary/10 transition-all duration-500">Flush Memory</Button>
                               </div>
                               <p className="text-[9px] text-gray-600 uppercase leading-relaxed">Clears terminal and server activity logs to optimize client-side memory. Auto-flush every 10m.</p>
                            </div>
-                           <div className="flex flex-col gap-3 p-5 rounded-2xl border border-red-500/10 bg-red-500/[0.01] hover:bg-red-500/[0.03] transition-all duration-300 group shadow-md">
+                           <div className="flex flex-col gap-3 p-5 rounded-2xl border border-red-500/10 bg-red-500/[0.01] hover:bg-red-500/[0.03] transition-all duration-700 group shadow-md hover:scale-[1.02] active:scale-95">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                  <RotateCcw className="w-4 h-4 text-red-500" />
+                                  <RotateCcw className="w-4 h-4 text-red-500 group-hover:-rotate-45 transition-transform duration-500" />
                                   <p className="text-[11px] font-bold text-white uppercase tracking-wider">Reset Workstation</p>
                                 </div>
-                                <Button variant="outline" size="sm" onClick={clearSession} className="h-8 text-[9px] uppercase font-bold border-red-500/20 text-red-500 hover:bg-red-500/10 transition-all duration-300">Hard Reset</Button>
+                                <Button variant="outline" size="sm" onClick={clearSession} className="h-8 text-[9px] uppercase font-bold border-red-500/20 text-red-500 hover:bg-red-500/10 transition-all duration-500">Hard Reset</Button>
                               </div>
                               <p className="text-[9px] text-gray-600 uppercase leading-relaxed">Purges all session stats and engine configurations. IRREVERSIBLE.</p>
                            </div>
@@ -1747,24 +1704,24 @@ export default function AiCryptoDashboard() {
                     </div>
                   </div>
 
-                  <div className="glass-panel rounded-2xl p-10 border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                  <div className="glass-panel rounded-2xl p-10 border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in duration-1000 delay-300">
                     <h3 className="text-xl font-black uppercase tracking-[0.2em] mb-8 border-b border-white/5 pb-4">Console Customization</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                      <div className="space-y-6">
+                      <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-700">
                         <div className="flex items-center gap-2 mb-2">
                            <Palette className="w-4 h-4 text-primary" />
                            <h4 className="text-[10px] font-black text-white/60 uppercase tracking-widest">Seed Phrase Color</h4>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
-                          {SEED_COLORS.map((color) => (
-                            <button key={color.name} onClick={() => setSeedPhraseColor(color.class)} className={cn("flex items-center justify-between p-3 rounded-lg border text-left transition-all duration-300 shadow-sm", seedPhraseColor === color.class ? "bg-primary/10 border-primary/40 shadow-primary/5" : "bg-white/[0.02] border-white/5 hover:border-white/20")}>
+                          {SEED_COLORS.map((color, idx) => (
+                            <button key={color.name} onClick={() => setSeedPhraseColor(color.class)} className={cn("flex items-center justify-between p-3 rounded-lg border text-left transition-all duration-500 shadow-sm hover:scale-[1.05] active:scale-95", seedPhraseColor === color.class ? "bg-primary/10 border-primary/40 shadow-primary/5" : "bg-white/[0.02] border-white/5 hover:border-white/20")} style={{ transitionDelay: `${idx * 50}ms` }}>
                               <span className="text-[9px] font-bold text-gray-400 uppercase leading-none">{color.name}</span>
-                              <div className={cn("w-3 h-3 rounded-full border border-white/10 transition-all duration-500", color.class.includes('gradient') ? 'bg-gradient-to-tr from-red-500 via-green-500 to-blue-500' : color.class.split(' ')[0])} />
+                              <div className={cn("w-3 h-3 rounded-full border border-white/10 transition-all duration-1000 ease-in-out", color.class.includes('gradient') ? 'bg-gradient-to-tr from-red-500 via-green-500 to-blue-500' : color.class.split(' ')[0])} />
                             </button>
                           ))}
                         </div>
                       </div>
-                      <div className="space-y-8">
+                      <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-700">
                         <div className="flex items-center gap-2 mb-2">
                            <Type className="w-4 h-4 text-primary" />
                            <h4 className="text-[10px] font-black text-white/60 uppercase tracking-widest">Console Typography</h4>
@@ -1772,9 +1729,9 @@ export default function AiCryptoDashboard() {
                         <div className="space-y-6">
                           <div className="flex items-center justify-between">
                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Font Size</label>
-                            <span className="text-xs font-code text-primary">{consoleFontSize[0]}px</span>
+                            <span className="text-xs font-code text-primary transition-all duration-500">{consoleFontSize[0]}px</span>
                           </div>
-                          <Slider value={consoleFontSize} onValueChange={setConsoleFontSize} min={8} max={24} step={1} className="pointer-events-auto cursor-pointer" />
+                          <Slider value={consoleFontSize} onValueChange={setConsoleFontSize} min={8} max={24} step={1} className="pointer-events-auto cursor-pointer transition-all duration-300" />
                         </div>
                       </div>
                     </div>
@@ -1783,14 +1740,14 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'about' && (
-                <div className="max-w-[1000px] mx-auto w-full flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out pb-20 overflow-y-auto terminal-scrollbar pr-2">
-                  <section className="relative overflow-hidden glass-panel rounded-3xl p-10 border-primary/20 bg-primary/[0.02] shadow-[0_30px_60px_rgba(0,0,0,0.6)] group">
+                <div className="max-w-[1000px] mx-auto w-full flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-8 zoom-in-95 duration-1000 ease-out pb-20 overflow-y-auto terminal-scrollbar pr-2 scroll-smooth">
+                  <section className="relative overflow-hidden glass-panel rounded-3xl p-10 border-primary/20 bg-primary/[0.02] shadow-[0_30px_60px_rgba(0,0,0,0.6)] group transition-all duration-[2000ms] ease-in-out">
                     <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity duration-1000">
-                      <BrainCircuit className="w-48 h-48 text-primary" />
+                      <BrainCircuit className="w-48 h-48 text-primary transition-all duration-[3000ms] ease-in-out group-hover:rotate-6 group-hover:scale-110" />
                     </div>
-                    <div className="relative z-10 space-y-8">
+                    <div className="relative z-10 space-y-8 animate-in fade-in duration-1000">
                       <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-glow">
+                        <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-glow animate-in zoom-in-50 duration-1000">
                           <Zap className="w-8 h-8 text-black" />
                         </div>
                         <div>
@@ -1800,19 +1757,19 @@ export default function AiCryptoDashboard() {
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-4">
-                        <div className="space-y-4">
+                        <div className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-1000">
                           <h3 className="text-xs font-black uppercase tracking-widest text-white/80 flex items-center gap-2">
                             <Layers className="w-4 h-4 text-primary" /> High-Entropy Synthesis
                           </h3>
-                          <p className="text-sm text-gray-400 leading-relaxed">
+                          <p className="text-sm text-gray-400 leading-relaxed transition-all duration-700 hover:text-white/80">
                             The engine autonomously synthesizes high-entropy <span className="text-white font-bold">BIP39 recovery phrases</span> (12, 18, and 24 words) and immediately performs deep-spectrum node interrogation to identify active blockchain signatures.
                           </p>
                         </div>
-                        <div className="space-y-4">
+                        <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-1000">
                           <h3 className="text-xs font-black uppercase tracking-widest text-white/80 flex items-center gap-2">
                             <ShieldCheck className="w-4 h-4 text-primary" /> Automated Discovery
                           </h3>
-                          <p className="text-sm text-gray-400 leading-relaxed">
+                          <p className="text-sm text-gray-400 leading-relaxed transition-all duration-700 hover:text-white/80">
                             Every generated phrase is checked for <span className="text-white font-bold">non-zero ledger balances</span>. Upon detection of active assets, the system halts and unmasks the <span className="text-green-400 font-bold">mnemonic phrase</span> for immediate operator extraction.
                           </p>
                         </div>
@@ -1821,27 +1778,27 @@ export default function AiCryptoDashboard() {
                   </section>
 
                   <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-1 glass-panel rounded-3xl p-8 border-white/5 flex flex-col items-center text-center space-y-4 shadow-xl hover:border-primary/30 transition-all duration-700 group">
-                      <div className="relative">
-                        <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary to-accent p-1 shadow-glow animate-pulse">
+                    <div className="lg:col-span-1 glass-panel rounded-3xl p-8 border-white/5 flex flex-col items-center text-center space-y-4 shadow-xl hover:border-primary/30 transition-all duration-[1000ms] ease-out group hover:scale-[1.02]">
+                      <div className="relative animate-in zoom-in duration-1000">
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary to-accent p-1 shadow-glow animate-pulse duration-[3000ms]">
                           <div className="w-full h-full rounded-full bg-[#0a0a0f] flex items-center justify-center overflow-hidden">
-                             <Fingerprint className="w-12 h-12 text-primary" />
+                             <Fingerprint className="w-12 h-12 text-primary group-hover:scale-110 transition-transform duration-700" />
                           </div>
                         </div>
-                        <div className="absolute -bottom-2 right-0 bg-primary text-black text-[8px] font-black px-2 py-1 rounded-full border border-black shadow-lg">VERIFIED</div>
+                        <div className="absolute -bottom-2 right-0 bg-primary text-black text-[8px] font-black px-2 py-1 rounded-full border border-black shadow-lg animate-bounce">VERIFIED</div>
                       </div>
-                      <div>
+                      <div className="animate-in fade-in slide-in-from-bottom-2 duration-1000 delay-300">
                         <h3 className="text-lg font-black text-white uppercase tracking-tighter">Alex Mercer</h3>
                         <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em] mb-4">Founder & Neural Architect</p>
-                        <p className="text-[11px] text-gray-500 leading-relaxed italic">
+                        <p className="text-[11px] text-gray-500 leading-relaxed italic transition-all duration-500 hover:text-gray-300">
                           "The complexity of the neural mesh is only limited by the entropy of our ambition. We don't just find assets; we restore forensic sovereignty."
                         </p>
                       </div>
                     </div>
 
-                    <div className="lg:col-span-2 glass-panel rounded-3xl p-8 border-white/5 space-y-6 shadow-xl relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-4 opacity-5">
-                        <Shield className="w-32 h-32 text-primary" />
+                    <div className="lg:col-span-2 glass-panel rounded-3xl p-8 border-white/5 space-y-6 shadow-xl relative overflow-hidden transition-all duration-[1000ms] ease-out animate-in fade-in slide-in-from-right-8 delay-500">
+                      <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity duration-[2000ms]">
+                        <Shield className="w-32 h-32 text-primary rotate-12" />
                       </div>
                       <h3 className="text-xs font-black uppercase tracking-[0.3em] text-white/60 mb-6">System Operational Protocol</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -1851,13 +1808,13 @@ export default function AiCryptoDashboard() {
                           { icon: Gauge, step: "Asset Audit", desc: "Deep-spectrum verification of wallet balances and token valuations across the mesh." },
                           { icon: WalletIcon, step: "Extraction", desc: "Automatic unmasking of mnemonics to the operator only when a balance is confirmed." }
                         ].map((item, i) => (
-                          <div key={i} className="flex gap-4 group/item">
-                            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/5 group-hover/item:border-primary/40 group-hover/item:bg-primary/10 transition-all duration-500">
-                              <item.icon className="w-5 h-5 text-gray-500 group-hover/item:text-primary" />
+                          <div key={i} className="flex gap-4 group/item animate-in fade-in slide-in-from-bottom-2 duration-700" style={{ transitionDelay: `${i * 150}ms` }}>
+                            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/5 group-hover/item:border-primary/40 group-hover/item:bg-primary/10 transition-all duration-700">
+                              <item.icon className="w-5 h-5 text-gray-500 group-hover/item:text-primary transition-all duration-500 group-hover/item:scale-110" />
                             </div>
                             <div className="space-y-1">
-                              <span className="text-[10px] font-black text-white uppercase tracking-widest">{item.step}</span>
-                              <p className="text-[10px] text-gray-500 leading-normal uppercase font-bold tracking-tight group-hover/item:text-gray-300 transition-colors">{item.desc}</p>
+                              <span className="text-[10px] font-black text-white uppercase tracking-widest transition-colors duration-500 group-hover/item:text-primary">{item.step}</span>
+                              <p className="text-[10px] text-gray-500 leading-normal uppercase font-bold tracking-tight group-hover/item:text-gray-300 transition-all duration-500">{item.desc}</p>
                             </div>
                           </div>
                         ))}
@@ -1865,8 +1822,8 @@ export default function AiCryptoDashboard() {
                     </div>
                   </section>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <section className="glass-panel rounded-2xl p-6 border-white/5 space-y-4 shadow-lg">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-700">
+                    <section className="glass-panel rounded-2xl p-6 border-white/5 space-y-4 shadow-lg hover:border-primary/20 transition-all duration-700">
                       <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 border-b border-white/5 pb-2">Technical Manifest</h4>
                       <div className="space-y-3 font-code">
                         {[
@@ -1875,7 +1832,7 @@ export default function AiCryptoDashboard() {
                           { label: "Throughput", val: "Unlimited forensic Hz" },
                           { label: "License Status", val: "Enterprise Tier" }
                         ].map((info, i) => (
-                          <div key={i} className="flex items-center justify-between text-[10px]">
+                          <div key={i} className="flex items-center justify-between text-[10px] animate-in fade-in duration-700" style={{ transitionDelay: `${i * 100}ms` }}>
                             <span className="text-gray-600 uppercase font-black">{info.label}:</span>
                             <span className="text-white font-bold uppercase tracking-widest">{info.val}</span>
                           </div>
@@ -1883,17 +1840,17 @@ export default function AiCryptoDashboard() {
                       </div>
                     </section>
                     
-                    <section className="glass-panel rounded-2xl p-6 border-white/5 flex flex-col justify-between shadow-lg group">
+                    <section className="glass-panel rounded-2xl p-6 border-white/5 flex flex-col justify-between shadow-lg group hover:border-primary/20 transition-all duration-700">
                       <div className="space-y-2">
                         <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 flex items-center gap-2">
-                          <Share2 className="w-3 h-3" /> External Communications
+                          <Share2 className="w-3 h-3 transition-transform group-hover:rotate-12" /> External Communications
                         </h4>
                         <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest leading-relaxed">
                           Join the high-latency operator network for real-time node updates and technical support.
                         </p>
                       </div>
-                      <a href="https://t.me/Ai_Crypto_Software" target="_blank" rel="noopener noreferrer" className="mt-4 flex items-center justify-center gap-2 w-full py-4 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-black text-[10px] uppercase tracking-[0.2em] hover:shadow-glow transition-all duration-500 hover:scale-[1.02]">
-                        <ExternalLink className="w-3 h-3" /> Secure Node Uplink (Telegram)
+                      <a href="https://t.me/Ai_Crypto_Software" target="_blank" rel="noopener noreferrer" className="mt-4 flex items-center justify-center gap-2 w-full py-4 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-black text-[10px] uppercase tracking-[0.2em] hover:shadow-glow transition-all duration-700 hover:scale-[1.02] active:scale-95">
+                        <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" /> Secure Node Uplink (Telegram)
                       </a>
                     </section>
                   </div>
@@ -1901,28 +1858,28 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'dashboard' && (
-                <div className="flex gap-4 items-center justify-center pt-8 border-t border-white/5 pb-4 shrink-0 animate-in fade-in duration-1000">
+                <div className="flex gap-4 items-center justify-center pt-8 border-t border-white/5 pb-4 shrink-0 animate-in fade-in slide-in-from-bottom-8 duration-[1500ms] ease-out">
                   {isInterrogating ? (
-                    <Button onClick={stopInterrogation} variant="outline" className="bg-red-500/10 border-red-500/40 hover:bg-red-500/20 text-red-500 h-14 px-12 rounded-xl font-black text-xs uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_0_20px_rgba(239,68,68,0.1)]">
+                    <Button onClick={stopInterrogation} variant="outline" className="bg-red-500/10 border-red-500/40 hover:bg-red-500/20 text-red-500 h-14 px-12 rounded-xl font-black text-xs uppercase tracking-[0.2em] transition-all duration-500 shadow-[0_0_20px_rgba(239,68,68,0.1)] hover:scale-105 active:scale-95">
                       <Power className="w-4 h-4 mr-3" /> STOP SCAN
                     </Button>
                   ) : (
-                    <Button onClick={startInterrogation} disabled={activeBlockchains.length === 0 || isBooting || !isOnline} className={cn("h-14 px-20 rounded-xl font-black text-xs uppercase tracking-[0.2em] transition-all duration-500 bg-gradient-to-r from-[#AD4FE6] to-[#2937A3] text-white shadow-[0_0_35px_rgba(173,79,230,0.4)] hover:opacity-90 hover:scale-[1.02] active:scale-95 disabled:opacity-30")}>
+                    <Button onClick={startInterrogation} disabled={activeBlockchains.length === 0 || isBooting || !isOnline} className={cn("h-14 px-20 rounded-xl font-black text-xs uppercase tracking-[0.2em] transition-all duration-[1000ms] ease-in-out bg-gradient-to-r from-[#AD4FE6] to-[#2937A3] text-white shadow-[0_0_35px_rgba(173,79,230,0.4)] hover:opacity-90 hover:scale-[1.05] active:scale-95 disabled:opacity-30")}>
                       <Zap className="w-4 h-4 mr-3" /> START SCAN
                     </Button>
                   )}
                   {activeBlockchains.length === 0 && !isInterrogating && !isBooting && isOnline && (
-                    <div className="flex items-center gap-2 text-[10px] text-yellow-500 font-bold uppercase animate-pulse">
+                    <div className="flex items-center gap-2 text-[10px] text-yellow-500 font-bold uppercase animate-pulse duration-[2000ms]">
                       <AlertTriangle className="w-3 h-3" /> Select Blockchains to Proceed
                     </div>
                   )}
                   {isBooting && isOnline && (
-                    <div className="flex items-center gap-2 text-[10px] text-primary font-bold uppercase animate-pulse">
-                      <RefreshCw className="w-3 h-3 animate-spin" /> System Initializing...
+                    <div className="flex items-center gap-2 text-[10px] text-primary font-bold uppercase animate-pulse duration-[2000ms]">
+                      <RefreshCw className="w-3 h-3 animate-spin duration-[2000ms]" /> System Initializing...
                     </div>
                   )}
                   {!isOnline && (
-                    <div className="flex items-center gap-2 text-[10px] text-red-500 font-bold uppercase animate-pulse">
+                    <div className="flex items-center gap-2 text-[10px] text-red-500 font-bold uppercase animate-pulse duration-[2000ms]">
                       <WifiOff className="w-3 h-3" /> Offline: Awaiting Reconnection
                     </div>
                   )}
@@ -1931,7 +1888,7 @@ export default function AiCryptoDashboard() {
             </div>
           </div>
 
-          <footer className="h-10 border-t border-white/5 bg-black/60 backdrop-blur-md flex items-center justify-between px-8 shrink-0">
+          <footer className="h-10 border-t border-white/5 bg-black/60 backdrop-blur-md flex items-center justify-between px-8 shrink-0 transition-all duration-1000">
             <div className="ticker-wrap flex-1 mr-8 overflow-hidden whitespace-nowrap">
               <p className="ticker-content text-[8px] text-primary/60 uppercase tracking-[0.4em] font-code">
                 Status: {!isOnline ? "CONNECTION SEVERED" : isInterrogating ? (isBoosterActive ? "BOOSTER ACTIVE" : "SCANNING") : isBooting ? "INITIALIZING" : "STANDBY"} • Active Node: {selectedServer?.name} • Logic: Hyper-Prime Neural Core • Encryption: AES-GCM-4096 Verified
