@@ -1069,11 +1069,14 @@ export default function AiCryptoDashboard() {
                           onClick={activateBooster}
                           disabled={!isInterrogating || isBoosterActive || boosterCount <= 0}
                           className={cn(
-                            "w-full h-11 font-black text-[10px] uppercase tracking-widest transition-all duration-500 rounded-xl border mt-2",
-                            isBoosterActive ? "bg-primary text-black border-primary shadow-glow" : "bg-primary/5 text-primary border-primary/20 hover:bg-primary/10 shadow-[0_5px_15px_rgba(173,79,230,0.1)]"
+                            "w-full h-14 font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-500 rounded-xl border mt-4 relative overflow-hidden group",
+                            isBoosterActive 
+                              ? "bg-primary text-black border-primary shadow-glow scale-[1.02]" 
+                              : "bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-gradient text-white border-primary/40 hover:scale-[1.02] active:scale-95 shadow-[0_10px_30px_rgba(173,79,230,0.3)]"
                           )}
                         >
-                          <Rocket className={cn("w-3 h-3 mr-2", isBoosterActive && "animate-bounce")} />
+                          <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                          <Rocket className={cn("w-4 h-4 mr-3", isBoosterActive && "animate-bounce", !isBoosterActive && "group-hover:-translate-y-1 transition-transform")} />
                           {isBoosterActive ? `Neural Booster Engaged (${formatTime(boosterTimeRemaining).slice(3)})` : "Activate Neural Booster"}
                         </Button>
                       </div>
