@@ -49,7 +49,8 @@ import {
   Coins,
   Rocket,
   Save,
-  CreditCard
+  CreditCard,
+  Fingerprint
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
@@ -1696,72 +1697,122 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'about' && (
-                <div className="max-w-[900px] mx-auto w-full flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out pb-20 overflow-y-auto">
-                  <section className="glass-panel rounded-2xl p-8 border-white/5 space-y-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-                    <div className="flex items-center gap-4 border-b border-white/5 pb-4">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-[0_0_25px_rgba(173,79,230,0.3)] transition-all duration-700">
-                        <Cpu className="w-6 h-6" />
-                      </div>
-                      <h3 className="text-xl font-black uppercase tracking-[0.2em] text-white">AI Crypto Engine v4.0 Elite</h3>
+                <div className="max-w-[1000px] mx-auto w-full flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out pb-20 overflow-y-auto terminal-scrollbar pr-2">
+                  
+                  {/* Hero Functional Section */}
+                  <section className="relative overflow-hidden glass-panel rounded-3xl p-10 border-primary/20 bg-primary/[0.02] shadow-[0_30px_60px_rgba(0,0,0,0.6)] group">
+                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity duration-1000">
+                      <BrainCircuit className="w-48 h-48 text-primary" />
                     </div>
-                    <div className="space-y-4 text-sm text-gray-400 leading-relaxed font-body">
-                      <p>AI Crypto Engine is an advanced, hardware-accelerated blockchain analysis system designed for deep-spectrum forensic asset recovery.</p>
-                      <p>By leveraging neural heuristic pattern recognition and the ultra-low latency **NEURAL CORE PRIME** Geneva cluster, the engine provides unprecedented forensic throughput for digital asset interrogation.</p>
-                    </div>
-                  </section>
-                  <section className="space-y-4">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 px-2">System Operational Protocol</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      {[
-                        { step: "Phase 1", desc: "Autonomous Mnemonic Synthesis: The engine generates high-entropy BIP39 seed phrases using neural randomization." },
-                        { step: "Phase 2", desc: "Network Synchronization: The system performs cross-network interrogation via the Geneva Prime uplink to identify active nodes." },
-                        { step: "Phase 3", desc: "Forensic Asset Audit: Real-time ledger inquiries determine the current valuation and liquidity of detected wallet signatures." },
-                        { step: "Phase 4", desc: "Discovery Registration: Assets with verified non-zero balances are formally registered in the secure workstation ledger." }
-                      ].map((item, i) => (
-                        <div key={i} className="glass-panel rounded-xl p-5 border-white/5 space-y-3 hover:border-primary/30 transition-all duration-500 group shadow-md hover:shadow-primary/5">
-                          <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em] border-b border-primary/20 pb-1 inline-block transition-all duration-500 group-hover:border-primary/50">{item.step}</span>
-                          <p className="text-[10px] font-bold text-gray-400 uppercase leading-relaxed group-hover:text-white transition-colors duration-500">{item.desc}</p>
+                    <div className="relative z-10 space-y-8">
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-glow">
+                          <Zap className="w-8 h-8 text-black" />
                         </div>
-                      ))}
+                        <div>
+                          <h2 className="text-2xl font-black uppercase tracking-[0.1em] text-white">Core Forensic Engine</h2>
+                          <p className="text-[10px] font-bold text-primary uppercase tracking-[0.3em]">Operational Protocol v4.0 Elite</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-4">
+                        <div className="space-y-4">
+                          <h3 className="text-xs font-black uppercase tracking-widest text-white/80 flex items-center gap-2">
+                            <Layers className="w-4 h-4 text-primary" /> High-Entropy Synthesis
+                          </h3>
+                          <p className="text-sm text-gray-400 leading-relaxed">
+                            The engine autonomously synthesizes high-entropy <span className="text-white font-bold">BIP39 recovery phrases</span> (12, 18, and 24 words) and immediately performs deep-spectrum node interrogation to identify active blockchain signatures.
+                          </p>
+                        </div>
+                        <div className="space-y-4">
+                          <h3 className="text-xs font-black uppercase tracking-widest text-white/80 flex items-center gap-2">
+                            <ShieldCheck className="w-4 h-4 text-primary" /> Automated Discovery
+                          </h3>
+                          <p className="text-sm text-gray-400 leading-relaxed">
+                            Every generated phrase is checked for <span className="text-white font-bold">non-zero ledger balances</span>. Upon detection of active assets, the system halts and unmasks the <span className="text-green-400 font-bold">mnemonic phrase</span> for immediate operator extraction.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </section>
+
+                  {/* Alex Mercer - Founder Section */}
+                  <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-1 glass-panel rounded-3xl p-8 border-white/5 flex flex-col items-center text-center space-y-4 shadow-xl hover:border-primary/30 transition-all duration-700 group">
+                      <div className="relative">
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-primary to-accent p-1 shadow-glow animate-pulse">
+                          <div className="w-full h-full rounded-full bg-[#0a0a0f] flex items-center justify-center overflow-hidden">
+                             <Fingerprint className="w-12 h-12 text-primary" />
+                          </div>
+                        </div>
+                        <div className="absolute -bottom-2 right-0 bg-primary text-black text-[8px] font-black px-2 py-1 rounded-full border border-black shadow-lg">VERIFIED</div>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-black text-white uppercase tracking-tighter">Alex Mercer</h3>
+                        <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em] mb-4">Founder & Neural Architect</p>
+                        <p className="text-[11px] text-gray-500 leading-relaxed italic">
+                          "The complexity of the neural mesh is only limited by the entropy of our ambition. We don't just find assets; we restore forensic sovereignty."
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="lg:col-span-2 glass-panel rounded-3xl p-8 border-white/5 space-y-6 shadow-xl relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-4 opacity-5">
+                        <Shield className="w-32 h-32 text-primary" />
+                      </div>
+                      <h3 className="text-xs font-black uppercase tracking-[0.3em] text-white/60 mb-6">System Operational Protocol</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        {[
+                          { icon: Cpu, step: "Neural Synthesis", desc: "Autonomous generation of 12/18/24-word seed phrases using high-entropy models." },
+                          { icon: Network, step: "Global Node Sync", desc: "Real-time interrogation of BTC, ETH, SOL, and Multi-Chain nodes for active signatures." },
+                          { icon: Gauge, step: "Asset Audit", desc: "Deep-spectrum verification of wallet balances and token valuations across the mesh." },
+                          { icon: WalletIcon, step: "Extraction", desc: "Automatic unmasking of mnemonics to the operator only when a balance is confirmed." }
+                        ].map((item, i) => (
+                          <div key={i} className="flex gap-4 group/item">
+                            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/5 group-hover/item:border-primary/40 group-hover/item:bg-primary/10 transition-all duration-500">
+                              <item.icon className="w-5 h-5 text-gray-500 group-hover/item:text-primary" />
+                            </div>
+                            <div className="space-y-1">
+                              <span className="text-[10px] font-black text-white uppercase tracking-widest">{item.step}</span>
+                              <p className="text-[10px] text-gray-500 leading-normal uppercase font-bold tracking-tight group-hover/item:text-gray-300 transition-colors">{item.desc}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Telemetry & Links */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <section className="glass-panel rounded-2xl p-6 border-white/5 space-y-4 shadow-lg hover:border-white/10 transition-all duration-500">
-                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white border-b border-white/5 pb-2">Software Information</h4>
+                    <section className="glass-panel rounded-2xl p-6 border-white/5 space-y-4 shadow-lg">
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 border-b border-white/5 pb-2">Technical Manifest</h4>
                       <div className="space-y-3 font-code">
                         {[
-                          { label: "Version", val: "v4.0 Elite" },
-                          { label: "Engine", val: "Hyper-Prime Neural Core" },
-                          { label: "Encryption", val: "AES-GCM-4096" },
-                          { label: "Status", val: isOnline ? "Active" : "Offline", class: isOnline ? "text-green-500" : "text-red-500" }
+                          { label: "Core Version", val: "v4.0 Elite" },
+                          { label: "Neural Engine", val: "Hyper-Prime Gen 4" },
+                          { label: "Throughput", val: "Unlimited forensic Hz" },
+                          { label: "License Status", val: "Enterprise Tier" }
                         ].map((info, i) => (
                           <div key={i} className="flex items-center justify-between text-[10px]">
-                            <span className="text-gray-600 uppercase font-black">:</span>
-                            <span className={cn("font-bold uppercase tracking-widest transition-all duration-500", info.class || "text-white")}>{info.val}</span>
+                            <span className="text-gray-600 uppercase font-black">{info.label}:</span>
+                            <span className="text-white font-bold uppercase tracking-widest">{info.val}</span>
                           </div>
                         ))}
                       </div>
                     </section>
-                    <section className="glass-panel rounded-2xl p-6 border-white/5 space-y-4 shadow-lg hover:border-white/10 transition-all duration-500">
-                      <div className="flex items-center gap-3 border-b border-white/5 pb-2">
-                        <BookOpen className="w-4 h-4 text-primary" />
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Project Oversight</h4>
+                    
+                    <section className="glass-panel rounded-2xl p-6 border-white/5 flex flex-col justify-between shadow-lg group">
+                      <div className="space-y-2">
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 flex items-center gap-2">
+                          <Share2 className="w-3 h-3" /> External Communications
+                        </h4>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest leading-relaxed">
+                          Join the high-latency operator network for real-time node updates and technical support.
+                        </p>
                       </div>
-                      <div className="space-y-3 font-code">
-                        <div className="flex items-center justify-between text-[10px]">
-                          <span className="text-gray-600 uppercase font-black">Operator:</span>
-                          <span className="text-white font-bold uppercase tracking-widest">{session?.username || "(UNAUTHORIZED)"}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-[10px]">
-                          <span className="text-gray-600 uppercase font-black">Project:</span>
-                          <span className="text-white font-bold uppercase tracking-widest">AI Crypto Engine</span>
-                        </div>
-                      </div>
-                      <div className="pt-4">
-                         <a href="https://t.me/Ai_Crypto_Software" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-gradient-to-r from-[#7c6cff] to-[#9b7bff] text-white font-black text-[10px] uppercase tracking-[0.2em] hover:shadow-[0_0_25px_rgba(124,108,255,0.5)] transition-all duration-500">
-                           <ExternalLink className="w-3 h-3" /> Join Telegram Channel
-                         </a>
-                      </div>
+                      <a href="https://t.me/Ai_Crypto_Software" target="_blank" rel="noopener noreferrer" className="mt-4 flex items-center justify-center gap-2 w-full py-4 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-black text-[10px] uppercase tracking-[0.2em] hover:shadow-glow transition-all duration-500 hover:scale-[1.02]">
+                        <ExternalLink className="w-3 h-3" /> Secure Node Uplink (Telegram)
+                      </a>
                     </section>
                   </div>
                 </div>
