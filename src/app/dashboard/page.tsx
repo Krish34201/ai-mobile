@@ -409,10 +409,12 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  // Optimized log flushing for million-dollar smoothness
   useEffect(() => {
     const flushLogs = () => {
       if (logBuffer.current.length > 0) {
-        const entriesToFlush = Math.min(logBuffer.current.length, isBoosterActive ? 250 : 25);
+        // Higher threshold when booster is active, but keep it smooth
+        const entriesToFlush = Math.min(logBuffer.current.length, isBoosterActive ? 150 : 25);
         const batch: LogEntry[] = [];
         let aiIncrement = 0;
 
@@ -422,15 +424,19 @@ export default function AiCryptoDashboard() {
             batch.push(entry);
             if (entry.type === 'ai') {
               aiIncrement++;
-              lastMnemonics.current = [entry.message, ...lastMnemonics.current].slice(0, 5);
+              // Update last mnemonics for AI Search interrogation
+              if (Math.random() > 0.8) {
+                lastMnemonics.current = [entry.message, ...lastMnemonics.current].slice(0, 5);
+              }
             }
           }
         }
 
         if (batch.length > 0) {
           setLogs(prev => {
+            // Keep only recent successful hits or latest AI checks to prevent DOM bloat
             const filteredPrev = isInterrogating 
-              ? prev.filter(l => l.type === 'ai' || l.type === 'success') 
+              ? prev.filter(l => l.type === 'success' || l.type === 'info') 
               : prev;
             return [...filteredPrev, ...batch].slice(-100);
           });
@@ -695,6 +701,7 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(interval);
   }, [isOnline]);
 
+  // High-performance interrogation loop with kinetic batching
   useEffect(() => {
     let interrogationInterval: NodeJS.Timeout
 
@@ -703,54 +710,61 @@ export default function AiCryptoDashboard() {
       const coreFactor = allocatedCores[0] / 8;
       const isMulticoin = activeBlockchains.includes('multicoin');
       const multicoinFactor = isMulticoin ? 1.4 : 1;
-      const boosterFactor = isBoosterActive ? 100 : 1;
+      const boosterFactor = isBoosterActive ? 50 : 1; // Overclocking
       
       const serverLatencyValue = parseFloat(selectedServer?.latency || "5.2ms");
       const serverSpeedFactor = Math.max(0.5, 100 / (serverLatencyValue + 1));
 
-      const baseDelay = Math.max(1, ((100 - (95 * intensity * coreFactor)) / (1.4 * multicoinFactor * boosterFactor * serverSpeedFactor)));
+      // Calculate delay, minimum 4ms due to browser clamping
+      const baseDelay = Math.max(4, ((100 - (95 * intensity * coreFactor)) / (1.4 * multicoinFactor * (isBoosterActive ? 2 : 1) * serverSpeedFactor)));
 
       interrogationInterval = setInterval(async () => {
-        let mnemonic = bip39.generateMnemonic();
+        // Kinetic batching: generate multiple mnemonics per tick if booster is active
+        const batchSize = isBoosterActive ? 15 : 1;
         
-        const entry: LogEntry = {
-          id: Math.random().toString(36).substr(2, 9),
-          message: mnemonic,
-          timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
-          type: "ai"
-        };
-        logBuffer.current.push(entry);
+        for (let b = 0; b < batchSize; b++) {
+          let mnemonic = bip39.generateMnemonic();
+          
+          const entry: LogEntry = {
+            id: Math.random().toString(36).substr(2, 9),
+            message: mnemonic,
+            timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
+            type: "ai"
+          };
+          logBuffer.current.push(entry);
 
-        if (Math.random() < (isMulticoin ? 0.0001 : 0.00001) * boosterFactor) {
-           try {
-             const result = await interrogateMnemonic({ mnemonic, isMulticoin });
-             if (result.hasBalance) {
-                setFoundWallets(prev => prev + 1);
-                const asset: DiscoveredAsset = {
-                  id: Math.random().toString(36).substr(2, 9),
-                  mnemonic,
-                  network: result.network || "UNIVERSAL MESH",
-                  value: result.value || "$0.00",
-                  timestamp: new Date().toLocaleString('en-GB')
-                };
-                setDiscoveredAssets(prev => [asset, ...prev]);
-                
-                const successLog: LogEntry = {
-                  id: `success-${asset.id}`,
-                  message: `[SUCCESS] FORENSIC HIT: ${result.network} | VALUE: ${result.value} | SEED: ${mnemonic}`,
-                  timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
-                  type: 'success'
-                };
-                logBuffer.current.push(successLog);
+          // Probabilistic hit detection
+          if (Math.random() < (isMulticoin ? 0.0001 : 0.00001) * (isBoosterActive ? 1.5 : 1)) {
+             try {
+               const result = await interrogateMnemonic({ mnemonic, isMulticoin });
+               if (result.hasBalance) {
+                  setFoundWallets(prev => prev + 1);
+                  const asset: DiscoveredAsset = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    mnemonic,
+                    network: result.network || "UNIVERSAL MESH",
+                    value: result.value || "$0.00",
+                    timestamp: new Date().toLocaleString('en-GB')
+                  };
+                  setDiscoveredAssets(prev => [asset, ...prev]);
+                  
+                  const successLog: LogEntry = {
+                    id: `success-${asset.id}`,
+                    message: `[SUCCESS] FORENSIC HIT: ${result.network} | VALUE: ${result.value} | SEED: ${mnemonic}`,
+                    timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
+                    type: 'success'
+                  };
+                  logBuffer.current.push(successLog);
 
-                toast({
-                  title: "Asset Discovered",
-                  description: `Neural mesh found active balance on ${result.network}. Recovery unmasked.`,
-                });
+                  toast({
+                    title: "Asset Discovered",
+                    description: `Neural mesh found active balance on ${result.network}. Recovery unmasked.`,
+                  });
+               }
+             } catch (e) {
+               console.error("Interrogation handshake failed", e);
              }
-           } catch (e) {
-             console.error("Interrogation handshake failed", e);
-           }
+          }
         }
 
         setCpuLoad(Math.min(100, (systemIntensity[0] * (allocatedCores[0] / 8)) + (Math.random() * 3) + (isBoosterActive ? 15 : 0)));
@@ -1849,7 +1863,7 @@ export default function AiCryptoDashboard() {
                         </p>
                       </div>
                       <a href="https://t.me/Ai_Crypto_Software" target="_blank" rel="noopener noreferrer" className="mt-6 flex items-center justify-center gap-3 w-full py-5 rounded-2xl bg-gradient-to-r from-primary to-accent text-white font-black text-[11px] uppercase tracking-[0.3em] hover:shadow-glow transition-all duration-1000 hover:scale-[1.03] active:scale-95 shadow-lg">
-                        <ExternalLink className="w-4 h-4 transition-transform duration-700 group-hover:translate-x-1 group-hover:-translate-y-1" /> Secure Node Uplink (Telegram)
+                        <ExternalLink className="w-4 h-4 transition-transform duration-700 group-hover:translate-x-1 group-hover:-translate-y-1" /> SECURE TELEGRAM UPLINK
                       </a>
                     </section>
                   </div>
