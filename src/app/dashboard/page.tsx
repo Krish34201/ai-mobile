@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
@@ -427,7 +428,7 @@ export default function AiCryptoDashboard() {
     const flushLogs = () => {
       if (logBuffer.current.length > 0) {
         // Kinetic bite: Take a size that feels fast but avoids React render choke
-        // Decreased booster flush rate to ensure buttery smoothness (8 vs 15)
+        // Moderated booster flush rate for buttery smoothness
         const entriesToFlush = Math.min(logBuffer.current.length, isBoosterActive ? 8 : 4);
         const batch: LogEntry[] = [];
         let aiIncrement = 0;
@@ -731,11 +732,11 @@ export default function AiCryptoDashboard() {
       const serverLatencyValue = parseFloat(selectedServer?.latency || "5.2ms");
       const serverSpeedFactor = Math.max(0.5, 100 / (serverLatencyValue + 1));
 
-      // Decreased booster speed for buttery smoothness (min delay 50ms)
+      // Synchronized delay for buttery smoothness (min delay 50ms)
       const baseDelay = Math.max(50, ((200 - (100 * intensity * coreFactor)) / (1.4 * (isMulticoin ? 1.4 : 1) * serverSpeedFactor)));
 
       interrogationInterval = setInterval(() => {
-        // Reduced batch size for smoother rendering (10 vs 25)
+        // Moderated batch size for buttery rendering
         const batchSize = isBoosterActive ? 10 : 2;
         
         for (let b = 0; b < batchSize; b++) {
@@ -784,11 +785,13 @@ export default function AiCryptoDashboard() {
       if (activeBlockchains.includes('multicoin')) {
         setActiveBlockchains([]);
       } else {
+        // Automatically select and lock all individual blockchains
         setActiveBlockchains(BLOCKCHAINS.map(c => c.id));
       }
       return;
     }
 
+    // Individual chains are locked when multicoin is active
     if (activeBlockchains.includes('multicoin')) return;
 
     setActiveBlockchains(prev => prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id])
@@ -862,7 +865,7 @@ export default function AiCryptoDashboard() {
           <SidebarHeader className="p-6 border-b border-white/5 shrink-0">
             <div className="flex items-center gap-3">
               <div className="relative w-12 h-12 rounded-[14px] bg-gradient-to-tr from-primary via-accent to-primary flex items-center justify-center shadow-[0_0_30px_rgba(173,79,230,0.5)] border border-primary/50 group animate-in zoom-in duration-1000">
-                <BrainCircuit className="w-7 h-7 text-black animate-pulse duration-[3000ms]" />
+                <Cpu className="w-7 h-7 text-black animate-pulse duration-[3000ms]" />
               </div>
               <div className="animate-in fade-in slide-in-from-left-2 duration-1000">
                 <h1 className="text-sm font-black tracking-tight uppercase leading-none text-white">Ai Crypto</h1>

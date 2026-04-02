@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect } from 'react'
@@ -6,7 +7,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { 
-  BrainCircuit, 
+  Cpu, 
   ShieldCheck, 
   ChevronRight, 
   Fingerprint,
@@ -109,7 +110,7 @@ export default function LoginPage() {
           <div className="relative mb-6 group animate-in zoom-in duration-1000">
             <div className="absolute inset-0 bg-primary/40 blur-[20px] rounded-full group-hover:blur-[30px] transition-all duration-1000" />
             <div className="relative w-20 h-20 rounded-[24px] bg-gradient-to-tr from-primary via-accent to-primary flex items-center justify-center shadow-[0_0_40px_rgba(173,79,230,0.6)] border border-primary/50 group-hover:scale-105 transition-transform duration-700">
-              <BrainCircuit className="w-11 h-11 text-black animate-pulse duration-[3000ms]" />
+              <Cpu className="w-11 h-11 text-black animate-pulse duration-[3000ms]" />
             </div>
           </div>
           <h1 className="text-3xl font-black tracking-tighter uppercase text-white mb-1 drop-shadow-sm">Ai Crypto</h1>
@@ -180,7 +181,7 @@ export default function LoginPage() {
                   </>
                 ) : (
                   <>
-                    START GATEWAY
+                    LOGIN
                     <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
