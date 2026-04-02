@@ -821,8 +821,8 @@ export default function AiCryptoDashboard() {
         <Sidebar className="border-r border-white/5 bg-[#0a0a0a]/80 backdrop-blur-2xl z-30 transition-all duration-1000 ease-in-out">
           <SidebarHeader className="p-6 border-b border-white/5 shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shadow-[0_0_20px_rgba(173,79,230,0.5)] animate-in fade-in zoom-in duration-1000">
-                <Zap className="w-6 h-6 text-black animate-pulse duration-[3000ms]" />
+              <div className="relative w-12 h-12 rounded-[14px] bg-gradient-to-tr from-primary via-accent to-primary flex items-center justify-center shadow-[0_0_30px_rgba(173,79,230,0.5)] border border-primary/50 group animate-in zoom-in duration-1000">
+                <BrainCircuit className="w-7 h-7 text-black animate-pulse duration-[3000ms]" />
               </div>
               <div className="animate-in fade-in slide-in-from-left-2 duration-1000">
                 <h1 className="text-sm font-black tracking-tight uppercase leading-none text-white">Ai Crypto</h1>
@@ -831,7 +831,7 @@ export default function AiCryptoDashboard() {
             </div>
           </SidebarHeader>
           
-          <SidebarContent className="p-4 terminal-scrollbar overflow-x-hidden">
+          <SidebarContent className="p-4 terminal-scrollbar overflow-x-hidden no-scrollbar">
             <SidebarGroup className="animate-in fade-in slide-in-from-left-4 duration-1000">
               <SidebarGroupLabel className="text-white/30 text-[9px] uppercase tracking-[0.2em] mb-2">Navigation</SidebarGroupLabel>
               <SidebarMenu>
@@ -927,7 +927,7 @@ export default function AiCryptoDashboard() {
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto terminal-scrollbar p-4 md:p-8 flex flex-col transition-all duration-1000">
+          <div className="flex-1 overflow-y-auto terminal-scrollbar p-4 md:p-8 flex flex-col transition-all duration-1000 no-scrollbar">
             <div className="max-w-[1400px] mx-auto w-full flex-1 flex flex-col min-h-0">
               
               {!isOnline && (
@@ -1059,7 +1059,7 @@ export default function AiCryptoDashboard() {
                             </div>
                             <div className="space-y-1 border-l border-white/5 pl-4 animate-in fade-in slide-in-from-bottom-2 duration-1000 delay-1000">
                               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                                <Rocket className="w-3 h-3" /> Boosters
+                                <Rocket className="w-3 h-3" /> Booster
                               </p>
                               <p className="text-lg font-black font-code text-primary tracking-tighter">
                                 {boosterCount} UNITS
@@ -1073,7 +1073,7 @@ export default function AiCryptoDashboard() {
                             onClick={activateBooster}
                             disabled={!isInterrogating || isBoosterActive || boosterCount <= 0}
                             className={cn(
-                              "w-full h-14 font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-700 rounded-xl border relative overflow-hidden group",
+                              "w-full h-14 font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-700 rounded-xl border relative overflow-hidden group shadow-glow",
                               isBoosterActive 
                                 ? "bg-primary/20 text-primary border-primary/40 cursor-default" 
                                 : "bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-gradient text-white border-primary/40 hover:scale-[1.03] active:scale-95 shadow-[0_12px_40px_rgba(173,79,230,0.4)]"
@@ -1106,13 +1106,13 @@ export default function AiCryptoDashboard() {
                     </div>
                     
                     <div className={cn("scan-wrapper flex-1 min-h-0 shadow-[0_0_80px_rgba(0,0,0,0.7)] rounded-xl transition-all duration-1000 ease-in-out animate-in fade-in zoom-in-95 delay-500", isBoosterActive && "border-primary/60 shadow-primary/30 scale-[1.01]")}>
-                      <div className="h-full scan-console terminal-scrollbar flex flex-col relative rounded-xl overflow-hidden">
+                      <div className="h-full scan-console terminal-scrollbar flex flex-col relative rounded-xl overflow-hidden no-scrollbar">
                         <div className="absolute inset-0 scanline opacity-30 z-20 pointer-events-none" />
                         {isBoosterActive && <div className="absolute inset-0 bg-primary/5 animate-pulse z-10 pointer-events-none transition-all duration-1000" />}
                         <div 
                           ref={scrollRef} 
                           className={cn(
-                            "flex-1 overflow-y-auto terminal-scrollbar p-6 space-y-2 z-10 flex flex-col scroll-smooth"
+                            "flex-1 overflow-y-auto terminal-scrollbar p-6 space-y-2 z-10 flex flex-col scroll-smooth no-scrollbar"
                           )}
                           style={{ fontSize: `${consoleFontSize[0]}px` }}
                         >
@@ -1183,9 +1183,15 @@ export default function AiCryptoDashboard() {
                            <Button 
                              onClick={connectAiSearch} 
                              disabled={isAiSearchConnecting}
-                             className="w-full bg-primary/10 border border-primary/20 text-primary font-black text-[10px] uppercase hover:bg-primary/20 transition-all duration-700 h-10 mt-6 shadow-[0_0_20px_rgba(173,79,230,0.15)] hover:scale-[1.02]"
+                             className={cn(
+                               "w-full font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-700 rounded-xl border relative overflow-hidden group h-12 mt-6",
+                               session?.aiSearchEnabled && !isAiSearchConnecting
+                                 ? "bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-gradient text-white border-primary/40 shadow-glow hover:scale-[1.03]"
+                                 : "bg-primary/10 border-primary/20 text-primary hover:bg-primary/20"
+                             )}
                            >
-                             {session?.aiSearchEnabled ? <Zap className="w-3 h-3 mr-2" /> : <Lock className="w-3 h-3 mr-2" />}
+                             {isAiSearchConnecting && <Loader2 className="w-3 h-3 mr-2 animate-spin" />}
+                             {!isAiSearchConnecting && (session?.aiSearchEnabled ? <Zap className="w-3 h-3 mr-2" /> : <Lock className="w-3 h-3 mr-2" />)}
                              {isAiSearchConnecting ? "Connecting..." : session?.aiSearchEnabled ? "Enable AI Search" : "License Required"}
                            </Button>
                            {!session?.aiSearchEnabled && (
@@ -1243,7 +1249,7 @@ export default function AiCryptoDashboard() {
                               </div>
                               <div 
                                 ref={aiTerminalScrollRef}
-                                className="flex-1 overflow-y-auto p-4 space-y-2 terminal-scrollbar font-code text-[9px] scroll-smooth"
+                                className="flex-1 overflow-y-auto p-4 space-y-2 terminal-scrollbar font-code text-[9px] scroll-smooth no-scrollbar"
                               >
                                 {aiTerminalLogs.length === 0 ? (
                                   <div className="text-gray-700 uppercase animate-pulse italic text-[8px] tracking-widest py-6 text-center">
@@ -1284,7 +1290,7 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'withdraw' && (
-                <div className="flex-1 flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-12 zoom-in-95 duration-1000 ease-out max-h-full overflow-hidden">
+                <div className="flex-1 flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-12 zoom-in-95 duration-1000 ease-out max-h-full overflow-hidden no-scrollbar">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8 shrink-0">
                     <div className="glass-panel p-10 rounded-3xl border-primary/30 bg-primary/[0.02] relative overflow-hidden group shadow-[0_25px_50px_rgba(0,0,0,0.6)] transition-all duration-1000">
                       <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-25 transition-all duration-1000 ease-in-out">
@@ -1367,7 +1373,7 @@ export default function AiCryptoDashboard() {
                       <span className="text-[10px] font-code text-primary/60 uppercase tracking-widest">Found Assets: {discoveredAssets.length}</span>
                     </div>
                     
-                    <div className="flex-1 overflow-y-auto terminal-scrollbar pr-6 pb-12 scroll-smooth">
+                    <div className="flex-1 overflow-y-auto terminal-scrollbar pr-6 pb-12 scroll-smooth no-scrollbar">
                       {discoveredAssets.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center opacity-20 group py-24 animate-in fade-in duration-1500">
                           <Activity className="w-24 h-24 mb-8 group-hover:scale-115 transition-transform duration-[2500ms] ease-out" />
@@ -1418,7 +1424,7 @@ export default function AiCryptoDashboard() {
 
               {activeTab === 'server' && (
                 <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 animate-in fade-in slide-in-from-bottom-12 zoom-in-95 duration-1000 ease-out overflow-hidden relative pb-10 md:pb-0">
-                  <div className="lg:col-span-4 flex flex-col gap-8 min-h-0 overflow-y-auto terminal-scrollbar px-1 pr-3 pb-20 scroll-smooth">
+                  <div className="lg:col-span-4 flex flex-col gap-8 min-h-0 overflow-y-auto terminal-scrollbar px-1 pr-3 pb-20 scroll-smooth no-scrollbar">
                     <div className="flex items-center justify-between mb-2 sticky top-0 bg-[#050507]/90 backdrop-blur-md py-4 z-20 animate-in fade-in duration-1000">
                       <div className="flex items-center gap-3 px-2">
                         <Network className="w-5 h-5 text-primary" />
@@ -1627,7 +1633,7 @@ export default function AiCryptoDashboard() {
                       </div>
                       <div className="flex-1 bg-black/70 p-5 md:p-8 font-code text-[11px] md:text-[12px] overflow-hidden relative">
                         <div className="absolute inset-0 scanline opacity-40 z-20 pointer-events-none" />
-                        <div ref={serverLogRef} className="h-full overflow-y-auto terminal-scrollbar space-y-2.5 flex flex-col z-10 relative scroll-smooth">
+                        <div ref={serverLogRef} className="h-full overflow-y-auto terminal-scrollbar space-y-2.5 flex flex-col z-10 relative scroll-smooth no-scrollbar">
                            {serverLogs.map((log, i) => (
                              <div key={i} className="text-[#00FF41]/70 hover:text-[#00FF41] transition-all duration-500 py-1.5 border-b border-white/[0.04] tracking-tighter animate-in fade-in slide-in-from-left-4">
                                <span className="text-gray-600 mr-3 opacity-60 select-none font-bold uppercase whitespace-nowrap">Node_Log:</span> {log}
@@ -1646,7 +1652,7 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'settings' && (
-                <div className="max-w-4xl mx-auto w-full flex flex-col gap-10 animate-in zoom-in-95 fade-in slide-in-from-bottom-12 duration-1200 ease-out pb-24 overflow-y-auto terminal-scrollbar pr-3 scroll-smooth">
+                <div className="max-w-4xl mx-auto w-full flex flex-col gap-10 animate-in zoom-in-95 fade-in slide-in-from-bottom-12 duration-1200 ease-out pb-24 overflow-y-auto terminal-scrollbar pr-3 scroll-smooth no-scrollbar">
                   <div className="glass-panel rounded-[32px] p-12 border-white/5 shadow-[0_30px_70px_rgba(0,0,0,0.6)] animate-in fade-in duration-1200 delay-300">
                     <h3 className="text-2xl font-black uppercase tracking-[0.2em] mb-12 border-b border-white/10 pb-6">Performance Management</h3>
                     <div className="space-y-16">
@@ -1732,7 +1738,7 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'about' && (
-                <div className="max-w-[1000px] mx-auto w-full flex flex-col gap-12 animate-in fade-in slide-in-from-bottom-12 zoom-in-95 duration-1200 ease-out pb-24 overflow-y-auto terminal-scrollbar pr-3 scroll-smooth">
+                <div className="max-w-[1000px] mx-auto w-full flex flex-col gap-12 animate-in fade-in slide-in-from-bottom-12 zoom-in-95 duration-1200 ease-out pb-24 overflow-y-auto terminal-scrollbar pr-3 scroll-smooth no-scrollbar">
                   <section className="relative overflow-hidden glass-panel rounded-[40px] p-12 border-primary/20 bg-primary/[0.02] shadow-[0_40px_80px_rgba(0,0,0,0.7)] group transition-all duration-[2500ms] ease-in-out animate-in fade-in duration-1500 delay-300">
                     <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-15 transition-all duration-[3000ms]">
                       <BrainCircuit className="w-56 h-56 text-primary transition-all duration-[4000ms] ease-in-out group-hover:rotate-12 group-hover:scale-125" />
