@@ -67,7 +67,7 @@ import { SessionData } from '@/lib/session'
 import { filterMnemonicsHeuristically } from '@/ai/flows/filter-mnemonics-heuristically'
 import { interrogateMnemonic } from '@/ai/flows/interrogate-mnemonic'
 import { db } from '@/firebase/config'
-import { doc, updateDoc, increment } from 'firebase/firestore'
+import { doc, updateDoc, increment, getDoc } from 'firebase/firestore'
 
 const BLOCKCHAINS = [
   { id: 'btc', name: 'Bitcoin', logo: "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/btc.png" },
@@ -293,11 +293,20 @@ export default function AiCryptoDashboard() {
     const fetchSession = async () => {
       const sess = await getSession();
       setSession(sess as SessionData);
-      setBoosterCount(sess.boosters || 0);
       
-      if (sess.aiSearchEnabled) {
-        setSelectedServerId('node-prime-exclusive');
-        setNetworkPing(2.4);
+      // Critical: Fetch latest booster count directly from Firestore to prevent loops/resets
+      if (sess.username) {
+        const userRef = doc(db, 'licenses', sess.username);
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setBoosterCount(data.boosters || 0);
+          // Sync licensing-dependent features
+          if (data.ai_search_enabled) {
+            setSelectedServerId('node-prime-exclusive');
+            setNetworkPing(2.4);
+          }
+        }
       }
     }
     fetchSession();
@@ -338,6 +347,7 @@ export default function AiCryptoDashboard() {
       payoutBtc,
       payoutUsdt,
       payoutSol
+      // boosterCount removed from localStorage to ensure strictly limited quantity from license
     };
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
   }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, seedPhraseColor, consoleFontSize, discoveredAssets, payoutBtc, payoutUsdt, payoutSol]);
@@ -546,7 +556,7 @@ export default function AiCryptoDashboard() {
       return
     }
 
-    // Persistent Firestore Sync
+    // Persistent Firestore Sync - Decrement directly in DB to prevent resets/loops
     if (session?.username) {
       const userRef = doc(db, 'licenses', session.username);
       updateDoc(userRef, {
