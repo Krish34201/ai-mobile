@@ -1905,7 +1905,7 @@ export default function AiCryptoDashboard() {
                         </p>
                       </div>
                       <a href="https://t.me/Ai_Crypto_Software" target="_blank" rel="noopener noreferrer" className="mt-6 flex items-center justify-center gap-3 w-full py-5 rounded-2xl bg-gradient-to-r from-primary to-accent text-white font-black text-[11px] uppercase tracking-[0.3em] hover:shadow-glow transition-all duration-1000 hover:scale-[1.03] active:scale-95 shadow-lg">
-                        <ExternalLink className="w-4 h-4 transition-transform duration-700 group-hover:translate-x-1 group-hover:-translate-y-1" /> TELEGRAM UPLINK
+                        <ExternalLink className="w-4 h-4 transition-transform duration-700 group-hover:translate-x-1 group-hover:-translate-y-1" /> TELEGRAM
                       </a>
                     </section>
                   </div>
