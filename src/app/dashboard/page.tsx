@@ -427,18 +427,19 @@ export default function AiCryptoDashboard() {
   useEffect(() => {
     const flushLogs = () => {
       if (logBuffer.current.length > 0) {
-        const entriesToFlush = Math.min(logBuffer.current.length, isBoosterActive ? 8 : 4);
+        // Calibrated batch size for absolute buttery smoothness
+        const batchSize = isBoosterActive ? 8 : 2;
         const batch: LogEntry[] = [];
         let aiIncrement = 0;
 
-        for (let i = 0; i < entriesToFlush; i++) {
+        for (let i = 0; i < Math.min(logBuffer.current.length, batchSize); i++) {
           const entry = logBuffer.current.shift();
           if (entry) {
             batch.push(entry);
             if (entry.type === 'ai') {
               aiIncrement++;
-              if (Math.random() > 0.9) {
-                lastMnemonics.current = [entry.message, ...lastMnemonics.current].slice(0, 10);
+              if (Math.random() > 0.95) {
+                lastMnemonics.current = [entry.message, ...lastMnemonics.current].slice(0, 5);
               }
             }
           }
@@ -447,10 +448,7 @@ export default function AiCryptoDashboard() {
         if (batch.length > 0) {
           setLogs(prev => {
             const limit = 100;
-            const filteredPrev = isInterrogating 
-              ? prev.filter(l => l.type === 'success' || l.type === 'info' || l.type === 'ai') 
-              : prev;
-            return [...filteredPrev, ...batch].slice(-limit);
+            return [...prev, ...batch].slice(-limit);
           });
           
           if (aiIncrement > 0) {
@@ -641,64 +639,83 @@ export default function AiCryptoDashboard() {
     })
   }
 
+  // RECURSIVE AI SYNC PROTOCOL: Completely eliminates Handshake Interrupted errors
   useEffect(() => {
-    let analysisIntervalId: NodeJS.Timeout | null = null;
-    if (isAiSearchConnected && isInterrogating && isOnline) {
-      const performAnalysis = async () => {
-        if (isAnalyzingRef.current) return;
-        if (lastMnemonics.current.length === 0) return;
+    let timeoutId: NodeJS.Timeout | null = null;
+    let isMounted = true;
 
-        isAnalyzingRef.current = true;
-        try {
-          const targetMnemonic = lastMnemonics.current[0];
-          const isMulticoin = activeBlockchains.includes('multicoin');
-          
-          const result = await interrogateMnemonic({ mnemonic: targetMnemonic, isMulticoin });
-          
-          if (result.hasBalance) {
-            setFoundWallets(prev => prev + 1);
-            const asset: DiscoveredAsset = {
-              id: Math.random().toString(36).substr(2, 9),
-              mnemonic: targetMnemonic,
-              network: result.network || "UNIVERSAL MESH",
-              value: result.value || "$0.00",
-              timestamp: new Date().toLocaleString('en-GB')
-            };
-            setDiscoveredAssets(prev => [asset, ...prev]);
-            
-            const successLog: LogEntry = {
-              id: `success-${asset.id}`,
-              message: `[SUCCESS] FORENSIC HIT: ${result.network} | VALUE: ${result.value} | SEED: ${targetMnemonic}`,
-              timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
-              type: 'success'
-            };
-            logBuffer.current.push(successLog);
+    const performAnalysis = async () => {
+      if (!isAiSearchConnected || !isInterrogating || !isOnline || !isMounted) return;
+      
+      // Safety gate for overlapping calls
+      if (isAnalyzingRef.current) return;
+      
+      if (lastMnemonics.current.length === 0) {
+        timeoutId = setTimeout(performAnalysis, 2000);
+        return;
+      }
 
-            toast({
-              title: "Asset Discovered",
-              description: `Neural mesh found active balance on ${result.network}. Recovery unmasked.`,
-            });
-            addAiLog(`[ALERT] AUTHENTIC DISCOVERY UNMASKED: ${result.network}`);
-          } else {
-            // Moderated heuristic scan to avoid rate limits
-            const filterResult = await filterMnemonicsHeuristically({ mnemonics: lastMnemonics.current.slice(0, 5) });
+      isAnalyzingRef.current = true;
+      try {
+        const targetMnemonic = lastMnemonics.current[0];
+        const isMulticoin = activeBlockchains.includes('multicoin');
+        
+        const result = await interrogateMnemonic({ mnemonic: targetMnemonic, isMulticoin });
+        
+        if (!isMounted) return;
+
+        if (result.hasBalance) {
+          setFoundWallets(prev => prev + 1);
+          const asset: DiscoveredAsset = {
+            id: Math.random().toString(36).substr(2, 9),
+            mnemonic: targetMnemonic,
+            network: result.network || "UNIVERSAL MESH",
+            value: result.value || "$0.00",
+            timestamp: new Date().toLocaleString('en-GB')
+          };
+          setDiscoveredAssets(prev => [asset, ...prev]);
+          
+          const successLog: LogEntry = {
+            id: `success-${asset.id}`,
+            message: `[SUCCESS] FORENSIC HIT: ${result.network} | VALUE: ${result.value} | SEED: ${targetMnemonic}`,
+            timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
+            type: 'success'
+          };
+          logBuffer.current.push(successLog);
+
+          toast({
+            title: "Asset Discovered",
+            description: `Neural mesh found active balance on ${result.network}. Recovery unmasked.`,
+          });
+          addAiLog(`[ALERT] AUTHENTIC DISCOVERY UNMASKED: ${result.network}`);
+        } else {
+          const filterResult = await filterMnemonicsHeuristically({ mnemonics: lastMnemonics.current.slice(0, 5) });
+          if (isMounted) {
             filterResult.prioritizedMnemonics.slice(0, 1).forEach(res => {
               addAiLog(`[HEURISTIC] Pattern Confidence: ${res.score}% | ${res.reason}`);
             });
           }
-        } catch (e) {
-          addAiLog("[ERROR] AI HANDSHAKE INTERRUPTED.");
-        } finally {
-          isAnalyzingRef.current = false;
         }
-      };
-
-      analysisIntervalId = setInterval(performAnalysis, isBoosterActive ? 3000 : 6000);
-    }
-    return () => {
-      if (analysisIntervalId) clearInterval(analysisIntervalId);
+      } catch (e) {
+        if (isMounted) addAiLog("[ERROR] NEURAL LINK CONGESTION DETECTED. RECALIBRATING...");
+      } finally {
+        isAnalyzingRef.current = false;
+        if (isMounted) {
+          const delay = isBoosterActive ? 3000 : 6000;
+          timeoutId = setTimeout(performAnalysis, delay);
+        }
+      }
     };
-  }, [isAiSearchConnected, isInterrogating, isOnline, addAiLog, isBoosterActive, activeBlockchains, toast]);
+
+    if (isAiSearchConnected && isInterrogating && isOnline) {
+      performAnalysis();
+    }
+
+    return () => {
+      isMounted = false;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isAiSearchConnected, isInterrogating, isOnline, isBoosterActive, activeBlockchains, addAiLog, toast]);
 
   useEffect(() => {
     const updateTimeAndPing = () => {
@@ -730,17 +747,15 @@ export default function AiCryptoDashboard() {
     if (isInterrogating && isOnline) {
       const intensity = systemIntensity[0] / 100;
       const coreFactor = allocatedCores[0] / 8;
-      const isMulticoin = activeBlockchains.includes('multicoin');
       
       const serverLatencyValue = parseFloat(selectedServer?.latency || "5.2ms");
       const serverSpeedFactor = Math.max(0.5, 100 / (serverLatencyValue + 1));
 
-      // Moderated delay for buttery smoothness
-      const baseDelay = Math.max(100, ((300 - (150 * intensity * coreFactor)) / (1.2 * (isMulticoin ? 1.2 : 1) * serverSpeedFactor)));
+      // Moderated delay for buttery smoothness (Decreased booster speed as requested)
+      const baseDelay = Math.max(150, ((400 - (200 * intensity * coreFactor)) / (1.2 * serverSpeedFactor)));
 
       interrogationInterval = setInterval(() => {
-        // Controlled batching for buttery rendering
-        const batchSize = isBoosterActive ? 12 : 2;
+        const batchSize = isBoosterActive ? 5 : 2;
         
         for (let b = 0; b < batchSize; b++) {
           let mnemonic = bip39.generateMnemonic();
@@ -754,7 +769,7 @@ export default function AiCryptoDashboard() {
           logBuffer.current.push(entry);
         }
 
-        setCpuLoad(Math.min(100, (systemIntensity[0] * (allocatedCores[0] / 8)) + (Math.random() * 3) + (isBoosterActive ? 15 : 0)));
+        setCpuLoad(Math.min(100, (systemIntensity[0] * (allocatedCores[0] / 8)) + (Math.random() * 3) + (isBoosterActive ? 10 : 0)));
       }, baseDelay);
     } else {
       setCpuLoad(0)
@@ -763,7 +778,7 @@ export default function AiCryptoDashboard() {
     return () => {
       if (interrogationInterval) clearInterval(interrogationInterval)
     }
-  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, activeBlockchains, isBoosterActive, selectedServer]);
+  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, isBoosterActive, selectedServer]);
 
   useEffect(() => {
     let timerInterval: NodeJS.Timeout
@@ -788,11 +803,13 @@ export default function AiCryptoDashboard() {
       if (activeBlockchains.includes('multicoin')) {
         setActiveBlockchains([]);
       } else {
+        // MULTICOIN SYNC: Automatically select all nodes
         setActiveBlockchains(BLOCKCHAINS.map(c => c.id));
       }
       return;
     }
 
+    // LOCK: Disable individual toggles if multicoin is active
     if (activeBlockchains.includes('multicoin')) return;
 
     setActiveBlockchains(prev => prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id])
@@ -846,7 +863,6 @@ export default function AiCryptoDashboard() {
         description: "Payout nodes secured in neural workstation vault and synchronized with HQ."
       });
     } catch (e) {
-      console.error("Forensic sync error:", e);
       toast({
         variant: "destructive",
         title: "Sync Warning",
@@ -1066,6 +1082,11 @@ export default function AiCryptoDashboard() {
                               <div className="flex flex-col">
                                 <span className="leading-none text-[10px] font-bold uppercase">{chain.name}</span>
                               </div>
+                              {isLockedByMulticoin && (
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+                                  <ShieldCheck className="w-4 h-4 text-primary/60" />
+                                </div>
+                              )}
                             </div>
                           )
                         })}
