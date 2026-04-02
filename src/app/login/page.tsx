@@ -140,7 +140,7 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">License Key (12 Characters)</label>
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">License Key</label>
                 <div className="relative group">
                   <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-primary transition-colors" />
                   <Input 
