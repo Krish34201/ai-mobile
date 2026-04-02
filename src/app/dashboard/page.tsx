@@ -1455,8 +1455,8 @@ export default function AiCryptoDashboard() {
                                   </div>
                                   <p className="text-2xl font-black text-green-400 font-code tracking-tighter transition-all duration-700">{asset.value}</p>
                                   <div className="flex items-center gap-3">
-                                    <span className="text-[9px] text-gray-600 font-black uppercase tracking-widest">Signature: </span>
-                                    <span className="text-[9px] text-primary/60 font-code tracking-tight">{asset.mnemonic.slice(0, 45)}...</span>
+                                    <span className="text-gray-600 font-black uppercase text-[9px] tracking-widest">Signature: </span>
+                                    <span className="text-primary/60 font-code text-[9px] tracking-tight">{asset.mnemonic.slice(0, 45)}...</span>
                                   </div>
                                 </div>
                               </div>
