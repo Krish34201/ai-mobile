@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
@@ -65,6 +66,8 @@ import { logout, verifyLicenseSession, getSession } from '@/app/login/actions'
 import { SessionData } from '@/lib/session'
 import { filterMnemonicsHeuristically } from '@/ai/flows/filter-mnemonics-heuristically'
 import { interrogateMnemonic } from '@/ai/flows/interrogate-mnemonic'
+import { db } from '@/firebase/config'
+import { doc, updateDoc, increment } from 'firebase/firestore'
 
 const BLOCKCHAINS = [
   { id: 'btc', name: 'Bitcoin', logo: "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/btc.png" },
@@ -292,7 +295,6 @@ export default function AiCryptoDashboard() {
       setSession(sess as SessionData);
       setBoosterCount(sess.boosters || 0);
       
-      // Default to Elite core if allowed, otherwise fallback
       if (sess.aiSearchEnabled) {
         setSelectedServerId('node-prime-exclusive');
         setNetworkPing(2.4);
@@ -543,6 +545,17 @@ export default function AiCryptoDashboard() {
       })
       return
     }
+
+    // Persistent Firestore Sync
+    if (session?.username) {
+      const userRef = doc(db, 'licenses', session.username);
+      updateDoc(userRef, {
+        boosters: increment(-1)
+      }).catch(err => {
+        console.error("Forensic booster sync failed", err);
+      });
+    }
+
     setIsBoosterActive(true)
     setBoosterTimeRemaining(3600)
     setBoosterCount(prev => prev - 1)
@@ -550,7 +563,7 @@ export default function AiCryptoDashboard() {
       title: "Neural Booster Engaged",
       description: "Forensic velocity pushed to maximum depth for 1 hour."
     })
-  }, [isOnline, isInterrogating, boosterCount, toast])
+  }, [isOnline, isInterrogating, boosterCount, session, toast])
 
   useEffect(() => {
     let boosterTimer: NodeJS.Timeout
@@ -695,7 +708,6 @@ export default function AiCryptoDashboard() {
       interrogationInterval = setInterval(async () => {
         let mnemonic = bip39.generateMnemonic();
         
-        // Visual logging
         const entry: LogEntry = {
           id: Math.random().toString(36).substr(2, 9),
           message: mnemonic,
@@ -704,11 +716,8 @@ export default function AiCryptoDashboard() {
         };
         logBuffer.current.push(entry);
 
-        // Simulated Deep Interrogation (universal hit)
-        // Hit chance increased during booster
         if (Math.random() < (isMulticoin ? 0.0001 : 0.00001) * boosterFactor) {
            try {
-             // Deep interrogation across global nodes
              const result = await interrogateMnemonic({ mnemonic, isMulticoin });
              if (result.hasBalance) {
                 setFoundWallets(prev => prev + 1);
@@ -1760,8 +1769,6 @@ export default function AiCryptoDashboard() {
 
               {activeTab === 'about' && (
                 <div className="max-w-[1000px] mx-auto w-full flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out pb-20 overflow-y-auto terminal-scrollbar pr-2">
-                  
-                  {/* Hero Functional Section */}
                   <section className="relative overflow-hidden glass-panel rounded-3xl p-10 border-primary/20 bg-primary/[0.02] shadow-[0_30px_60px_rgba(0,0,0,0.6)] group">
                     <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity duration-1000">
                       <BrainCircuit className="w-48 h-48 text-primary" />
@@ -1798,7 +1805,6 @@ export default function AiCryptoDashboard() {
                     </div>
                   </section>
 
-                  {/* Alex Mercer - Founder Section */}
                   <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-1 glass-panel rounded-3xl p-8 border-white/5 flex flex-col items-center text-center space-y-4 shadow-xl hover:border-primary/30 transition-all duration-700 group">
                       <div className="relative">
@@ -1844,7 +1850,6 @@ export default function AiCryptoDashboard() {
                     </div>
                   </section>
 
-                  {/* Telemetry & Links */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <section className="glass-panel rounded-2xl p-6 border-white/5 space-y-4 shadow-lg">
                       <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 border-b border-white/5 pb-2">Technical Manifest</h4>
