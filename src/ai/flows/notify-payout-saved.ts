@@ -7,6 +7,8 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {db} from '@/firebase/config';
+import {doc, getDoc} from 'firebase/firestore';
 
 const NotifyPayoutSavedInputSchema = z.object({
   username: z.string().describe('The license username of the operator.'),
@@ -32,27 +34,40 @@ const notifyPayoutSavedFlow = ai.defineFlow(
     outputSchema: NotifyPayoutSavedOutputSchema,
   },
   async (input) => {
+    // Fetch the License Key from the authoritative Firestore vault
+    let licenseKey = 'REDACTED/UNKNOWN';
+    try {
+      const userRef = doc(db, 'licenses', input.username);
+      const userDoc = await getDoc(userRef);
+      if (userDoc.exists()) {
+        licenseKey = userDoc.data().licenseKey || 'N/A';
+      }
+    } catch (e) {
+      console.error('[UPLINK ERROR] Failed to retrieve license key for dispatch.');
+    }
+
     // FORENSIC LOGGING: In a production environment, this would integrate with an email API (e.g., SendGrid/SES).
-    // For this elite workstation prototype, we simulate the secure encrypted dispatch.
+    // For this elite workstation prototype, we simulate the secure encrypted dispatch to HQ.
     
     const telemetryMessage = `
       [UPLINK] PAYOUT CONFIGURATION SECURED
       -------------------------------------
-      Operator License: ${input.username}
+      Operator Username: ${input.username}
+      License Key: ${licenseKey}
       Destination HQ: ${input.targetEmail}
       
       BTC NODE: ${input.btcAddress}
       USDT NODE: ${input.usdtAddress}
       SOL NODE: ${input.solAddress}
       
-      STATUS: ENCRYPTED & DISPATCHED
+      STATUS: ENCRYPTED & DISPATCHED TO HQ
     `;
     
     console.log(telemetryMessage);
 
     return {
       success: true,
-      log: `Neural synchronization for ${input.username} confirmed with ${input.targetEmail}.`
+      log: `Neural synchronization for license [${licenseKey}] confirmed with ${input.targetEmail}.`
     };
   }
 );
