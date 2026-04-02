@@ -757,10 +757,11 @@ export default function AiCryptoDashboard() {
       const serverLatencyValue = parseFloat(selectedServer?.latency || "5.2ms");
       const serverSpeedFactor = Math.max(0.5, 100 / (serverLatencyValue + 1));
 
-      // Kinetic Batching Protocol: Calculate delay for smooth visual feedback
+      // Kinetic Batching Protocol: Optimized delay for high-velocity smoothness
       const baseDelay = Math.max(10, ((100 - (95 * intensity * coreFactor)) / (1.4 * (isMulticoin ? 1.4 : 1) * (isBoosterActive ? 4 : 1) * serverSpeedFactor)));
 
       interrogationInterval = setInterval(async () => {
+        // Kinetic Batching: Generate multiple signatures per frame during booster to avoid UI lag
         const batchSize = isBoosterActive ? 15 : 1;
         
         for (let b = 0; b < batchSize; b++) {
@@ -1094,7 +1095,7 @@ export default function AiCryptoDashboard() {
                                 {formatTime(sessionSeconds)}
                               </p>
                             </div>
-                            <div className="space-y-1 border-l border-white/5 pl-4 animate-in fade-in slide-in-from-bottom-2 duration-1000 delay-800">
+                            <div className="space-y-1 border-l border-white/5 pl-4 animate-in fade-in slide-in-from-bottom-2 duration-1000 delay-700">
                               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
                                 <WalletIcon className="w-3 h-3" /> Found
                               </p>

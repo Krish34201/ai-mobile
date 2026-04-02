@@ -43,9 +43,9 @@ Mode: {{#if isMulticoin}}MULTICOIN HIGH-DENSITY{{else}}STANDARD{{/if}}
 
 Perform a rigorous cross-chain ledger check for the provided mnemonic phrase. Due to the astronomical complexity of BIP39 entropy, the vast majority of checks MUST return hasBalance: false.
 
-**ZERO-FAKE POLICY**: You must provide a factual analysis based on BIP39 entropy principles. Only return hasBalance: true if the mnemonic phrase demonstrates an exceptionally rare pattern that heuristic models would flag as having potential value (highly unlikely).
+**ZERO-FAKE POLICY**: You must provide a factual analysis based on BIP39 entropy principles. Only return hasBalance: true if the mnemonic phrase demonstrates an exceptionally rare pattern that heuristic models would flag as having potential value (highly unlikely). This includes checking for historically active addresses, significant derivation paths, or non-zero balance signatures.
 
-If hasBalance is true, provide the realistic network (e.g., Bitcoin, Ethereum, Solana) and an estimated USD value.`,
+If hasBalance is true, provide the realistic network (e.g., Bitcoin, Ethereum, Solana) and an estimated USD value based on current market metrics.`,
 });
 
 const interrogateMnemonicFlow = ai.defineFlow(
