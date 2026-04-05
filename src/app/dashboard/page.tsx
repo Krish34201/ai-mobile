@@ -210,15 +210,7 @@ const RISING_PARTICLES = [
   { left: '88%', delay: '0.3s', duration: '2.9s', size: '2.2px' },
 ];
 
-const CHART_DATA = [
-  { name: '09.03', value: 0 },
-  { name: '10.03', value: 0 },
-  { name: '11.03', value: 8486 },
-  { name: '12.03', value: 0 },
-  { name: '13.03', value: 3000 },
-  { name: '14.03', value: 0 },
-  { name: '15.03', value: 0 },
-];
+const CHART_DATES = ['09.03', '10.03', '11.03', '12.03', '13.03', '14.03', '15.03'];
 
 const SESSION_STORAGE_KEY = 'ai_crypto_session_state_v4_manual_scale';
 
@@ -303,6 +295,28 @@ export default function AiCryptoDashboard() {
   const isAnalyzingRef = useRef(false);
 
   const selectedServer = useMemo(() => SERVERS.find(s => s.id === selectedServerId), [selectedServerId]);
+
+  // DYNAMIC CHART DATA: Only shows growth if wallets are found.
+  const dynamicChartData = useMemo(() => {
+    if (discoveredAssets.length === 0) {
+      return CHART_DATES.map(date => ({ name: date, value: 0 }));
+    }
+
+    // Aggregate total value
+    const totalVal = discoveredAssets.reduce((acc, curr) => {
+      const numericVal = parseFloat(curr.value.replace(/[^0-9.]/g, '')) || 0;
+      return acc + numericVal;
+    }, 0);
+
+    // Create a luxury growth curve
+    return CHART_DATES.map((date, idx) => {
+      const factor = (idx + 1) / CHART_DATES.length;
+      return {
+        name: date,
+        value: Math.floor(totalVal * factor)
+      };
+    });
+  }, [discoveredAssets]);
 
   const handleMemoryFlush = useCallback(() => {
     setLogs([]);
@@ -1495,61 +1509,88 @@ export default function AiCryptoDashboard() {
                       </Select>
                     </div>
 
-                    <div className="flex-1 min-h-0 z-10 relative">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={CHART_DATA} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-                          <defs>
-                            <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                          <XAxis 
-                            dataKey="name" 
-                            axisLine={false} 
-                            tickLine={false} 
-                            tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 'bold' }}
-                            dy={10}
-                          />
-                          <YAxis 
-                            axisLine={false} 
-                            tickLine={false} 
-                            tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 'bold' }}
-                            tickFormatter={(val) => `$${val}`}
-                          />
-                          <RechartsTooltip 
-                            content={({ active, payload }) => {
-                              if (active && payload && payload.length) {
-                                return (
-                                  <div className="bg-[#12121a] border border-white/10 p-4 rounded-2xl shadow-glow">
-                                    <p className="text-[0.625rem] font-bold text-gray-500 uppercase tracking-widest mb-1">Total: ${payload[0].value?.toLocaleString()}</p>
-                                    <div className="flex items-center gap-2">
-                                      <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
-                                        <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-glow" />
+                    <div className="flex-1 min-h-0 z-10 relative flex flex-col">
+                      <div className="flex-1">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={dynamicChartData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                            <XAxis 
+                              dataKey="name" 
+                              axisLine={false} 
+                              tickLine={false} 
+                              tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 'bold' }}
+                              dy={10}
+                            />
+                            <YAxis 
+                              axisLine={false} 
+                              tickLine={false} 
+                              tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 'bold' }}
+                              tickFormatter={(val) => `$${val}`}
+                            />
+                            <RechartsTooltip 
+                              content={({ active, payload }) => {
+                                if (active && payload && payload.length) {
+                                  return (
+                                    <div className="bg-[#12121a] border border-white/10 p-4 rounded-2xl shadow-glow">
+                                      <p className="text-[0.625rem] font-bold text-gray-500 uppercase tracking-widest mb-1">Total: ${payload[0].value?.toLocaleString()}</p>
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30">
+                                          <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-glow" />
+                                        </div>
+                                        <p className="text-[1rem] font-black text-white font-code">${payload[0].value?.toLocaleString()}</p>
                                       </div>
-                                      <p className="text-[1rem] font-black text-white font-code">${payload[0].value?.toLocaleString()}</p>
                                     </div>
-                                  </div>
-                                );
-                              }
-                              return null;
-                            }}
-                          />
-                          <Area 
-                            type="monotone" 
-                            dataKey="value" 
-                            stroke="hsl(var(--primary))" 
-                            strokeWidth={3} 
-                            fillOpacity={1} 
-                            fill="url(#colorValue)" 
-                            animationDuration={2000}
-                          />
-                        </AreaChart>
-                      </ResponsiveContainer>
+                                  );
+                                }
+                                return null;
+                              }}
+                            />
+                            <Area 
+                              type="monotone" 
+                              dataKey="value" 
+                              stroke="hsl(var(--primary))" 
+                              strokeWidth={3} 
+                              fillOpacity={1} 
+                              fill="url(#colorValue)" 
+                              animationDuration={2000}
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      {/* GLOBAL WITHDRAW BUTTON BELOW GRAPH */}
+                      <div className="mt-8 shrink-0 flex justify-center">
+                        <Button 
+                          onClick={() => {
+                            if (discoveredAssets.length === 0) {
+                              toast({
+                                variant: "destructive",
+                                title: "Extraction Error",
+                                description: "No authentic assets detected in current neural mesh session."
+                              });
+                            } else {
+                              toast({
+                                title: "Global Withdrawal Initialized",
+                                description: "Neural extraction process dispatched to HQ nodes."
+                              });
+                            }
+                          }}
+                          className="w-full max-w-md h-16 rounded-[20px] bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-gradient text-white font-black text-[0.875rem] uppercase tracking-[0.4em] shadow-[0_12px_40px_rgba(173,79,230,0.4)] hover:scale-[1.03] transition-all duration-700 active:scale-95"
+                        >
+                          <ArrowDownCircle className="w-6 h-6 mr-4" />
+                          Initialize Withdraw
+                        </Button>
+                      </div>
                     </div>
                   </div>
 
+                  {/* AUTHENTIC ASSET CAROUSEL */}
                   <div className="h-32 flex items-center gap-4 overflow-x-auto no-scrollbar shrink-0 px-1 pb-4">
                     {discoveredAssets.length === 0 ? (
                       <div className="flex-1 flex items-center justify-center border-2 border-dashed border-white/5 rounded-2xl opacity-30">
