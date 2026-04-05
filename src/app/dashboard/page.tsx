@@ -1669,7 +1669,7 @@ export default function AiCryptoDashboard() {
                             </div>
                           </div>
                         )
-                      })}
+                       })}
                     </div>
                   </div>
                   
