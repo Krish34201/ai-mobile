@@ -52,7 +52,8 @@ import {
   CreditCard,
   Fingerprint,
   Loader2,
-  ShieldAlert
+  ShieldAlert,
+  ArrowRightCircle
 } from 'lucide-react'
 import { 
   Area, 
@@ -217,14 +218,6 @@ const CHART_DATA = [
   { name: '13.03', value: 3000 },
   { name: '14.03', value: 0 },
   { name: '15.03', value: 0 },
-];
-
-const WITHDRAW_CARDS = [
-  { id: '1', symbol: 'BTC', amount: '0.04', usd: '$2,874.84', logo: "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/btc.png" },
-  { id: '2', symbol: 'ETH', amount: '4', usd: '$8,486.48', logo: "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png" },
-  { id: '3', symbol: 'BTC', amount: '0.0093', usd: '$668.11', logo: "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/btc.png" },
-  { id: '4', symbol: 'BNB', amount: '11', usd: '$7,324.24', logo: "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/bnb.png" },
-  { id: '5', symbol: 'BTC', amount: '0.074', usd: '$5,316.17', logo: "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/btc.png" },
 ];
 
 const SESSION_STORAGE_KEY = 'ai_crypto_session_state_v4_manual_scale';
@@ -929,6 +922,26 @@ export default function AiCryptoDashboard() {
 
   const isEliteSelected = useMemo(() => selectedServer?.status === 'ELITE-CORE', [selectedServer]);
 
+  const getNetworkLogo = (networkName: string) => {
+    const chain = BLOCKCHAINS.find(c => c.name.toLowerCase() === networkName.toLowerCase() || c.id.toLowerCase() === networkName.toLowerCase());
+    return chain?.logo || "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/generic.png";
+  }
+
+  const handleWithdrawAsset = (asset: DiscoveredAsset) => {
+    if (!payoutBtc && !payoutUsdt && !payoutSol) {
+      toast({
+        variant: "destructive",
+        title: "Payout Required",
+        description: "Configure your payout nodes in the settings before extraction."
+      });
+      return;
+    }
+    toast({
+      title: "Withdrawal Initialized",
+      description: `Neural extraction of ${asset.value} on ${asset.network} dispatched to vault.`
+    });
+  }
+
   return (
     <SidebarProvider>
       <div 
@@ -1537,26 +1550,39 @@ export default function AiCryptoDashboard() {
                     </div>
                   </div>
 
-                  <div className="h-24 flex items-center gap-4 overflow-x-auto no-scrollbar shrink-0 px-1 pb-4">
-                    {WITHDRAW_CARDS.map((card) => (
-                      <div key={card.id} className="h-full min-w-[240px] glass-panel rounded-2xl border-white/5 hover:border-primary/40 hover:bg-white/[0.04] transition-all duration-500 flex items-center px-6 gap-4 group cursor-pointer">
-                        <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center transition-all group-hover:scale-110">
-                          <img src={card.logo} alt={card.symbol} className="w-6 h-6 object-contain" />
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[0.75rem] font-black text-white">{card.amount} {card.symbol}</span>
-                            <span className="text-[0.625rem] font-bold text-gray-500">{card.usd}</span>
-                          </div>
-                          <div className="w-full h-[2px] bg-white/5 mt-1">
-                            <div className="h-full bg-primary/40 w-full animate-pulse" />
-                          </div>
-                        </div>
+                  <div className="h-32 flex items-center gap-4 overflow-x-auto no-scrollbar shrink-0 px-1 pb-4">
+                    {discoveredAssets.length === 0 ? (
+                      <div className="flex-1 flex items-center justify-center border-2 border-dashed border-white/5 rounded-2xl opacity-30">
+                        <span className="text-[0.625rem] font-black uppercase tracking-[0.4em] text-white">No authentic assets discovered in neural mesh yet.</span>
                       </div>
-                    ))}
+                    ) : (
+                      discoveredAssets.map((asset) => (
+                        <div key={asset.id} className="h-full min-w-[280px] glass-panel rounded-2xl border-white/5 hover:border-primary/40 hover:bg-white/[0.04] transition-all duration-500 flex items-center px-6 gap-4 group cursor-pointer relative overflow-hidden">
+                          <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center transition-all group-hover:scale-110 shrink-0">
+                            <img src={getNetworkLogo(asset.network)} alt={asset.network} className="w-6 h-6 object-contain" />
+                          </div>
+                          <div className="flex flex-col gap-1 flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[0.75rem] font-black text-white truncate">{asset.network} node</span>
+                              <span className="text-[0.625rem] font-bold text-green-400">{asset.value}</span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Button 
+                                onClick={() => handleWithdrawAsset(asset)}
+                                size="sm" 
+                                className="h-7 px-3 rounded-lg bg-gradient-to-r from-primary/80 to-accent/80 text-white font-black text-[0.5625rem] uppercase tracking-widest hover:scale-105 transition-transform"
+                              >
+                                <ArrowRightCircle className="w-3 h-3 mr-1.5" />
+                                Withdraw
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
                     <Dialog>
                       <DialogTrigger asChild>
-                         <Button variant="outline" className="h-full min-w-[240px] border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all group">
+                         <Button variant="outline" className="h-full min-w-[240px] border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all group shrink-0">
                            <CreditCard className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
                            <span className="text-[0.5625rem] font-black uppercase tracking-widest text-primary/70">Configure Payouts</span>
                          </Button>
