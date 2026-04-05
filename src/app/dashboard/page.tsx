@@ -275,7 +275,7 @@ export default function AiCryptoDashboard() {
     });
   }, [toast]);
 
-  // SYNC UI SCALE TO ROOT - Proportional Manual Scaling
+  // SYNC UI SCALE TO ROOT
   useEffect(() => {
     if (typeof window !== 'undefined') {
       document.documentElement.style.fontSize = `${uiScale}%`;
@@ -287,7 +287,7 @@ export default function AiCryptoDashboard() {
     };
   }, [uiScale]);
 
-  // BIOMETRIC HANDSHAKE INITIALIZATION (Step 3)
+  // BIOMETRIC HANDSHAKE INITIALIZATION
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsAuthenticating(false);
@@ -448,7 +448,7 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  // OPTIMIZED FLUSH LOGS: Uses requestAnimationFrame for absolute buttery smoothness (Step 4)
+  // OPTIMIZED FLUSH LOGS
   useEffect(() => {
     const flushLogs = () => {
       if (logBuffer.current.length > 0) {
@@ -648,7 +648,7 @@ export default function AiCryptoDashboard() {
     })
   }
 
-  // RECURSIVE SERIAL ANALYSIS: Eliminates terminal collisions by ensuring one analysis finishes before the next starts.
+  // RECURSIVE SERIAL ANALYSIS
   useEffect(() => {
     let isMounted = true;
     let timeoutId: NodeJS.Timeout | null = null;
@@ -712,7 +712,6 @@ export default function AiCryptoDashboard() {
       } finally {
         isAnalyzingRef.current = false;
         if (isMounted) {
-          // Adjust delay based on booster status
           const delay = isBoosterActive ? 3500 : 7000;
           timeoutId = setTimeout(performAnalysis, delay);
         }
@@ -751,7 +750,7 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(interval);
   }, [isOnline]);
 
-  // HIGH-VELOCITY ENGINE: Uses optimized intervals for hardware-accelerated generation.
+  // HIGH-VELOCITY ENGINE
   useEffect(() => {
     let interrogationInterval: NodeJS.Timeout
 
@@ -762,7 +761,6 @@ export default function AiCryptoDashboard() {
       const serverLatencyValue = parseFloat(selectedServer?.latency || "5.2ms");
       const serverSpeedFactor = Math.max(0.5, 100 / (serverLatencyValue + 1));
 
-      // Calculate delay based on load and booster status
       const baseDelay = Math.max(15, ((400 - (200 * intensity * coreFactor)) / (1.2 * serverSpeedFactor)));
 
       interrogationInterval = setInterval(() => {
@@ -889,7 +887,7 @@ export default function AiCryptoDashboard() {
       <div 
         className="flex h-screen w-full bg-[#050507] overflow-hidden text-foreground font-body select-none relative transition-all duration-700 ease-in-out"
       >
-        {/* BIOMETRIC HANDSHAKE OVERLAY (Step 3) - Optimized for 60FPS */}
+        {/* BIOMETRIC HANDSHAKE OVERLAY */}
         {isAuthenticating && (
           <div className="fixed inset-0 z-[100] bg-[#050507] flex flex-col items-center justify-center p-8 animate-out fade-out duration-1000 fill-mode-forwards">
             <div className="relative w-64 h-64 mb-12">
@@ -1209,7 +1207,7 @@ export default function AiCryptoDashboard() {
                       </div>
                     </div>
                     
-                    <div className={cn("scan-wrapper flex-1 min-h-0 shadow-[0_0_80px_rgba(0,0,0,0.7)] rounded-xl transition-all duration-1000", isBoosterActive && "border-primary/60 shadow-primary/30 scale-[1.01]")}>
+                    <div className={cn("scan-wrapper flex-1 min-h-0 shadow-[0_0_80px_rgba(0,0,0,0.7)] rounded-xl transition-all duration-1000", isBoosterActive && "scale-[1.01]")}>
                       <div className="h-full scan-console no-scrollbar flex flex-col relative rounded-xl overflow-hidden bg-black/80 backdrop-blur-sm">
                         <div className="absolute inset-0 scanline opacity-30 z-20 pointer-events-none" />
                         {isBoosterActive && <div className="absolute inset-0 bg-primary/5 animate-pulse z-10 pointer-events-none" />}
@@ -1251,8 +1249,8 @@ export default function AiCryptoDashboard() {
                           ))}
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none h-32">
-                           <div className="absolute inset-0 bg-gradient-to-t from-primary/40 via-primary/5 to-transparent animate-pulse-glow" />
-                           <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary/60 shadow-[0_0_25px_rgba(173,79,230,0.9)]" />
+                           <div className="absolute inset-0 bg-gradient-to-t from-primary/60 via-primary/10 to-transparent animate-pulse-glow" />
+                           <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-primary shadow-[0_0_35px_rgba(173,79,230,1)]" />
                         </div>
                       </div>
                     </div>
@@ -1275,7 +1273,6 @@ export default function AiCryptoDashboard() {
 
                        {!isAiSearchConnected ? (
                          <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
-                           {/* DYNAMIC NEURAL CORE SVG (Step 2) - Optimized for high FPS */}
                            <div className="relative mb-8 group">
                              <svg viewBox="0 0 100 100" className={cn("w-20 h-20 transition-all duration-1000", isAiSearchConnecting ? "text-primary scale-110" : "text-gray-800")}>
                                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="10 5" className={cn("animate-smooth-spin", isBoosterActive && "animate-spin-fast")} />
@@ -1770,7 +1767,6 @@ export default function AiCryptoDashboard() {
                         </div>
                       ))}
 
-                      {/* GLOBAL UI SCALING (Manual Controls) */}
                       <div className="space-y-8 pt-12 border-t border-white/10 animate-in fade-in duration-1000">
                         <div className="flex items-center gap-3 mb-6">
                           <LayoutDashboard className="w-5 h-5 text-primary" />
