@@ -55,7 +55,8 @@ import {
   ShieldAlert,
   ArrowRightCircle,
   User,
-  Menu
+  Menu,
+  Languages
 } from 'lucide-react'
 import { 
   Area, 
@@ -169,6 +170,13 @@ const SEED_COLORS = [
   { name: 'Cyber RGB', class: 'bg-gradient-to-r from-red-500 via-green-500 to-blue-500 bg-clip-text text-transparent animate-gradient font-bold' },
 ]
 
+const ENTROPY_LANGUAGES = [
+  { id: 'english', name: 'English (Global)', flag: '🇺🇸' },
+  { id: 'spanish', name: 'Spanish (Neural)', flag: '🇪🇸' },
+  { id: 'french', name: 'French (Forensic)', flag: '🇫🇷' },
+  { id: 'japanese', name: 'Japanese (Spectrum)', flag: '🇯🇵' },
+]
+
 const BOOT_LOGS = [
   "[BOOT] Initializing AI Crypto Engine v4.0",
   "[SYS] Verifying system modules...",
@@ -218,7 +226,7 @@ const RISING_PARTICLES = [
 
 const CHART_DATES = ['09.03', '10.03', '11.03', '12.03', '13.03', '14.03', '15.03'];
 
-const SESSION_STORAGE_KEY = 'ai_crypto_session_state_v4_manual_scale';
+const SESSION_STORAGE_KEY = 'ai_crypto_session_state_v4_multi_lang';
 
 interface LogEntry {
   id: string;
@@ -266,6 +274,7 @@ export default function AiCryptoDashboard() {
   const [seedPhraseColor, setSeedPhraseColor] = useState('text-[#dcdcdc]')
   const [consoleFontSize, setConsoleFontSize] = useState([8])
   const [uiScale, setUiScale] = useState(100)
+  const [mnemonicLanguage, setMnemonicLanguage] = useState<string>('english')
   
   const [isOnline, setIsOnline] = useState(true)
   const [wasInterrogatingBeforeOffline, setWasInterrogatingBeforeOffline] = useState(false)
@@ -423,6 +432,7 @@ export default function AiCryptoDashboard() {
         setSeedPhraseColor(parsed.seedPhraseColor || 'text-[#dcdcdc]');
         setConsoleFontSize(parsed.consoleFontSize || [8]);
         setUiScale(parsed.uiScale || 100);
+        setMnemonicLanguage(parsed.mnemonicLanguage || 'english');
         setDiscoveredAssets(parsed.discoveredAssets || []);
         setPayoutBtc(parsed.payoutBtc || '');
         setPayoutUsdt(parsed.payoutUsdt || '');
@@ -443,13 +453,14 @@ export default function AiCryptoDashboard() {
       seedPhraseColor,
       consoleFontSize,
       uiScale,
+      mnemonicLanguage,
       discoveredAssets,
       payoutBtc,
       payoutUsdt,
       payoutSol
     };
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
-  }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, seedPhraseColor, consoleFontSize, uiScale, discoveredAssets, payoutBtc, payoutUsdt, payoutSol]);
+  }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, seedPhraseColor, consoleFontSize, uiScale, mnemonicLanguage, discoveredAssets, payoutBtc, payoutUsdt, payoutSol]);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -605,6 +616,7 @@ export default function AiCryptoDashboard() {
     setSeedPhraseColor('text-[#dcdcdc]');
     setConsoleFontSize([8]);
     setUiScale(100);
+    setMnemonicLanguage('english');
     setDiscoveredAssets([]);
     setPayoutBtc('');
     setPayoutUsdt('');
@@ -828,7 +840,8 @@ export default function AiCryptoDashboard() {
         const batchSize = isBoosterActive ? 2 : 1;
         
         for (let b = 0; b < batchSize; b++) {
-          let mnemonic = bip39.generateMnemonic();
+          const wordlist = (bip39.wordlists as any)[mnemonicLanguage] || bip39.wordlists.english;
+          let mnemonic = bip39.generateMnemonic(undefined, undefined, wordlist);
           
           const entry: LogEntry = {
             id: Math.random().toString(36).substr(2, 9),
@@ -848,7 +861,7 @@ export default function AiCryptoDashboard() {
     return () => {
       if (interrogationInterval) clearInterval(interrogationInterval)
     }
-  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, isBoosterActive, selectedServer]);
+  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, isBoosterActive, selectedServer, mnemonicLanguage]);
 
   useEffect(() => {
     let timerInterval: NodeJS.Timeout
@@ -1971,6 +1984,32 @@ export default function AiCryptoDashboard() {
                           <p className="text-[0.625rem] text-gray-500 uppercase tracking-widest leading-relaxed font-medium">{item.desc}</p>
                         </div>
                       ))}
+
+                      <div className="space-y-8 pt-12 border-t border-white/10 animate-in fade-in duration-1000">
+                        <div className="flex items-center gap-3 mb-6">
+                          <Languages className="w-5 h-5 text-primary" />
+                          <h4 className="text-[0.6875rem] font-black text-white/60 uppercase tracking-widest">Neural Entropy Configuration</h4>
+                        </div>
+                        <div className="space-y-6">
+                           <div className="flex items-center justify-between">
+                             <label className="text-[0.6875rem] font-bold text-gray-400 uppercase tracking-widest">Entropy Language</label>
+                             <Select value={mnemonicLanguage} onValueChange={setMnemonicLanguage} disabled={isInterrogating}>
+                               <SelectTrigger className="w-[200px] h-11 bg-white/[0.02] border-white/10 rounded-xl font-bold uppercase tracking-widest text-[0.6875rem] focus:ring-primary/20">
+                                 <SelectValue placeholder="Select Language" />
+                               </SelectTrigger>
+                               <SelectContent className="bg-[#0a0a0f] border-white/10">
+                                 {ENTROPY_LANGUAGES.map((lang) => (
+                                   <SelectItem key={lang.id} value={lang.id} className="text-white uppercase font-bold text-[0.625rem] tracking-widest focus:bg-primary/10 focus:text-primary">
+                                      <span className="mr-3">{lang.flag}</span>
+                                      {lang.name}
+                                   </SelectItem>
+                                 ))}
+                               </SelectContent>
+                             </Select>
+                           </div>
+                           <p className="text-[0.625rem] text-gray-500 uppercase tracking-widest leading-relaxed font-medium">Calibrates the neural mesh to interrogate non-English global recovery phrases (Spanish, French, Japanese).</p>
+                        </div>
+                      </div>
 
                       <div className="space-y-8 pt-12 border-t border-white/10 animate-in fade-in duration-1000">
                         <div className="flex items-center gap-3 mb-6">
