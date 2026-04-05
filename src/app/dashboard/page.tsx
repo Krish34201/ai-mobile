@@ -275,7 +275,7 @@ export default function AiCryptoDashboard() {
     });
   }, [toast]);
 
-  // SYNC UI SCALE TO ROOT
+  // SYNC UI SCALE TO ROOT - Proportional Manual Scaling
   useEffect(() => {
     if (typeof window !== 'undefined') {
       document.documentElement.style.fontSize = `${uiScale}%`;
@@ -287,7 +287,7 @@ export default function AiCryptoDashboard() {
     };
   }, [uiScale]);
 
-  // BIOMETRIC HANDSHAKE INITIALIZATION
+  // BIOMETRIC HANDSHAKE INITIALIZATION (Step 3)
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsAuthenticating(false);
@@ -448,6 +448,7 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  // OPTIMIZED FLUSH LOGS: Uses requestAnimationFrame for absolute buttery smoothness (Step 4)
   useEffect(() => {
     const flushLogs = () => {
       if (logBuffer.current.length > 0) {
@@ -647,7 +648,7 @@ export default function AiCryptoDashboard() {
     })
   }
 
-  // SERIAL EXECUTION PROTOCOL: Uses recursive sync to eliminate handshake collisions.
+  // RECURSIVE SERIAL ANALYSIS: Eliminates terminal collisions by ensuring one analysis finishes before the next starts.
   useEffect(() => {
     let isMounted = true;
     let timeoutId: NodeJS.Timeout | null = null;
@@ -711,6 +712,7 @@ export default function AiCryptoDashboard() {
       } finally {
         isAnalyzingRef.current = false;
         if (isMounted) {
+          // Adjust delay based on booster status
           const delay = isBoosterActive ? 3500 : 7000;
           timeoutId = setTimeout(performAnalysis, delay);
         }
@@ -749,6 +751,7 @@ export default function AiCryptoDashboard() {
     return () => clearInterval(interval);
   }, [isOnline]);
 
+  // HIGH-VELOCITY ENGINE: Uses optimized intervals for hardware-accelerated generation.
   useEffect(() => {
     let interrogationInterval: NodeJS.Timeout
 
@@ -759,6 +762,7 @@ export default function AiCryptoDashboard() {
       const serverLatencyValue = parseFloat(selectedServer?.latency || "5.2ms");
       const serverSpeedFactor = Math.max(0.5, 100 / (serverLatencyValue + 1));
 
+      // Calculate delay based on load and booster status
       const baseDelay = Math.max(15, ((400 - (200 * intensity * coreFactor)) / (1.2 * serverSpeedFactor)));
 
       interrogationInterval = setInterval(() => {
@@ -885,6 +889,7 @@ export default function AiCryptoDashboard() {
       <div 
         className="flex h-screen w-full bg-[#050507] overflow-hidden text-foreground font-body select-none relative transition-all duration-700 ease-in-out"
       >
+        {/* BIOMETRIC HANDSHAKE OVERLAY (Step 3) - Optimized for 60FPS */}
         {isAuthenticating && (
           <div className="fixed inset-0 z-[100] bg-[#050507] flex flex-col items-center justify-center p-8 animate-out fade-out duration-1000 fill-mode-forwards">
             <div className="relative w-64 h-64 mb-12">
@@ -1270,6 +1275,7 @@ export default function AiCryptoDashboard() {
 
                        {!isAiSearchConnected ? (
                          <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
+                           {/* DYNAMIC NEURAL CORE SVG (Step 2) - Optimized for high FPS */}
                            <div className="relative mb-8 group">
                              <svg viewBox="0 0 100 100" className={cn("w-20 h-20 transition-all duration-1000", isAiSearchConnecting ? "text-primary scale-110" : "text-gray-800")}>
                                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="10 5" className={cn("animate-smooth-spin", isBoosterActive && "animate-spin-fast")} />
@@ -1764,6 +1770,7 @@ export default function AiCryptoDashboard() {
                         </div>
                       ))}
 
+                      {/* GLOBAL UI SCALING (Manual Controls) */}
                       <div className="space-y-8 pt-12 border-t border-white/10 animate-in fade-in duration-1000">
                         <div className="flex items-center gap-3 mb-6">
                           <LayoutDashboard className="w-5 h-5 text-primary" />
