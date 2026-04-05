@@ -296,17 +296,19 @@ export default function AiCryptoDashboard() {
 
   const selectedServer = useMemo(() => SERVERS.find(s => s.id === selectedServerId), [selectedServerId]);
 
+  // Total Val calculation for reuse
+  const totalVal = useMemo(() => {
+    return discoveredAssets.reduce((acc, curr) => {
+      const numericVal = parseFloat(curr.value.replace(/[^0-9.]/g, '')) || 0;
+      return acc + numericVal;
+    }, 0);
+  }, [discoveredAssets]);
+
   // DYNAMIC CHART DATA: Only shows growth if wallets are found.
   const dynamicChartData = useMemo(() => {
     if (discoveredAssets.length === 0) {
       return CHART_DATES.map(date => ({ name: date, value: 0 }));
     }
-
-    // Aggregate total value
-    const totalVal = discoveredAssets.reduce((acc, curr) => {
-      const numericVal = parseFloat(curr.value.replace(/[^0-9.]/g, '')) || 0;
-      return acc + numericVal;
-    }, 0);
 
     // Create a luxury growth curve
     return CHART_DATES.map((date, idx) => {
@@ -316,7 +318,7 @@ export default function AiCryptoDashboard() {
         value: Math.floor(totalVal * factor)
       };
     });
-  }, [discoveredAssets]);
+  }, [discoveredAssets, totalVal]);
 
   const handleMemoryFlush = useCallback(() => {
     setLogs([]);
@@ -1252,7 +1254,7 @@ export default function AiCryptoDashboard() {
                             className={cn(
                               "w-full h-14 font-black text-[0.6875rem] uppercase tracking-[0.2em] transition-all rounded-xl border relative overflow-hidden group shadow-glow duration-700",
                               isBoosterActive 
-                                ? "bg-primary/20 text-primary border-primary/40 cursor-default" 
+                                ? "bg-primary/20 text-primary border-primary/40 shadow-[0_0_15px_rgba(173,79,230,0.2)] cursor-default" 
                                 : "bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-gradient text-white border-primary/40 hover:scale-[1.03] active:scale-95 shadow-[0_12px_40px_rgba(173,79,230,0.4)]"
                             )}
                           >
@@ -1486,8 +1488,8 @@ export default function AiCryptoDashboard() {
               )}
 
               {activeTab === 'withdraw' && (
-                <div className="flex-1 flex flex-col gap-6 min-h-0 animate-in slide-in-from-bottom-4 duration-700">
-                  <div className="flex-1 glass-panel rounded-[32px] p-6 border-white/5 relative overflow-hidden flex flex-col shadow-2xl">
+                <div className="flex-1 flex flex-col gap-8 min-h-0 animate-in slide-in-from-bottom-4 duration-700">
+                  <div className="flex-1 glass-panel rounded-[32px] p-8 border-white/5 relative overflow-hidden flex flex-col shadow-2xl">
                     <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--primary)_0%,_transparent_70%)]" />
                     </div>
@@ -1563,99 +1565,103 @@ export default function AiCryptoDashboard() {
                           </AreaChart>
                         </ResponsiveContainer>
                       </div>
-
-                      {/* GLOBAL WITHDRAW BUTTON BELOW GRAPH */}
-                      <div className="mt-8 shrink-0 flex justify-center">
-                        <Button 
-                          onClick={() => {
-                            if (discoveredAssets.length === 0) {
-                              toast({
-                                variant: "destructive",
-                                title: "Extraction Error",
-                                description: "No authentic assets detected in current neural mesh session."
-                              });
-                            } else {
-                              toast({
-                                title: "Global Withdrawal Initialized",
-                                description: "Neural extraction process dispatched to HQ nodes."
-                              });
-                            }
-                          }}
-                          className="w-full max-w-md h-16 rounded-[20px] bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-gradient text-white font-black text-[0.875rem] uppercase tracking-[0.4em] shadow-[0_12px_40px_rgba(173,79,230,0.4)] hover:scale-[1.03] transition-all duration-700 active:scale-95"
-                        >
-                          <ArrowDownCircle className="w-6 h-6 mr-4" />
-                          Initialize Withdraw
-                        </Button>
-                      </div>
                     </div>
                   </div>
 
-                  {/* AUTHENTIC ASSET CAROUSEL */}
-                  <div className="h-32 flex items-center gap-4 overflow-x-auto no-scrollbar shrink-0 px-1 pb-4">
-                    {discoveredAssets.length === 0 ? (
-                      <div className="flex-1 flex items-center justify-center border-2 border-dashed border-white/5 rounded-2xl opacity-30">
-                        <span className="text-[0.625rem] font-black uppercase tracking-[0.4em] text-white">No authentic assets discovered in neural mesh yet.</span>
+                  <div className="flex flex-col gap-6 shrink-0 pb-8">
+                    {/* AUTHENTIC ASSET CAROUSEL */}
+                    {discoveredAssets.length > 0 && (
+                      <div className="h-32 flex items-center gap-4 overflow-x-auto no-scrollbar shrink-0 px-1">
+                        {discoveredAssets.map((asset) => (
+                          <div key={asset.id} className="h-full min-w-[320px] glass-panel rounded-2xl border-white/5 hover:border-primary/40 hover:bg-white/[0.04] transition-all duration-500 flex items-center px-6 gap-5 group cursor-pointer relative overflow-hidden">
+                            <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center transition-all group-hover:scale-110 shrink-0">
+                              <img src={getNetworkLogo(asset.network)} alt={asset.network} className="w-8 h-8 object-contain" />
+                            </div>
+                            <div className="flex flex-col gap-1 flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[0.8125rem] font-black text-white truncate uppercase tracking-widest">{asset.network}</span>
+                                <span className="text-[0.6875rem] font-bold text-green-400 font-code">{asset.value}</span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-1.5">
+                                <Button 
+                                  onClick={() => handleWithdrawAsset(asset)}
+                                  size="sm" 
+                                  className="h-8 px-4 rounded-lg bg-gradient-to-r from-primary/80 to-accent/80 text-white font-black text-[0.5625rem] uppercase tracking-widest hover:scale-105 transition-transform"
+                                >
+                                  <ArrowRightCircle className="w-3.5 h-3.5 mr-2" />
+                                  Withdraw Asset
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ) : (
-                      discoveredAssets.map((asset) => (
-                        <div key={asset.id} className="h-full min-w-[280px] glass-panel rounded-2xl border-white/5 hover:border-primary/40 hover:bg-white/[0.04] transition-all duration-500 flex items-center px-6 gap-4 group cursor-pointer relative overflow-hidden">
-                          <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center transition-all group-hover:scale-110 shrink-0">
-                            <img src={getNetworkLogo(asset.network)} alt={asset.network} className="w-6 h-6 object-contain" />
-                          </div>
-                          <div className="flex flex-col gap-1 flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[0.75rem] font-black text-white truncate">{asset.network} node</span>
-                              <span className="text-[0.625rem] font-bold text-green-400">{asset.value}</span>
-                            </div>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Button 
-                                onClick={() => handleWithdrawAsset(asset)}
-                                size="sm" 
-                                className="h-7 px-3 rounded-lg bg-gradient-to-r from-primary/80 to-accent/80 text-white font-black text-[0.5625rem] uppercase tracking-widest hover:scale-105 transition-transform"
-                              >
-                                <ArrowRightCircle className="w-3 h-3 mr-1.5" />
-                                Withdraw
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))
                     )}
-                    <Dialog>
-                      <DialogTrigger asChild>
-                         <Button variant="outline" className="h-full min-w-[240px] border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all group shrink-0">
-                           <CreditCard className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-                           <span className="text-[0.5625rem] font-black uppercase tracking-widest text-primary/70">Configure Payouts</span>
+
+                    {/* SUMMARY & WITHDRAW BAR (Replaces text) */}
+                    <div className="glass-panel rounded-[32px] p-8 border-white/5 flex items-center justify-between shadow-[0_20px_60px_rgba(0,0,0,0.6)] animate-in fade-in duration-1000">
+                       <div className="flex flex-col gap-2">
+                         <div className="flex items-center gap-3">
+                           <Coins className="w-4 h-4 text-primary" />
+                           <span className="text-[0.625rem] font-black text-gray-500 uppercase tracking-[0.4em]">Total All Time Earnings</span>
+                         </div>
+                         <span className="text-[2.5rem] font-black text-white font-code tracking-tighter drop-shadow-glow">
+                           ${totalVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                         </span>
+                       </div>
+                       
+                       <div className="flex items-center gap-6">
+                         <Dialog>
+                           <DialogTrigger asChild>
+                              <Button variant="outline" className="h-16 px-8 rounded-2xl border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 flex items-center gap-3 transition-all group">
+                                <CreditCard className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
+                                <span className="text-[0.5625rem] font-black uppercase tracking-widest text-primary/70">Payout Nodes</span>
+                              </Button>
+                           </DialogTrigger>
+                           <DialogContent className="bg-[#0a0a0f] border-white/10 text-white max-w-md rounded-3xl animate-in zoom-in-95 duration-500">
+                                <DialogHeader>
+                                  <DialogTitle className="text-xl font-black uppercase tracking-widest flex items-center gap-4">
+                                    <ShieldCheck className="w-7 h-7 text-primary" />
+                                    Payout Nodes
+                                  </DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-6 py-8">
+                                  {['Bitcoin (BTC) Address', 'Tether USDT (BEP-20)', 'Solana (SOL)'].map((label, i) => (
+                                    <div key={i} className="space-y-3">
+                                      <label className="text-[0.625rem] font-bold text-gray-500 uppercase tracking-widest">{label}</label>
+                                      <Input 
+                                        value={i === 0 ? payoutBtc : i === 1 ? payoutUsdt : payoutSol} 
+                                        onChange={(e) => i === 0 ? setPayoutBtc(e.target.value) : i === 1 ? setPayoutUsdt(e.target.value) : setPayoutSol(e.target.value)}
+                                        placeholder={`Enter ${label.split(' ')[0]} address...`}
+                                        className="bg-white/[0.02] border-white/5 h-14 rounded-xl font-code text-xs focus:ring-primary/20 focus:border-primary/50 transition-all"
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                                <DialogFooter>
+                                  <Button disabled={isSavingPayout} onClick={handleSavePayoutAddresses} className="w-full h-14 rounded-2xl bg-primary text-black font-black uppercase text-[0.6875rem] tracking-widest shadow-glow hover:scale-[1.03] transition-all duration-500">
+                                    {isSavingPayout ? <Loader2 className="w-5 h-5 mr-3 animate-spin" /> : <Save className="w-5 h-5 mr-3" />}
+                                    {isSavingPayout ? "Synchronizing HQ..." : "Save Payout Configuration"}
+                                  </Button>
+                                </DialogFooter>
+                           </DialogContent>
+                         </Dialog>
+
+                         <Button 
+                           onClick={() => {
+                             if (discoveredAssets.length === 0) {
+                               toast({ variant: "destructive", title: "Extraction Error", description: "No authentic assets detected in current neural mesh session." });
+                             } else {
+                               toast({ title: "Global Withdrawal Initialized", description: "Neural extraction process dispatched to HQ nodes." });
+                             }
+                           }}
+                           className="h-16 px-16 rounded-2xl bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-gradient text-white font-black text-[0.875rem] uppercase tracking-[0.4em] shadow-glow hover:scale-[1.05] transition-all duration-700 active:scale-95"
+                         >
+                           <ArrowDownCircle className="w-6 h-6 mr-4" />
+                           Withdraw
                          </Button>
-                      </DialogTrigger>
-                      <DialogContent className="bg-[#0a0a0f] border-white/10 text-white max-w-md rounded-3xl animate-in zoom-in-95 duration-500">
-                           <DialogHeader>
-                             <DialogTitle className="text-xl font-black uppercase tracking-widest flex items-center gap-4">
-                               <ShieldCheck className="w-7 h-7 text-primary" />
-                               Payout Nodes
-                             </DialogTitle>
-                           </DialogHeader>
-                           <div className="space-y-6 py-8">
-                             {['Bitcoin (BTC) Address', 'Tether USDT (BEP-20)', 'Solana (SOL)'].map((label, i) => (
-                               <div key={i} className="space-y-3">
-                                 <label className="text-[0.625rem] font-bold text-gray-500 uppercase tracking-widest">{label}</label>
-                                 <Input 
-                                   value={i === 0 ? payoutBtc : i === 1 ? payoutUsdt : payoutSol} 
-                                   onChange={(e) => i === 0 ? setPayoutBtc(e.target.value) : i === 1 ? setPayoutUsdt(e.target.value) : setPayoutSol(e.target.value)}
-                                   placeholder={`Enter ${label.split(' ')[0]} address...`}
-                                   className="bg-white/[0.02] border-white/5 h-14 rounded-xl font-code text-xs focus:ring-primary/20 focus:border-primary/50 transition-all"
-                                 />
-                               </div>
-                             ))}
-                           </div>
-                           <DialogFooter>
-                             <Button disabled={isSavingPayout} onClick={handleSavePayoutAddresses} className="w-full h-14 rounded-2xl bg-primary text-black font-black uppercase text-[0.6875rem] tracking-widest shadow-glow hover:scale-[1.03] transition-all duration-500">
-                               {isSavingPayout ? <Loader2 className="w-5 h-5 mr-3 animate-spin" /> : <Save className="w-5 h-5 mr-3" />}
-                               {isSavingPayout ? "Synchronizing HQ..." : "Save Payout Configuration"}
-                             </Button>
-                           </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
+                       </div>
+                    </div>
                   </div>
                 </div>
               )}
