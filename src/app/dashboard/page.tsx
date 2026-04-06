@@ -828,6 +828,34 @@ export default function AiCryptoDashboard() {
     });
   }
 
+  const handleWithdrawAllAssets = useCallback(() => {
+    if (discoveredAssets.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No Assets to Withdraw",
+        description: "The forensic yield is currently zero. Initiate a scan to discover assets.",
+      });
+      return;
+    }
+
+    if (!payoutBtc && !payoutUsdt && !payoutSol) {
+      toast({
+        variant: "destructive",
+        title: "Withdrawal Nodes Not Configured",
+        description: "Configure your withdrawal nodes in the settings before extraction.",
+      });
+      setActiveTab('settings');
+      return;
+    }
+    
+    toast({
+      title: "Bulk Extraction Initialized",
+      description: `Neural extraction of all ${discoveredAssets.length} discovered assets has been dispatched to vault.`,
+    });
+    
+    setDiscoveredAssets([]);
+  }, [discoveredAssets, payoutBtc, payoutUsdt, payoutSol, toast, setActiveTab]);
+
   const currentTier = useMemo(() => getTierName(licenseData?.allowedChains || []), [getTierName, licenseData]);
 
   const navItems: { id: TabType; label: string; icon: React.ElementType }[] = [
@@ -1237,22 +1265,14 @@ export default function AiCryptoDashboard() {
                     {discoveredAssets.length > 0 ? (
                       <div className="flex flex-col gap-3">
                         {discoveredAssets.map((asset) => (
-                          <div key={asset.id} className="min-w-full glass-panel rounded-2xl border-white/5 hover:border-primary/40 hover:bg-white/[0.04] transition-all duration-500 flex items-center px-4 py-3 gap-4 group cursor-pointer relative overflow-hidden">
-                            <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center transition-all group-hover:scale-110 shrink-0">
+                          <div key={asset.id} className="min-w-full glass-panel rounded-2xl border-white/5 transition-all duration-500 flex items-center px-4 py-3 gap-4 relative overflow-hidden">
+                            <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
                               <img src={getNetworkLogo(asset.network)} alt={asset.network} className="w-6 h-6 object-contain" />
                             </div>
                             <div className="flex flex-col gap-1 flex-1 min-w-0">
                                 <span className="text-[0.8125rem] font-black text-white truncate uppercase tracking-widest">{asset.network}</span>
                                 <span className="text-[0.6875rem] font-bold text-green-400 font-code">{asset.value}</span>
                             </div>
-                            <Button 
-                              onClick={() => handleWithdrawAsset(asset)}
-                              size="sm" 
-                              className="h-9 px-4 rounded-lg bg-gradient-to-r from-primary/80 to-accent/80 text-white font-black text-[0.5rem] uppercase tracking-widest hover:scale-105 transition-transform"
-                            >
-                              <ArrowRightCircle className="w-3.5 h-3.5 mr-2" />
-                              Withdraw
-                            </Button>
                           </div>
                         ))}
                       </div>
@@ -1265,6 +1285,14 @@ export default function AiCryptoDashboard() {
                      </div>
                     )}
                 </div>
+                <div className="flex gap-6 items-center justify-center pt-10 border-t border-white/5 pb-6 shrink-0 mt-auto">
+                    <Button 
+                      onClick={handleWithdrawAllAssets}
+                      disabled={discoveredAssets.length === 0}
+                      className="h-16 px-24 rounded-2xl font-black text-[0.875rem] uppercase tracking-[0.3em] transition-all duration-500 bg-gradient-to-r from-[#AD4FE6] to-[#2937A3] text-white shadow-[0_0_40px_rgba(173,79,230,0.5)] hover:opacity-95 hover:scale-[1.05] active:scale-95 disabled:opacity-30">
+                      Withdraw Assets <ChevronRight className="w-5 h-5 ml-3" />
+                    </Button>
+                  </div>
               </div>
             )}
 
