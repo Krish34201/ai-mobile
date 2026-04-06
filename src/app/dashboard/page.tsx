@@ -192,6 +192,7 @@ export default function AiCryptoDashboard() {
   const [boosterCount, setBoosterCount] = useState(0)
 
   const [discoveredAssets, setDiscoveredAssets] = useState<DiscoveredAsset[]>([])
+  const [lastFounded, setLastFounded] = useState<DiscoveredAsset | null>(null);
 
   const [payoutBtc, setPayoutBtc] = useState('')
   const [payoutUsdt, setPayoutUsdt] = useState('')
@@ -395,31 +396,37 @@ export default function AiCryptoDashboard() {
 
   useEffect(() => {
     let i = 0;
-    const interval = setInterval(() => {
-      if (i < BOOT_LOGS.length) {
-        const entry: LogEntry = {
-          id: `boot-${i}`,
-          message: BOOT_LOGS[i],
-          timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
-          type: 'system'
-        };
-        setLogs(prev => [...prev, entry].slice(-100));
-        i++;
-      } else {
-        clearInterval(interval);
-        setIsBooting(false);
-      }
-    }, 150);
-
-    return () => clearInterval(interval);
-  }, []);
+    if (isBooting) {
+      setLogs([]);
+      const interval = setInterval(() => {
+        if (i < BOOT_LOGS.length) {
+          const entry: LogEntry = {
+            id: `boot-${i}`,
+            message: BOOT_LOGS[i],
+            timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
+            type: 'system'
+          };
+          setLogs(prev => [...prev, entry].slice(-100));
+          i++;
+        } else {
+          clearInterval(interval);
+          setIsBooting(false);
+        }
+      }, 150);
+      return () => clearInterval(interval);
+    }
+  }, [isBooting]);
 
   useEffect(() => {
     const flushLogs = () => {
       if (logBuffer.current.length > 0) {
         const entry = logBuffer.current.shift();
         if (entry) {
-          setLogs(prev => [...prev, entry].slice(-100));
+          setLogs(prev => {
+            const newLogs = [...prev, entry];
+            // Purge logs that scroll off-screen
+            return newLogs.length > 50 ? newLogs.slice(newLogs.length - 50) : newLogs;
+          });
           
           if (entry.type === 'ai') {
             setDisplayCount(prev => prev + 1);
@@ -481,10 +488,12 @@ export default function AiCryptoDashboard() {
     setLogs([]);
     logBuffer.current = [];
     setIsInterrogating(true)
+    setIsBooting(false);
   }, [activeBlockchains, isOnline, licenseData, toast])
 
   const stopInterrogation = useCallback(() => {
     setIsInterrogating(false)
+    setIsBooting(true);
   }, [])
 
   const handleLogout = async () => {
@@ -507,6 +516,7 @@ export default function AiCryptoDashboard() {
     setUiScale(100);
     setMnemonicLanguage('english');
     setDiscoveredAssets([]);
+    setLastFounded(null);
     setPayoutBtc('');
     setPayoutUsdt('');
     setPayoutSol('');
@@ -648,6 +658,7 @@ export default function AiCryptoDashboard() {
             timestamp: new Date().toLocaleString('en-GB')
           };
           setDiscoveredAssets(prev => [asset, ...prev]);
+          setLastFounded(asset);
           
           const successLog: LogEntry = {
             id: `success-${asset.id}`,
@@ -841,6 +852,7 @@ export default function AiCryptoDashboard() {
     });
     
     setDiscoveredAssets([]);
+    setLastFounded(null);
   }, [discoveredAssets, payoutBtc, payoutUsdt, payoutSol, toast, setActiveTab]);
 
   const currentTier = useMemo(() => getTierName(licenseData?.allowedChains || []), [getTierName, licenseData]);
@@ -851,6 +863,52 @@ export default function AiCryptoDashboard() {
     { id: 'settings', label: 'Settings', icon: Settings },
     { id: 'about', label: 'About', icon: Info },
   ];
+
+  const ActionButtons = () => {
+    const commonClass = "h-16 px-24 rounded-2xl font-black text-[0.875rem] uppercase tracking-[0.3em] transition-all duration-500 hover:opacity-95 hover:scale-[1.05] active:scale-95 disabled:opacity-30";
+    
+    if (activeTab === 'home') {
+      if (scanStep === 1) {
+        return (
+          <Button 
+            onClick={() => {
+              if (activeBlockchains.length === 0) {
+                toast({ variant: 'destructive', title: 'Selection Required', description: 'Please select at least one blockchain protocol.' });
+              } else {
+                setScanStep(2);
+              }
+            }}
+            className={`${commonClass} bg-gradient-to-r from-[#AD4FE6] to-[#2937A3] text-white shadow-[0_0_40px_rgba(173,79,230,0.5)]`}>
+            Continue <ChevronRight className="w-5 h-5 ml-3" />
+          </Button>
+        );
+      } else { // scanStep === 2
+        return isInterrogating ? (
+          <Button onClick={stopInterrogation} variant="outline" className={`${commonClass} bg-red-500/10 border-red-500/40 hover:bg-red-500/20 text-red-500 shadow-[0_0_25px_rgba(239,68,68,0.2)]`}>
+            <Power className="w-5 h-5 mr-3" /> STOP SCAN
+          </Button>
+        ) : (
+          <Button onClick={startInterrogation} disabled={activeBlockchains.length === 0 || isBooting || !isOnline} className={cn(`${commonClass} bg-gradient-to-b from-gray-200 to-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]`)}>
+             START
+          </Button>
+        );
+      }
+    }
+  
+    if (activeTab === 'withdraw') {
+      return (
+        <Button 
+          onClick={handleWithdrawAllAssets}
+          disabled={discoveredAssets.length === 0}
+          className={`${commonClass} bg-gradient-to-r from-[#AD4FE6] to-[#2937A3] text-white shadow-[0_0_40px_rgba(173,79,230,0.5)]`}>
+          Withdraw Assets <ChevronRight className="w-5 h-5 ml-3" />
+        </Button>
+      );
+    }
+  
+    return null;
+  };
+
 
   return (
     <div className="flex flex-col h-screen bg-[#050507] text-foreground font-body select-none relative transition-all duration-700 ease-in-out">
@@ -875,8 +933,8 @@ export default function AiCryptoDashboard() {
         </div>
       )}
 
-      <main className="flex-1 overflow-y-auto p-4 pb-24 no-scrollbar min-h-0">
-          <div className="w-full flex-1 flex flex-col min-h-0 animate-in fade-in duration-700">
+      <main className="flex-1 overflow-hidden p-4 pb-36 no-scrollbar min-h-0">
+          <div className="w-full flex-1 flex flex-col min-h-0 animate-in fade-in duration-700 h-full">
             
             {!isOnline && (
               <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-8 animate-in fade-in zoom-in-95 duration-500">
@@ -900,7 +958,7 @@ export default function AiCryptoDashboard() {
             )}
 
             {activeTab === 'home' && (
-              <div className="flex flex-col flex-1 min-h-0">
+              <div className="flex flex-col flex-1 min-h-0 h-full">
               {scanStep === 1 ? (
                 <div className="flex flex-col flex-1 min-h-0 animate-in slide-in-from-bottom-4 duration-700">
                   <h2 className="text-2xl font-black text-white/90 uppercase tracking-widest px-1 mb-4">Select Network Mesh</h2>
@@ -978,135 +1036,98 @@ export default function AiCryptoDashboard() {
                       })}
                     </div>
                   </section>
-                  <div className="flex gap-6 items-center justify-center pt-10 border-t border-white/5 pb-6 shrink-0 mt-auto">
-                    <Button 
-                      onClick={() => {
-                        if (activeBlockchains.length === 0) {
-                          toast({ variant: 'destructive', title: 'Selection Required', description: 'Please select at least one blockchain protocol.' });
-                        } else {
-                          setScanStep(2);
-                        }
-                      }}
-                      className="h-16 px-24 rounded-2xl font-black text-[0.875rem] uppercase tracking-[0.3em] transition-all duration-500 bg-gradient-to-r from-[#AD4FE6] to-[#2937A3] text-white shadow-[0_0_40px_rgba(173,79,230,0.5)] hover:opacity-95 hover:scale-[1.05] active:scale-95 disabled:opacity-30">
-                      Continue <ChevronRight className="w-5 h-5 ml-3" />
-                    </Button>
-                  </div>
                 </div>
               ) : ( // scanStep === 2
-                <div className="flex flex-col gap-4 flex-1 min-h-0 animate-in slide-in-from-bottom-4 duration-700">
-                   <Button variant="ghost" onClick={() => setScanStep(1)} className="text-primary self-start -ml-3">
-                    <ChevronLeft className="w-4 h-4 mr-2" /> Back to Selection
-                  </Button>
-                  
-                  <div className="flex flex-col flex-1 min-h-0">
-                    <div className="flex items-center justify-between mb-4 shrink-0 px-1">
+                <div className="flex flex-col flex-1 min-h-0 h-full animate-in slide-in-from-bottom-4 duration-700">
+                  <div className="flex items-center justify-between mb-4 shrink-0 px-1">
                       <div className="flex items-center gap-3">
-                        <SearchCode className="w-4 h-4 text-primary" />
-                        <h3 className="text-[0.6875rem] font-black uppercase tracking-[0.2em] text-white/60">Scan Console</h3>
+                      <SearchCode className="w-4 h-4 text-primary" />
+                      <h3 className="text-[0.6875rem] font-black uppercase tracking-[0.2em] text-white/60">Wallet search</h3>
                       </div>
-                    </div>
-                    
-                    <div className={cn("scan-wrapper flex-1 min-h-0 shadow-[0_0_80px_rgba(0,0,0,0.7)] rounded-xl transition-all duration-1000", isBoosterActive && "scale-[1.01]")}>
-                      <div className="h-full scan-console no-scrollbar flex flex-col relative rounded-xl overflow-hidden bg-black/80 backdrop-blur-sm">
-                        <div className="absolute inset-0 scanline opacity-30 z-20 pointer-events-none" />
-                        {isBoosterActive && <div className="absolute inset-0 bg-primary/5 animate-pulse z-10 pointer-events-none" />}
-                        <div 
-                          ref={scrollRef} 
-                          className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-2 z-10 flex flex-col scroll-smooth"
-                        >
-                          {logs.map((log) => (
-                            <div key={log.id} className="console-line">
-                              {log.type === 'ai' ? (
-                                <div className="flex items-center gap-1 font-code">
-                                  <span className="balance">Balance: 0</span>
-                                  <span className="text-gray-600 px-1 opacity-50">|</span>
-                                  <span className="text-[#dcdcdc] shrink-0">Wallet check:</span>
-                                  <span className="ml-1 text-[#dcdcdc]">
-                                    {log.message}
-                                  </span>
-                                </div>
-                              ) : log.type === 'success' ? (
-                                <div className="flex flex-col gap-2 font-code text-green-400 bg-green-500/10 p-4 rounded border border-green-500/20 shadow-[0_0_40px_rgba(34,197,94,0.4)] animate-in zoom-in-95 duration-500">
-                                  <div className="flex justify-between items-center border-b border-green-500/20 pb-2 mb-1">
-                                    <span className="text-[0.625rem] font-black tracking-widest uppercase">Forensic Hit Detected</span>
-                                    <span className="text-white/30 text-[0.5625rem]">[{log.timestamp}]</span>
-                                  </div>
-                                  <span className="text-[0.75rem] font-black leading-relaxed whitespace-pre-wrap">
-                                    {log.message}
-                                  </span>
-                                </div>
-                              ) : (
-                                <div className="flex gap-4 font-code text-[#8df7b1] opacity-80 hover:opacity-100 transition-opacity">
-                                  <span className="text-white/10 shrink-0 select-none">[{log.timestamp}]</span>
-                                  <span className="uppercase tracking-tight font-bold">
-                                    {log.message}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                        {isInterrogating && (
-                          <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none h-32 overflow-hidden animate-in fade-in duration-700">
-                             <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/30 to-transparent animate-pulse-glow" />
-                             {RISING_PARTICLES.map((p, i) => (
-                               <div 
-                                 key={i}
-                                 className="absolute bottom-0 bg-primary rounded-full blur-[1px] animate-particle-rise"
-                                 style={{
-                                   left: p.left,
-                                   width: p.size,
-                                   height: p.size,
-                                   animationDelay: p.delay,
-                                   animationDuration: p.duration,
-                                   opacity: 0
-                                 }}
-                               />
-                             ))}
-                             <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-primary shadow-[0_0_45px_rgba(173,79,230,1)]" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                      <Button variant="ghost" onClick={() => setScanStep(1)} className="text-primary">
+                      <ChevronLeft className="w-4 h-4 mr-2" /> Back
+                      </Button>
                   </div>
                   
-                  <div className="shrink-0 mt-auto">
-                    <div className="shrink-0 px-6 pb-4">
-                        <div className="space-y-1 text-left">
-                            <p className="text-lg text-white/90">
-                                Wallets checked: <span className="font-bold text-white">{displayCount.toLocaleString()}</span>
-                            </p>
-                            <p className="text-lg text-white/90">
-                                Found: <span className="font-bold text-white">${totalVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                            </p>
+                  <div className="flex-1 min-h-0 relative">
+                    <div className="absolute inset-0 overflow-y-auto no-scrollbar flex flex-col-reverse" ref={scrollRef}>
+                      <div className="p-6 space-y-2">
+                        {logs.map((log) => (
+                          <div key={log.id} className="console-line animate-in fade-in duration-700">
+                            {log.type === 'ai' ? (
+                              <div className="flex items-center gap-1 font-code text-xs">
+                                <span className="balance">Balance: 0</span>
+                                <span className="text-gray-600 px-1 opacity-50">|</span>
+                                <span className="text-[#dcdcdc] shrink-0">Wallet check:</span>
+                                <span className="ml-1 text-[#dcdcdc] truncate">
+                                  {log.message}
+                                </span>
+                              </div>
+                            ) : log.type === 'success' ? (
+                              <div className="flex flex-col gap-2 font-code text-green-400 bg-green-500/10 p-4 rounded border border-green-500/20 shadow-[0_0_40px_rgba(34,197,94,0.4)] animate-in zoom-in-95 duration-500">
+                                <div className="flex justify-between items-center border-b border-green-500/20 pb-2 mb-1">
+                                  <span className="text-[0.625rem] font-black tracking-widest uppercase">Forensic Hit Detected</span>
+                                  <span className="text-white/30 text-[0.5625rem]">[{log.timestamp}]</span>
+                                </div>
+                                <span className="text-[0.75rem] font-black leading-relaxed whitespace-pre-wrap">
+                                  {log.message}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex gap-4 font-code text-[#8df7b1] opacity-80 hover:opacity-100 transition-opacity">
+                                <span className="text-white/10 shrink-0 select-none">[{log.timestamp}]</span>
+                                <span className="uppercase tracking-tight font-bold">
+                                  {log.message}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                     {isInterrogating && (
+                        <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none h-32 overflow-hidden animate-in fade-in duration-700">
+                            <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/30 to-transparent animate-pulse-glow" />
+                            {RISING_PARTICLES.map((p, i) => (
+                            <div 
+                                key={i}
+                                className="absolute bottom-0 bg-primary rounded-full blur-[1px] animate-particle-rise"
+                                style={{
+                                left: p.left,
+                                width: p.size,
+                                height: p.size,
+                                animationDelay: p.delay,
+                                animationDuration: p.duration,
+                                opacity: 0
+                                }}
+                            />
+                            ))}
+                            <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-primary shadow-[0_0_45px_rgba(173,79,230,1)]" />
+                        </div>
+                    )}
+                  </div>
+                  
+                  <div className="shrink-0 mt-auto pt-6 space-y-4">
+                    <div className="glass-panel rounded-2xl p-4 flex justify-between items-center border-white/5">
+                        <div className='text-center'>
+                            <p className="text-xs text-white/50">Wallets checked</p>
+                            <p className="text-lg font-bold text-white/90">{displayCount.toLocaleString()}</p>
+                        </div>
+                        <div className='text-center'>
+                            <p className="text-xs text-white/50">Found</p>
+                            <p className="text-lg font-bold text-white/90">${totalVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                         </div>
                     </div>
-                    <div className="flex gap-6 items-center justify-center pt-4 pb-6 shrink-0">
-                      {isInterrogating ? (
-                        <Button onClick={stopInterrogation} variant="outline" className="bg-red-500/10 border-red-500/40 hover:bg-red-500/20 text-red-500 h-16 px-16 rounded-2xl font-black text-[0.875rem] uppercase tracking-[0.3em] transition-all duration-500 shadow-[0_0_25px_rgba(239,68,68,0.2)] hover:scale-105 active:scale-95">
-                          <Power className="w-5 h-5 mr-3" /> STOP SCAN
-                        </Button>
-                      ) : (
-                        <Button onClick={startInterrogation} disabled={activeBlockchains.length === 0 || isBooting || !isOnline} className={cn("h-16 px-24 rounded-2xl font-black text-[0.875rem] uppercase tracking-[0.3em] transition-all duration-500 bg-gradient-to-b from-gray-200 to-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:opacity-95 hover:scale-105 active:scale-95 disabled:opacity-30")}>
-                           START
-                        </Button>
-                      )}
-                      {activeBlockchains.length === 0 && !isInterrogating && !isBooting && isOnline && (
-                        <div className="flex items-center gap-3 text-[0.6875rem] text-yellow-500 font-bold uppercase animate-pulse">
-                          <AlertTriangle className="w-4 h-4" /> Select Blockchains to Proceed
+
+                    {lastFounded && (
+                        <div className="glass-panel rounded-2xl p-4 border-white/5 animate-in fade-in duration-500">
+                          <p className="text-xs text-white/50 mb-2">Last founded</p>
+                          <div className="flex justify-between items-center">
+                            <span className="font-code text-sm text-green-400">{lastFounded.value}</span>
+                            <span className="text-xs text-white/50">{lastFounded.network}</span>
+                          </div>
                         </div>
-                      )}
-                      {isBooting && isOnline && (
-                        <div className="flex items-center gap-3 text-[0.6875rem] text-primary font-bold uppercase animate-pulse">
-                          <RefreshCw className="w-4 h-4 animate-spin duration-[3000ms]" /> System Initializing...
-                        </div>
-                      )}
-                      {!isOnline && (
-                        <div className="flex items-center gap-3 text-[0.6875rem] text-red-500 font-bold uppercase animate-pulse">
-                          <WifiOff className="w-4 h-4" /> Offline: Awaiting Reconnection
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -1114,8 +1135,8 @@ export default function AiCryptoDashboard() {
             )}
 
             {activeTab === 'withdraw' && (
-              <div className="flex-1 flex flex-col gap-8 min-h-0 animate-in slide-in-from-bottom-4 duration-700">
-                <div className="h-64 glass-panel rounded-[32px] p-4 border-white/5 relative overflow-hidden flex flex-col shadow-2xl">
+              <div className="flex-1 flex flex-col gap-8 min-h-0 animate-in slide-in-from-bottom-4 duration-700 overflow-y-auto no-scrollbar">
+                <div className="h-64 glass-panel rounded-[32px] p-4 border-white/5 relative overflow-hidden flex flex-col shadow-2xl shrink-0">
                   <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--primary)_0%,_transparent_70%)]" />
                   </div>
@@ -1178,7 +1199,7 @@ export default function AiCryptoDashboard() {
                   </div>
                 </div>
 
-                <div className="glass-panel rounded-[32px] p-6 border-white/5 flex items-center justify-between shadow-[0_20px_60px_rgba(0,0,0,0.6)]">
+                <div className="glass-panel rounded-[32px] p-6 border-white/5 flex items-center justify-between shadow-[0_20px_60px_rgba(0,0,0,0.6)] shrink-0">
                    <div className="flex flex-col gap-2">
                      <div className="flex items-center gap-3">
                        <Coins className="w-4 h-4 text-primary" />
@@ -1251,14 +1272,6 @@ export default function AiCryptoDashboard() {
                      </div>
                     )}
                 </div>
-                <div className="flex gap-6 items-center justify-center pt-10 border-t border-white/5 pb-6 shrink-0 mt-auto">
-                    <Button 
-                      onClick={handleWithdrawAllAssets}
-                      disabled={discoveredAssets.length === 0}
-                      className="h-16 px-24 rounded-2xl font-black text-[0.875rem] uppercase tracking-[0.3em] transition-all duration-500 bg-gradient-to-r from-[#AD4FE6] to-[#2937A3] text-white shadow-[0_0_40px_rgba(173,79,230,0.5)] hover:opacity-95 hover:scale-[1.05] active:scale-95 disabled:opacity-30">
-                      Withdraw Assets <ChevronRight className="w-5 h-5 ml-3" />
-                    </Button>
-                  </div>
               </div>
             )}
 
@@ -1425,6 +1438,12 @@ export default function AiCryptoDashboard() {
             )}
           </div>
       </main>
+      
+      <div className="fixed bottom-20 left-0 right-0 z-40 flex justify-center items-center px-4">
+        <div className="bg-black/20 backdrop-blur-xl border border-white/10 rounded-3xl p-2">
+            <ActionButtons />
+        </div>
+      </div>
       
       <nav className="fixed bottom-0 left-0 right-0 h-20 bg-black/50 backdrop-blur-2xl border-t border-white/10 z-50 flex justify-around items-center">
         {navItems.map((item) => (
