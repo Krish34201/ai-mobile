@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
@@ -857,7 +858,7 @@ export default function AiCryptoDashboard() {
         );
       } else { // scanStep === 2
         return isInterrogating ? (
-          <Button onClick={stopInterrogation} variant="outline" className={`${commonClass} bg-black/50 border-red-500/60 hover:bg-black/70 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.3)]`}>
+          <Button onClick={stopInterrogation} variant="outline" className={`${commonClass} bg-red-900/40 border-red-500/60 hover:bg-red-900/60 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.3)]`}>
             <Power className="w-5 h-5 mr-3" /> STOP
           </Button>
         ) : (
@@ -1012,7 +1013,7 @@ export default function AiCryptoDashboard() {
                 </div>
               ) : ( // scanStep === 2
                 <div className="flex flex-col flex-1 min-h-0 h-full animate-in slide-in-from-bottom-4 duration-700">
-                  <div className="flex items-center justify-between mb-4 shrink-0 px-1">
+                  <div className="absolute inset-x-4 top-0 flex items-center justify-between mb-4 shrink-0 px-1">
                       <div className="flex items-center gap-3">
                       <SearchCode className="w-4 h-4 text-primary" />
                       <h3 className="text-[0.6875rem] font-black uppercase tracking-[0.2em] text-white/60">Wallet search</h3>
@@ -1022,14 +1023,15 @@ export default function AiCryptoDashboard() {
                       </Button>
                   </div>
                   
-                  <div className="flex-1 min-h-0 relative">
+                  <div className="flex-1 min-h-0 relative mt-12 mb-4">
                     <div className="absolute inset-0 overflow-y-auto no-scrollbar flex flex-col-reverse" ref={scrollRef}>
                       <div className="p-6 space-y-2">
                         {logs.map((log) => (
                           <div key={log.id} className="console-line animate-in fade-in duration-700">
                             {log.type === 'ai' ? (
-                              <div className="flex items-baseline font-code text-xs whitespace-nowrap">
-                                <span className="text-[#dcdcdc] truncate">{log.message}</span>
+                              <div className="flex items-baseline font-code text-xs whitespace-nowrap overflow-hidden">
+                                <span className="text-green-400 shrink-0">Balance: 0 | Wallet check:&nbsp;</span>
+                                <span className="text-white truncate">{log.message}</span>
                               </div>
                             ) : log.type === 'success' ? (
                               <div className="flex flex-col gap-2 font-code text-green-400 bg-green-500/10 p-4 rounded border border-green-500/20 shadow-[0_0_40px_rgba(34,197,94,0.4)] animate-in zoom-in-95 duration-500">
@@ -1051,6 +1053,11 @@ export default function AiCryptoDashboard() {
                             )}
                           </div>
                         ))}
+                         {logs.length === 0 && !isInterrogating && (
+                            <div className="absolute inset-0 flex items-center justify-center text-center">
+                                <p className="text-gray-700 font-code text-sm animate-pulse">Awaiting scan command...</p>
+                            </div>
+                        )}
                       </div>
                     </div>
                      {isInterrogating && (
@@ -1075,7 +1082,7 @@ export default function AiCryptoDashboard() {
                     )}
                   </div>
                   
-                  <div className="shrink-0 mt-auto pt-6 space-y-4">
+                  <div className="shrink-0 mt-auto pt-2 space-y-4">
                     <div className="glass-panel rounded-2xl p-4 flex justify-between items-center border-white/5">
                         <div className='text-center'>
                             <p className="text-xs text-white/50">Wallets checked</p>
@@ -1432,3 +1439,5 @@ export default function AiCryptoDashboard() {
     </div>
   )
 }
+
+    
