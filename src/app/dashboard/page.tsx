@@ -108,12 +108,17 @@ const ENTROPY_LANGUAGES = [
 ]
 
 const RISING_PARTICLES = [
-  { left: '10%', delay: '0s', duration: '3s', size: '2px' },
-  { left: '25%', delay: '1.2s', duration: '4s', size: '3px' },
-  { left: '40%', delay: '0.5s', duration: '2.5s', size: '1px' },
-  { left: '55%', delay: '2.1s', duration: '3.5s', size: '2px' },
-  { left: '70%', delay: '1.8s', duration: '4.5s', size: '3px' },
-  { left: '85%', delay: '0.9s', duration: '3.2s', size: '2px' },
+  { left: '5%', delay: '0s', duration: '5s', size: '2px' },
+  { left: '10%', delay: '1s', duration: '4s', size: '1px' },
+  { left: '20%', delay: '0.5s', duration: '6s', size: '3px' },
+  { left: '30%', delay: '2.5s', duration: '3.5s', size: '2px' },
+  { left: '40%', delay: '1.8s', duration: '5.5s', size: '1px' },
+  { left: '50%', delay: '3s', duration: '4.8s', size: '3px' },
+  { left: '60%', delay: '0.2s', duration: '6.5s', size: '2px' },
+  { left: '70%', delay: '2.2s', duration: '4.2s', size: '1px' },
+  { left: '80%', delay: '1.5s', duration: '5s', size: '3px' },
+  { left: '90%', delay: '3.5s', duration: '3.8s', size: '2px' },
+  { left: '95%', delay: '0.8s', duration: '6.2s', size: '1px' },
 ];
 
 const CHART_DATES = ['09.03', '10.03', '11.03', '12.03', '13.03', '14.03', '15.03'];
@@ -1479,5 +1484,7 @@ export default function AiCryptoDashboard() {
   )
 }
 
+
+    
 
     
