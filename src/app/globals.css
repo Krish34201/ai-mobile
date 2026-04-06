@@ -39,9 +39,13 @@
       linear-gradient(rgba(255, 255, 255, 0.01) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px),
       linear-gradient(135deg, #050507, #0b0b12, #050507);
-    background-size: 100% 100%, 100% 100%, 80px 80px, 80px 80px, 100% 100%;
     background-attachment: fixed;
     transition: background-color 1s ease;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    backface-visibility: hidden;
+    transform: translateZ(0);
   }
 
   body::after {
@@ -132,20 +136,6 @@
     animation: scan-line 3s linear infinite;
   }
 
-  @keyframes volumetric-pulse {
-    0% { box-shadow: 0 0 20px 2px rgba(173, 79, 230, 0.1); }
-    50% { box-shadow: 0 0 60px 10px rgba(173, 79, 230, 0.3); }
-    100% { box-shadow: 0 0 20px 2px rgba(173, 79, 230, 0.1); }
-  }
-
-  .shadow-volumetric {
-    animation: volumetric-pulse 8s ease-in-out infinite;
-  }
-
-  .shadow-volumetric-intense {
-    animation: volumetric-pulse 2s ease-in-out infinite;
-  }
-
   @keyframes bgFlow {
     0% { transform: scale(1); }
     50% { transform: scale(1.02); }
@@ -184,11 +174,6 @@
   .balance {
     @apply transition-colors duration-700;
     color: #8df7b1;
-  }
-
-  .ticker-content {
-    @apply inline-block;
-    animation: ticker 45s linear infinite;
   }
 
   .blockchain-grid {
@@ -265,11 +250,6 @@
   .animate-particle-rise {
     animation: particle-rise linear infinite;
   }
-}
-
-@keyframes ticker {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
 }
 
 @keyframes pulse-ring {
