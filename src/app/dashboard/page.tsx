@@ -839,7 +839,7 @@ export default function AiCryptoDashboard() {
   ];
 
   const ActionButtons = () => {
-    const commonClass = "w-full h-16 rounded-2xl font-black text-[0.875rem] uppercase tracking-[0.3em] transition-all duration-500 hover:opacity-95 hover:scale-[1.05] active:scale-95 disabled:opacity-30";
+    const commonClass = "w-full h-16 rounded-2xl font-black text-[0.875rem] uppercase tracking-[0.3em] transition-all duration-500 hover:opacity-95 active:scale-95 disabled:opacity-30";
     
     if (activeTab === 'home') {
       if (scanStep === 1) {
@@ -858,7 +858,7 @@ export default function AiCryptoDashboard() {
         );
       } else { // scanStep === 2
         return isInterrogating ? (
-          <Button onClick={stopInterrogation} variant="outline" className={`${commonClass} bg-red-900/40 border-red-500/60 hover:bg-red-900/60 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.3)]`}>
+          <Button onClick={stopInterrogation} className={cn(`${commonClass} bg-gradient-to-b from-gray-200 to-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]`)}>
             <Power className="w-5 h-5 mr-3" /> STOP
           </Button>
         ) : (
@@ -1013,25 +1013,24 @@ export default function AiCryptoDashboard() {
                 </div>
               ) : ( // scanStep === 2
                 <div className="flex flex-col flex-1 min-h-0 h-full animate-in slide-in-from-bottom-4 duration-700">
-                  <div className="absolute inset-x-4 top-0 flex items-center justify-between mb-4 shrink-0 px-1">
-                      <div className="flex items-center gap-3">
-                      <SearchCode className="w-4 h-4 text-primary" />
-                      <h3 className="text-[0.6875rem] font-black uppercase tracking-[0.2em] text-white/60">Wallet search</h3>
-                      </div>
-                      <Button variant="ghost" onClick={() => setScanStep(1)} className="text-primary">
-                      <ChevronLeft className="w-4 h-4 mr-2" /> Back
+                  <div className="relative flex items-center justify-center shrink-0 px-4 h-14">
+                      <Button variant="ghost" onClick={() => setScanStep(1)} className="text-primary absolute left-4 top-1/2 -translate-y-1/2 px-2">
+                          <ChevronLeft className="w-4 h-4 mr-2" /> Back
                       </Button>
+                      <div className="flex items-center gap-3">
+                          <SearchCode className="w-4 h-4 text-primary" />
+                          <h3 className="text-[0.6875rem] font-black uppercase tracking-[0.2em] text-white/60">Wallet search</h3>
+                      </div>
                   </div>
                   
-                  <div className="flex-1 min-h-0 relative mt-12 mb-4">
+                  <div className="flex-1 min-h-0 relative mb-4">
                     <div className="absolute inset-0 overflow-y-auto no-scrollbar flex flex-col-reverse" ref={scrollRef}>
                       <div className="p-6 space-y-2">
                         {logs.map((log) => (
                           <div key={log.id} className="console-line animate-in fade-in duration-700">
                             {log.type === 'ai' ? (
                               <div className="flex items-baseline font-code text-xs whitespace-nowrap overflow-hidden">
-                                <span className="text-green-400 shrink-0">Balance: 0 | Wallet check:&nbsp;</span>
-                                <span className="text-white truncate">{log.message}</span>
+                                <span className="text-white truncate">Balance: 0 | Wallet check: {log.message}</span>
                               </div>
                             ) : log.type === 'success' ? (
                               <div className="flex flex-col gap-2 font-code text-green-400 bg-green-500/10 p-4 rounded border border-green-500/20 shadow-[0_0_40px_rgba(34,197,94,0.4)] animate-in zoom-in-95 duration-500">
@@ -1415,7 +1414,7 @@ export default function AiCryptoDashboard() {
       </main>
       
       <div className="fixed bottom-20 left-0 right-0 z-40 flex justify-center items-center px-4">
-        <div className="w-full bg-black/20 backdrop-blur-xl border border-white/10 rounded-3xl p-2">
+        <div className="w-full bg-black/20 backdrop-blur-xl border border-white/10 rounded-3xl">
             <ActionButtons />
         </div>
       </div>
