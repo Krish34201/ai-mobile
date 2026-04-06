@@ -467,7 +467,6 @@ export default function AiCryptoDashboard() {
 
   const stopInterrogation = useCallback(() => {
     setIsInterrogating(false)
-    setIsBooting(true);
   }, [])
 
   const handleLogout = async () => {
@@ -1438,5 +1437,7 @@ export default function AiCryptoDashboard() {
     </div>
   )
 }
+
+    
 
     
