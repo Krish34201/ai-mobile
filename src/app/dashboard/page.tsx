@@ -381,7 +381,6 @@ export default function AiCryptoDashboard() {
 
   useEffect(() => {
     if (isBooting) {
-      setLogs([]);
       // Short delay to allow UI to clear before enabling scan button
       const timer = setTimeout(() => {
         setIsBooting(false);
@@ -1027,11 +1026,20 @@ export default function AiCryptoDashboard() {
                   <div className="flex-1 min-h-0 relative mb-4">
                     <div className="absolute inset-0 overflow-y-auto no-scrollbar flex flex-col-reverse" ref={scrollRef}>
                       <div className="p-6 space-y-2">
+                        {isBooting && (
+                          <div className="font-code text-xs space-y-1">
+                            <p className="text-terminal-cyan">[BOOT] Initializing AI Crypto Engine v4.0 Elite...</p>
+                            <p className="text-terminal-cyan">[BOOT] Verifying system modules...</p>
+                            <p className="text-terminal-cyan">[BOOT] Secure node connection established.</p>
+                            <p className="text-green-400">[READY] System online. Awaiting interrogation command.</p>
+                          </div>
+                        )}
                         {logs.map((log) => (
                           <div key={log.id} className="console-line animate-in fade-in duration-700">
                             {log.type === 'ai' ? (
                               <div className="flex items-baseline font-code text-xs whitespace-nowrap overflow-hidden">
-                                <span className="text-white truncate">Balance: 0 | Wallet check: {log.message}</span>
+                                <span className="text-terminal-green">Balance: 0 | Wallet check: </span>
+                                <span className="text-white truncate">{log.message}</span>
                               </div>
                             ) : log.type === 'success' ? (
                               <div className="flex flex-col gap-2 font-code text-green-400 bg-green-500/10 p-4 rounded border border-green-500/20 shadow-[0_0_40px_rgba(34,197,94,0.4)] animate-in zoom-in-95 duration-500">
@@ -1053,7 +1061,7 @@ export default function AiCryptoDashboard() {
                             )}
                           </div>
                         ))}
-                         {logs.length === 0 && !isInterrogating && (
+                         {logs.length === 0 && !isInterrogating && !isBooting && (
                             <div className="absolute inset-0 flex items-center justify-center text-center">
                                 <p className="text-gray-700 font-code text-sm animate-pulse">Awaiting scan command...</p>
                             </div>
@@ -1414,13 +1422,13 @@ export default function AiCryptoDashboard() {
           </div>
       </main>
       
-      <div className="fixed bottom-20 left-0 right-0 z-40 flex justify-center items-center px-4">
+      <div className="fixed bottom-20 left-0 right-0 z-[51] flex justify-center items-center px-4">
         <div className="w-full bg-black/20 backdrop-blur-xl border border-white/10 rounded-3xl">
             <ActionButtons />
         </div>
       </div>
       
-      <nav className="fixed bottom-0 left-0 right-0 h-20 bg-black/50 backdrop-blur-2xl border-t border-white/10 z-50 flex justify-around items-center">
+      <nav className="fixed bottom-0 left-0 right-0 h-20 bg-black/50 backdrop-blur-2xl border-t border-white/10 z-[52] flex justify-around items-center">
         {navItems.map((item) => (
           <button
             key={item.id}
@@ -1445,3 +1453,4 @@ export default function AiCryptoDashboard() {
 
     
 
+    
