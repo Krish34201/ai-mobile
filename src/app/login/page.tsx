@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect } from 'react'
@@ -191,11 +190,6 @@ export default function LoginPage() {
             </div>
           </form>
         </SnakeBorderCard>
-
-        <p className="mt-10 text-center text-[10px] text-[#6b6b75] uppercase tracking-[0.2em] font-bold leading-relaxed">
-          AUTHORIZED ACCESS ONLY<br />
-          ALL LOGIN ATTEMPTS ARE MONITORED AND LOGGED
-        </p>
       </div>
     </div>
   )
