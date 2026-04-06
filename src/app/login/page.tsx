@@ -177,17 +177,6 @@ export default function LoginPage() {
                 )}
               </Button>
             </div>
-
-            <div className="flex items-center justify-center gap-6 pt-4 border-t border-white/5">
-              <div className="flex flex-col items-center gap-1">
-                <Fingerprint className="w-5 h-5 text-gray-700" />
-                <span className="text-[8px] text-gray-600 uppercase font-bold">Biometric</span>
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <ShieldAlert className="w-5 h-5 text-gray-700" />
-                <span className="text-[8px] text-gray-600 uppercase font-bold">Encrypted</span>
-              </div>
-            </div>
           </form>
         </SnakeBorderCard>
       </div>
