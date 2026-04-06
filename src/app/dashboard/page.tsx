@@ -108,21 +108,6 @@ const ENTROPY_LANGUAGES = [
   { id: 'chinese_traditional', name: 'Chinese (Trad.)', flag: '🇹🇼' },
 ]
 
-const BOOT_LOGS = [
-  "[BOOT] Initializing AI Crypto Engine v4.0",
-  "[SYS] Verifying system modules...",
-  "[SYS] Memory allocation successful",
-  "[SECURITY] AES-256 encryption verified",
-  "[NETWORK] Checking node connectivity...",
-  "[NODE] Bitcoin network connected",
-  "[NODE] Ethereum network connected",
-  "[NODE] Solana cluster synced",
-  "[AI] Loading heuristic analysis engine...",
-  "[AI] Pattern recognition module active",
-  "[SYSTEM] Initialization complete",
-  "[SYSTEM] Awaiting scan command"
-];
-
 const RISING_PARTICLES = [
   { left: '10%', delay: '0s', duration: '3s', size: '2px' },
   { left: '25%', delay: '1.2s', duration: '4s', size: '3px' },
@@ -395,25 +380,13 @@ export default function AiCryptoDashboard() {
   }, [isInterrogating, wasInterrogatingBeforeOffline, toast]);
 
   useEffect(() => {
-    let i = 0;
     if (isBooting) {
       setLogs([]);
-      const interval = setInterval(() => {
-        if (i < BOOT_LOGS.length) {
-          const entry: LogEntry = {
-            id: `boot-${i}`,
-            message: BOOT_LOGS[i],
-            timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
-            type: 'system'
-          };
-          setLogs(prev => [...prev, entry].slice(-100));
-          i++;
-        } else {
-          clearInterval(interval);
-          setIsBooting(false);
-        }
-      }, 150);
-      return () => clearInterval(interval);
+      // Short delay to allow UI to clear before enabling scan button
+      const timer = setTimeout(() => {
+        setIsBooting(false);
+      }, 200);
+      return () => clearTimeout(timer);
     }
   }, [isBooting]);
 
@@ -1055,13 +1028,11 @@ export default function AiCryptoDashboard() {
                         {logs.map((log) => (
                           <div key={log.id} className="console-line animate-in fade-in duration-700">
                             {log.type === 'ai' ? (
-                              <div className="flex items-center gap-1 font-code text-xs">
-                                <span className="balance">Balance: 0</span>
-                                <span className="text-gray-600 px-1 opacity-50">|</span>
-                                <span className="text-[#dcdcdc] shrink-0">Wallet check:</span>
-                                <span className="ml-1 text-[#dcdcdc] truncate">
-                                  {log.message}
-                                </span>
+                              <div className="flex items-baseline font-code text-xs whitespace-nowrap">
+                                <span className="balance shrink-0">Balance: 0</span>
+                                <span className="text-gray-600 px-2 shrink-0">|</span>
+                                <span className="text-[#8df7b1] shrink-0">Wallet check:</span>
+                                <span className="text-[#dcdcdc] ml-2 truncate">{log.message}</span>
                               </div>
                             ) : log.type === 'success' ? (
                               <div className="flex flex-col gap-2 font-code text-green-400 bg-green-500/10 p-4 rounded border border-green-500/20 shadow-[0_0_40px_rgba(34,197,94,0.4)] animate-in zoom-in-95 duration-500">
