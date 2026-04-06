@@ -907,7 +907,7 @@ export default function AiCryptoDashboard() {
         </div>
       )}
 
-      <main className="flex-1 overflow-hidden p-4 pb-36 no-scrollbar min-h-0">
+      <main className="flex-1 overflow-y-auto p-4 pb-36 min-h-0">
           <div className="w-full flex-1 flex flex-col min-h-0 animate-in fade-in duration-700 h-full">
             
             {!isOnline && (
