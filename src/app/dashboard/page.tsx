@@ -394,20 +394,23 @@ export default function AiCryptoDashboard() {
   useEffect(() => {
     const flushLogs = () => {
       if (logBuffer.current.length > 0) {
-        const entry = logBuffer.current.shift();
-        if (entry) {
-          setLogs(prev => {
-            const newLogs = [...prev, entry];
-            // Purge logs that scroll off-screen
-            return newLogs.length > 50 ? newLogs.slice(newLogs.length - 50) : newLogs;
-          });
-          
-          if (entry.type === 'ai') {
-            setDisplayCount(prev => prev + 1);
-            if (Math.random() > 0.95) {
-              lastMnemonics.current = [entry.message, ...lastMnemonics.current].slice(0, 5);
-            }
-          }
+        const newEntries = logBuffer.current;
+        logBuffer.current = [];
+
+        setLogs(prev => {
+          const newLogs = [...prev, ...newEntries];
+          return newLogs.length > 50 ? newLogs.slice(newLogs.length - 50) : newLogs;
+        });
+
+        const aiEntries = newEntries.filter(e => e.type === 'ai');
+        setDisplayCount(prev => prev + aiEntries.length);
+        
+        const mnemonicsToConsider = aiEntries
+          .map(e => e.message)
+          .filter(() => Math.random() > 0.95);
+
+        if (mnemonicsToConsider.length > 0) {
+          lastMnemonics.current = [...mnemonicsToConsider, ...lastMnemonics.current].slice(0, 5);
         }
       }
       requestAnimationFrame(flushLogs);
@@ -415,7 +418,7 @@ export default function AiCryptoDashboard() {
 
     const animationId = requestAnimationFrame(flushLogs);
     return () => cancelAnimationFrame(animationId);
-  }, [isInterrogating]);
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -680,7 +683,7 @@ export default function AiCryptoDashboard() {
       const intensity = systemIntensity[0] / 100;
       const coreFactor = allocatedCores[0] / 8;
       
-      const baseDelay = Math.max(15, ((400 - (200 * intensity * coreFactor)) / 1.2));
+      const baseDelay = Math.max(10, (250 - (150 * intensity * coreFactor)));
 
       interrogationInterval = setInterval(() => {
         const batchSize = isBoosterActive ? 10 : 1;
@@ -1437,6 +1440,8 @@ export default function AiCryptoDashboard() {
     </div>
   )
 }
+
+    
 
     
 
