@@ -833,11 +833,11 @@ export default function AiCryptoDashboard() {
 
   const currentTier = useMemo(() => getTierName(licenseData?.allowedChains || []), [getTierName, licenseData]);
 
-  const navItems: { id: TabType; label: string; icon: React.ElementType }[] = [
-    { id: 'home', label: 'Scan', icon: SearchCode },
-    { id: 'withdraw', label: 'Withdraw', icon: ArrowDownCircle },
-    { id: 'settings', label: 'Settings', icon: Settings },
-    { id: 'about', label: 'About', icon: Info },
+  const navItems: { id: TabType; icon: React.ElementType }[] = [
+    { id: 'home', icon: SearchCode },
+    { id: 'withdraw', icon: WalletIcon },
+    { id: 'settings', icon: Settings },
+    { id: 'about', icon: Info },
   ];
 
   const ActionButtons = () => {
@@ -1445,3 +1445,4 @@ export default function AiCryptoDashboard() {
     
 
     
+
