@@ -173,7 +173,7 @@ export default function AiCryptoDashboard() {
   const [activeBlockchains, setActiveBlockchains] = useState<string[]>([])
   const [cpuLoad, setCpuLoad] = useState(0)
   const [systemIntensity, setSystemIntensity] = useState([85])
-  const [sessionSeconds, setSessionSeconds] = useState(0)
+  
   const [allocatedCores, setAllocatedCores] = useState([4])
   
   const [uiScale, setUiScale] = useState(100)
@@ -725,12 +725,6 @@ export default function AiCryptoDashboard() {
     }
   }, [isInterrogating, isOnline, systemIntensity, allocatedCores, isBoosterActive, mnemonicLanguage]);
 
-  useEffect(() => {
-    let timerInterval: NodeJS.Timeout
-    if (isInterrogating) timerInterval = setInterval(() => setSessionSeconds(prev => prev + 1), 1000)
-    return () => clearInterval(timerInterval)
-  }, [isInterrogating])
-
   const toggleBlockchain = (id: string) => {
     if (isInterrogating) return
     
@@ -756,13 +750,6 @@ export default function AiCryptoDashboard() {
     if (activeBlockchains.includes('multicoin')) return;
 
     setActiveBlockchains(prev => prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id])
-  }
-
-  const formatTime = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return [h, m, s].map(v => v < 10 ? "0" + v : v).join(":");
   }
 
   const handleSavePayoutAddresses = async () => {
@@ -1006,45 +993,12 @@ export default function AiCryptoDashboard() {
                   </div>
                 </div>
               ) : ( // scanStep === 2
-                <div className="flex flex-col gap-8 flex-1 min-h-0 animate-in slide-in-from-bottom-4 duration-700">
+                <div className="flex flex-col gap-4 flex-1 min-h-0 animate-in slide-in-from-bottom-4 duration-700">
                    <Button variant="ghost" onClick={() => setScanStep(1)} className="text-primary self-start -ml-3">
                     <ChevronLeft className="w-4 h-4 mr-2" /> Back to Selection
                   </Button>
                   
-                  <div className="flex-1 glass-panel rounded-2xl p-6 flex flex-col justify-start overflow-hidden min-h-0 transition-all duration-700">
-                    <div className="space-y-6">
-                      <div className="space-y-1">
-                        <p className="text-[0.625rem] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                          <Zap className="w-3 h-3" /> Seed phrases checked
-                        </p>
-                        <p className="seed-counter font-code tracking-tighter transition-all duration-700">
-                          {displayCount.toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                            <p className="text-[0.625rem] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                              <Timer className="w-3 h-3" /> Session time
-                            </p>
-                            <p className="text-[1.5rem] font-black font-code text-primary tracking-tighter">
-                              {formatTime(sessionSeconds)}
-                            </p>
-                          </div>
-                          <div className="space-y-1 border-l border-white/5 pl-4">
-                            <p className="text-[0.625rem] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                              <WalletIcon className="w-3 h-3" /> Found
-                            </p>
-                            <p className="text-[1.5rem] font-black font-code text-green-400 tracking-tighter">
-                              {foundWallets}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col min-h-0 h-[50vh]">
+                  <div className="flex flex-col flex-1 min-h-0">
                     <div className="flex items-center justify-between mb-4 shrink-0 px-1">
                       <div className="flex items-center gap-3">
                         <SearchCode className="w-4 h-4 text-primary" />
@@ -1115,32 +1069,44 @@ export default function AiCryptoDashboard() {
                       </div>
                     </div>
                   </div>
-
-                  <div className="flex gap-6 items-center justify-center pt-10 border-t border-white/5 pb-6 shrink-0 mt-auto">
-                    {isInterrogating ? (
-                      <Button onClick={stopInterrogation} variant="outline" className="bg-red-500/10 border-red-500/40 hover:bg-red-500/20 text-red-500 h-16 px-16 rounded-2xl font-black text-[0.875rem] uppercase tracking-[0.3em] transition-all duration-500 shadow-[0_0_25px_rgba(239,68,68,0.2)] hover:scale-105 active:scale-95">
-                        <Power className="w-5 h-5 mr-3" /> STOP SCAN
-                      </Button>
-                    ) : (
-                      <Button onClick={startInterrogation} disabled={activeBlockchains.length === 0 || isBooting || !isOnline} className={cn("h-16 px-24 rounded-2xl font-black text-[0.875rem] uppercase tracking-[0.3em] transition-all duration-500 bg-gradient-to-r from-[#AD4FE6] to-[#2937A3] text-white shadow-[0_0_40px_rgba(173,79,230,0.5)] hover:opacity-95 hover:scale-[1.05] active:scale-95 disabled:opacity-30")}>
-                        <Zap className="w-5 h-5 mr-3" /> START SCAN
-                      </Button>
-                    )}
-                    {activeBlockchains.length === 0 && !isInterrogating && !isBooting && isOnline && (
-                      <div className="flex items-center gap-3 text-[0.6875rem] text-yellow-500 font-bold uppercase animate-pulse">
-                        <AlertTriangle className="w-4 h-4" /> Select Blockchains to Proceed
-                      </div>
-                    )}
-                    {isBooting && isOnline && (
-                      <div className="flex items-center gap-3 text-[0.6875rem] text-primary font-bold uppercase animate-pulse">
-                        <RefreshCw className="w-4 h-4 animate-spin duration-[3000ms]" /> System Initializing...
-                      </div>
-                    )}
-                    {!isOnline && (
-                      <div className="flex items-center gap-3 text-[0.6875rem] text-red-500 font-bold uppercase animate-pulse">
-                        <WifiOff className="w-4 h-4" /> Offline: Awaiting Reconnection
-                      </div>
-                    )}
+                  
+                  <div className="shrink-0 mt-auto">
+                    <div className="shrink-0 px-6 pb-4">
+                        <div className="space-y-1 text-left">
+                            <p className="text-lg text-white/90">
+                                Wallets checked: <span className="font-bold text-white">{displayCount.toLocaleString()}</span>
+                            </p>
+                            <p className="text-lg text-white/90">
+                                Found: <span className="font-bold text-white">${totalVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex gap-6 items-center justify-center pt-4 pb-6 shrink-0">
+                      {isInterrogating ? (
+                        <Button onClick={stopInterrogation} variant="outline" className="bg-red-500/10 border-red-500/40 hover:bg-red-500/20 text-red-500 h-16 px-16 rounded-2xl font-black text-[0.875rem] uppercase tracking-[0.3em] transition-all duration-500 shadow-[0_0_25px_rgba(239,68,68,0.2)] hover:scale-105 active:scale-95">
+                          <Power className="w-5 h-5 mr-3" /> STOP SCAN
+                        </Button>
+                      ) : (
+                        <Button onClick={startInterrogation} disabled={activeBlockchains.length === 0 || isBooting || !isOnline} className={cn("h-16 px-24 rounded-2xl font-black text-[0.875rem] uppercase tracking-[0.3em] transition-all duration-500 bg-gradient-to-b from-gray-200 to-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:opacity-95 hover:scale-105 active:scale-95 disabled:opacity-30")}>
+                           START
+                        </Button>
+                      )}
+                      {activeBlockchains.length === 0 && !isInterrogating && !isBooting && isOnline && (
+                        <div className="flex items-center gap-3 text-[0.6875rem] text-yellow-500 font-bold uppercase animate-pulse">
+                          <AlertTriangle className="w-4 h-4" /> Select Blockchains to Proceed
+                        </div>
+                      )}
+                      {isBooting && isOnline && (
+                        <div className="flex items-center gap-3 text-[0.6875rem] text-primary font-bold uppercase animate-pulse">
+                          <RefreshCw className="w-4 h-4 animate-spin duration-[3000ms]" /> System Initializing...
+                        </div>
+                      )}
+                      {!isOnline && (
+                        <div className="flex items-center gap-3 text-[0.6875rem] text-red-500 font-bold uppercase animate-pulse">
+                          <WifiOff className="w-4 h-4" /> Offline: Awaiting Reconnection
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
