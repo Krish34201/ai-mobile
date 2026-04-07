@@ -1135,8 +1135,23 @@ export default function AiCryptoDashboard() {
               <div className="flex-1 flex flex-col min-h-0 animate-in slide-in-from-bottom-4 duration-300">
                 <div className="flex-1 overflow-y-auto no-scrollbar p-4 flex flex-col">
                   <div className="flex-1 glass-panel rounded-[32px] p-4 border-white/5 relative overflow-hidden flex flex-col shadow-2xl">
-                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--primary)_0%,_transparent_70%)]" />
+                    <div className="absolute inset-0 pointer-events-none">
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,hsl(var(--primary)_/_0.15)_0%,transparent_60%)]" />
+                      {Array.from({ length: 50 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="absolute rounded-full bg-primary/70 animate-pulse"
+                          style={{
+                            width: `${Math.random() * 3 + 1}px`,
+                            height: `${Math.random() * 3 + 1}px`,
+                            top: `${Math.random() * 100}%`,
+                            left: `${Math.random() * 100}%`,
+                            animationDelay: `${Math.random() * 8}s`,
+                            animationDuration: `${Math.random() * 8 + 5}s`,
+                            boxShadow: `0 0 12px hsl(var(--primary))`,
+                          }}
+                        />
+                      ))}
                     </div>
                     
                     <div className="flex items-center justify-between mb-4 z-10 shrink-0 px-2">
@@ -1367,10 +1382,10 @@ export default function AiCryptoDashboard() {
                   <div className="relative z-10 space-y-8">
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-glow animate-pulse duration-[3000ms]">
-                        <Zap className="w-8 h-8 text-black" />
+                        <Cpu className="w-8 h-8 text-black" />
                       </div>
                       <div>
-                        <h2 className="text-xl font-black uppercase tracking-widest text-white">Core Forensic Engine</h2>
+                        <h2 className="text-xl font-black uppercase tracking-widest text-white">Ai Crypto</h2>
                         <p className="text-[0.6rem] font-bold text-primary uppercase tracking-[0.4em] mt-1">v4.0 Elite</p>
                       </div>
                     </div>
@@ -1406,7 +1421,7 @@ export default function AiCryptoDashboard() {
                     </p>
                   </div>
                   <a href="https://t.me/Ai_Crypto_Software" target="_blank" rel="noopener noreferrer" className="mt-6 flex items-center justify-center gap-3 w-full py-5 rounded-2xl bg-gradient-to-r from-primary to-accent text-white font-black text-[11px] uppercase tracking-[0.3em] hover:shadow-glow transition-all duration-300 hover:scale-[1.03] active:scale-95 shadow-lg">
-                    <ExternalLink className="w-4 h-4" /> TELEGRAM UPLINK
+                    <ExternalLink className="w-4 h-4" /> TELEGRAM
                   </a>
                 </section>
               </div>
