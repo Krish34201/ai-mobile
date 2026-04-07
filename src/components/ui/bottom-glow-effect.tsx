@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-const PARTICLE_COUNT = 75; // Increased for a denser, more impressive flow
+const PARTICLE_COUNT = 100; // Increased for a denser, more impressive flow
 
 interface Particle {
   id: number;
@@ -17,11 +17,11 @@ const BottomGlowEffect = () => {
     const generateParticles = () => {
       const newParticles: Particle[] = [];
       for (let i = 0; i < PARTICLE_COUNT; i++) {
-        const size = Math.random() * 2.5 + 1.5;
-        const duration = Math.random() * 8 + 6;
-        const delay = Math.random() * 12;
+        const size = Math.random() * 2 + 1; // Smaller, more numerous particles
+        const duration = Math.random() * 10 + 8;
+        const delay = Math.random() * 15;
         const x = Math.random() * 100;
-        const drift = (Math.random() - 0.5) * 150; // Increased horizontal drift
+        const drift = (Math.random() - 0.5) * 200; // Wider drift for a more expansive feel
         
         newParticles.push({
           id: i,
@@ -33,7 +33,8 @@ const BottomGlowEffect = () => {
             height: `${size}px`,
             borderRadius: '50%',
             backgroundColor: 'hsl(var(--primary))',
-            boxShadow: `0 0 15px hsl(var(--primary)), 0 0 25px hsl(var(--primary)), 0 0 40px hsl(var(--accent))`,
+            // More intense particle glow
+            boxShadow: `0 0 18px hsl(var(--primary)), 0 0 30px hsl(var(--primary)), 0 0 50px hsl(var(--accent))`,
             animation: `impressive-particle-rise ${duration}s ease-in-out ${delay}s infinite`,
             opacity: 0,
             willChange: 'transform, opacity',
@@ -51,40 +52,39 @@ const BottomGlowEffect = () => {
       className="pointer-events-none absolute bottom-0 left-0 right-0 z-20 h-[300px] overflow-hidden"
       aria-hidden="true"
     >
-      {/* === FADE LAYER 1 (BOTTOM / OBSCURES TEXT) === */}
-      {/* This is the brightest layer, designed to wash out text behind it completely. */}
+      {/* Layer 1: The "Ultra-Bright" white-hot core. This is the heart of the light. */}
       <div 
-        className="absolute bottom-0 left-1/2 h-40 w-[150%] -translate-x-1/2 animate-luxury-pulse-fast
-                   bg-[radial-gradient(ellipse_at_bottom,hsl(var(--primary))_0%,transparent_75%)]
-                   opacity-100 blur-2xl"
+        className="absolute bottom-0 left-1/2 h-16 w-[70%] -translate-x-1/2 animate-luxury-pulse-fast
+                   bg-[radial-gradient(ellipse_at_bottom,white_0%,hsl(var(--primary))_30%,transparent_60%)]
+                   opacity-90 blur-md"
+        style={{ animationDuration: '4s' }}
+      />
+      
+      {/* Layer 2: The main, intense primary color glow. This provides the volume and color. */}
+      <div 
+        className="absolute bottom-0 left-1/2 h-28 w-[120%] -translate-x-1/2 animate-luxury-pulse
+                   bg-[radial-gradient(ellipse_at_bottom,hsl(var(--primary))_0%,transparent_65%)]
+                   opacity-100 blur-xl"
         style={{ animationDuration: '6s' }}
       />
-      <div 
-        className="absolute bottom-0 left-1/2 h-28 w-[80%] -translate-x-1/2 animate-luxury-pulse-fast
-                   bg-[radial-gradient(ellipse_at_bottom,hsl(var(--primary))_10%,transparent_65%)]
-                   opacity-100 blur-lg"
-        style={{ animationDuration: '5s' }}
-      />
 
-      {/* === FADE LAYER 2 (MIDDLE / PARTIAL VISIBILITY) === */}
-      {/* This layer is semi-transparent, allowing text to start becoming visible. */}
+      {/* Layer 3: A wider, softer primary glow to smooth the transition. */}
       <div 
-        className="absolute bottom-0 left-1/2 h-72 w-[300%] -translate-x-1/2 animate-luxury-pulse-fast
-                   bg-[radial-gradient(ellipse_at_bottom,hsl(var(--primary)/0.5)_0%,transparent_70%)]
-                   opacity-100"
+        className="absolute bottom-0 left-1/2 h-48 w-[200%] -translate-x-1/2 animate-luxury-pulse-fast
+                   bg-[radial-gradient(ellipse_at_bottom,hsl(var(--primary)/0.6)_10%,transparent_70%)]
+                   opacity-100 blur-2xl"
         style={{ animationDuration: '8s' }}
       />
       
-      {/* === FADE LAYER 3 (TOP / AMBIENT GLOW) === */}
-      {/* The softest, widest glow for overall atmosphere. Text is fully visible here. */}
+      {/* Layer 4: The final, ambient accent color haze for overall atmosphere. */}
       <div 
-        className="absolute bottom-0 left-1/2 h-96 w-[400%] -translate-x-1/2 animate-luxury-pulse
-                   bg-[radial-gradient(ellipse_at_bottom,hsl(var(--accent)/0.3)_0%,transparent_70%)]
-                   opacity-90"
+        className="absolute bottom-0 left-1/2 h-80 w-[350%] -translate-x-1/2 animate-luxury-pulse
+                   bg-[radial-gradient(ellipse_at_bottom,hsl(var(--accent)/0.3)_20%,transparent_75%)]
+                   opacity-90 blur-3xl"
         style={{ animationDuration: '12s' }}
       />
 
-      {/* === Ultra Premium Reflective Scan Line === */}
+      {/* === Ultra Premium Reflective Scan Line (Now brighter) === */}
       <div 
         className="absolute left-1/2 top-[calc(100%-1.2rem)] w-[70%] h-0.5 -translate-x-1/2
                   animate-scanline-glow"
@@ -93,14 +93,11 @@ const BottomGlowEffect = () => {
             maskImage: 'linear-gradient(to right, transparent, white 25%, white 75%, transparent)'
         }}
       >
-        {/* The solid white line in the middle */}
-        <div className="w-full h-full bg-white opacity-90" />
-        
-        {/* The reflection below */}
+        <div className="w-full h-full bg-white opacity-100" />
         <div 
-          className="absolute top-full w-full h-12
-                     bg-[linear-gradient(to_top,hsl(var(--primary)/0.35)_0%,transparent_75%)]
-                     blur-md"
+          className="absolute top-full w-full h-16
+                     bg-[linear-gradient(to_top,hsl(var(--primary)/0.5)_0%,transparent_75%)]
+                     blur-lg"
         />
       </div>
 
