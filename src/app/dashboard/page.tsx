@@ -181,7 +181,6 @@ export default function AiCryptoDashboard() {
     boosters: number;
   } | null>(null)
 
-  const logBuffer = useRef<LogEntry[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null)
   const aiTerminalScrollRef = useRef<HTMLDivElement>(null)
   const lastMnemonics = useRef<string[]>([])
@@ -222,7 +221,6 @@ export default function AiCryptoDashboard() {
   const handleMemoryFlush = useCallback(() => {
     setLogs([]);
     setAiTerminalLogs([]);
-    logBuffer.current = [];
     toast({
       title: "Memory Flushed",
       description: "Neural interrogation cache cleared automatically.",
@@ -384,36 +382,6 @@ export default function AiCryptoDashboard() {
   }, [isBooting]);
 
   useEffect(() => {
-    let animationFrameId: number;
-    const flushLogs = () => {
-      if (logBuffer.current.length > 0) {
-        const newEntries = logBuffer.current;
-        logBuffer.current = [];
-
-        setLogs(prev => {
-          const newLogs = [...prev, ...newEntries];
-          return newLogs.length > 50 ? newLogs.slice(newLogs.length - 50) : newLogs;
-        });
-
-        const aiEntries = newEntries.filter(e => e.type === 'ai');
-        setDisplayCount(prev => prev + aiEntries.length);
-        
-        const mnemonicsToConsider = aiEntries
-          .map(e => e.message)
-          .filter(() => Math.random() > 0.95);
-
-        if (mnemonicsToConsider.length > 0) {
-          lastMnemonics.current = [...mnemonicsToConsider, ...lastMnemonics.current].slice(0, 5);
-        }
-      }
-      animationFrameId = requestAnimationFrame(flushLogs);
-    };
-
-    animationFrameId = requestAnimationFrame(flushLogs);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, []);
-
-  useEffect(() => {
     if (scrollRef.current) {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
@@ -456,7 +424,6 @@ export default function AiCryptoDashboard() {
     }
 
     setLogs([]);
-    logBuffer.current = [];
     setIsInterrogating(true)
     setIsBooting(false);
   }, [activeBlockchains, isOnline, licenseData, toast])
@@ -635,7 +602,8 @@ export default function AiCryptoDashboard() {
             timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
             type: 'success'
           };
-          logBuffer.current.push(successLog);
+          
+          setLogs(prevLogs => [...prevLogs.slice(-49), successLog]);
 
           toast({
             title: "Asset Discovered",
@@ -671,42 +639,54 @@ export default function AiCryptoDashboard() {
   
   useEffect(() => {
     let animationFrameId: number;
-
-    if (isInterrogating && isOnline) {
-      const runInterrogation = () => {
-        // Increased batch size for much faster perceived speed.
-        const batchSize = isBoosterActive ? 150 : 75;
+  
+    if (!isInterrogating || !isOnline) {
+      setCpuLoad(0);
+      return;
+    }
+  
+    const runSmoothInterrogation = () => {
+      // Use a small batch per frame to ensure smoothness while allowing for speed scaling.
+      const iterations = isBoosterActive ? 5 : 2;
+      const newEntries: LogEntry[] = [];
+      const newMnemonics: string[] = [];
+  
+      for (let i = 0; i < iterations; i++) {
+        const wordlist = (bip39.wordlists as any)[mnemonicLanguage] || bip39.wordlists.english;
+        const mnemonic = bip39.generateMnemonic(undefined, undefined, wordlist);
+        newMnemonics.push(mnemonic);
         
-        for (let b = 0; b < batchSize; b++) {
-          const wordlist = (bip39.wordlists as any)[mnemonicLanguage] || bip39.wordlists.english;
-          let mnemonic = bip39.generateMnemonic(undefined, undefined, wordlist);
-          
-          const entry: LogEntry = {
-            id: Math.random().toString(36).substr(2, 9),
-            message: mnemonic,
-            timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
-            type: "ai"
-          };
-          logBuffer.current.push(entry);
-        }
-
-        setCpuLoad(Math.min(100, (systemIntensity[0] * (allocatedCores[0] / 8)) + (Math.random() * 3) + (isBoosterActive ? 10 : 0)));
-        
-        if (isInterrogating) {
-            animationFrameId = requestAnimationFrame(runInterrogation);
-        }
-      };
+        newEntries.push({
+          id: `${Math.random().toString(36).substr(2, 9)}-${i}`,
+          message: mnemonic,
+          timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
+          type: 'ai'
+        });
+      }
+  
+      // Single state update with the small batch for this frame.
+      setLogs(prevLogs => [...prevLogs, ...newEntries].slice(-50));
+      setDisplayCount(prevCount => prevCount + newEntries.length);
+  
+      // Update ref for AI analysis without causing re-renders.
+      const mnemonicsToConsider = newMnemonics.filter(() => Math.random() < 0.05); // 5% chance per mnemonic
+      if (mnemonicsToConsider.length > 0) {
+        lastMnemonics.current = [...mnemonicsToConsider, ...lastMnemonics.current].slice(0, 5);
+      }
       
-      animationFrameId = requestAnimationFrame(runInterrogation);
-
-    } else {
-      setCpuLoad(0)
-    }
-
+      // Update telemetry.
+      setCpuLoad(Math.min(100, (systemIntensity[0] * (allocatedCores[0] / 8)) + (Math.random() * 3) + (isBoosterActive ? 10 : 0)));
+      
+      // Continue the loop.
+      animationFrameId = requestAnimationFrame(runSmoothInterrogation);
+    };
+    
+    animationFrameId = requestAnimationFrame(runSmoothInterrogation);
+  
     return () => {
-        if (animationFrameId) cancelAnimationFrame(animationFrameId)
+      cancelAnimationFrame(animationFrameId);
     }
-  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, isBoosterActive, mnemonicLanguage, isAiSearchConnected]);
+  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, isBoosterActive, mnemonicLanguage]);
 
   const toggleBlockchain = (id: string) => {
     if (isInterrogating) return
