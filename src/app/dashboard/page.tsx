@@ -335,7 +335,7 @@ export default function AiCryptoDashboard() {
     const handleOnline = () => {
       setIsOnline(true);
       toast({
-        title: "Uplink Restored",
+        title: "Connection Restored",
         description: "Neural mesh reconnection successful. Resuming system...",
       });
       if (wasInterrogatingBeforeOffline) {
@@ -349,7 +349,7 @@ export default function AiCryptoDashboard() {
       toast({
         variant: "destructive",
         title: "Connection Severed",
-        description: "Neural uplink lost. Suspending all forensic operations.",
+        description: "Connection lost. Suspending all operations.",
       });
       if (isInterrogating) {
         setWasInterrogatingBeforeOffline(true);
@@ -405,7 +405,7 @@ export default function AiCryptoDashboard() {
       toast({
         variant: "destructive",
         title: "Selection Required",
-        description: "Please select at least one blockchain to begin the interrogation."
+        description: "Please select at least one blockchain to begin the search."
       })
       return
     }
@@ -416,7 +416,7 @@ export default function AiCryptoDashboard() {
          toast({
            variant: "destructive",
            title: "License Insufficient",
-           description: "Multicoin interrogation requires a premium license key."
+           description: "Multicoin search requires a premium license key."
          });
          return;
       }
@@ -706,7 +706,7 @@ export default function AiCryptoDashboard() {
         toast({
           variant: "destructive",
           title: "Access Denied",
-          description: "Multicoin protocol requires an Enterprise Tier license."
+          description: "Multicoin search requires an Enterprise Tier license."
         });
         return;
       }
@@ -969,7 +969,7 @@ export default function AiCryptoDashboard() {
               {scanStep === 1 ? (
                 <div className="flex flex-col flex-1 min-h-0 animate-in slide-in-from-bottom-4 duration-300">
                   <h2 className="text-2xl font-black text-white/90 uppercase tracking-widest px-1 mb-4">Select Blockchain</h2>
-                  <p className="text-sm text-gray-500 px-1 mb-8">Choose one or more blockchain protocols to begin the forensic interrogation.</p>
+                  <p className="text-sm text-gray-500 px-1 mb-8">Choose one or more blockchain to begin the search</p>
                   <section className="space-y-4 shrink-0 flex-1 overflow-y-auto no-scrollbar pb-8">
                     <div className="blockchain-grid">
                       {BLOCKCHAINS.map((chain) => {
@@ -1444,14 +1444,3 @@ export default function AiCryptoDashboard() {
     </div>
   )
 }
-
-
-    
-
-    
-
-    
-
-    
-
-    
