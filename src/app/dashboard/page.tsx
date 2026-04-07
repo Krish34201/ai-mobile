@@ -836,9 +836,8 @@ export default function AiCryptoDashboard() {
               if (activeBlockchains.length === 0) {
                 toast({ variant: 'destructive', title: 'Selection Required', description: 'Please select at least one blockchain protocol.' });
               } else {
-                // Reset state for a new interrogation session
+                // Reset logs for new session, but keep count for continuity
                 setLogs([]);
-                setDisplayCount(0);
                 lastMnemonics.current = [];
                 setScanStep(2);
               }
@@ -985,31 +984,38 @@ export default function AiCryptoDashboard() {
                               key={chain.id} 
                               onClick={() => toggleBlockchain(chain.id)} 
                               className={cn(
-                                "blockchain-card col-span-2 group relative overflow-hidden h-16 cursor-pointer transition-all duration-300", 
-                                isActive ? "bg-primary/20 border-primary/40 shadow-[0_0_30px_rgba(173,79,230,0.4)]" : "glass-panel border-white/10 hover:border-primary/40 hover:scale-[1.02]", 
+                                "col-span-2 group relative overflow-hidden h-20 cursor-pointer transition-all duration-300 rounded-2xl", 
+                                "flex items-center justify-between gap-4 w-full px-6",
+                                isActive 
+                                  ? "bg-gradient-to-r from-primary to-accent text-white shadow-[0_0_40px_rgba(173,79,230,0.6)] border border-primary/50" 
+                                  : "glass-panel border-white/10 hover:border-primary/40 hover:scale-[1.02]", 
                                 (isInterrogating || !isOnline) && "cursor-not-allowed pointer-events-none opacity-50",
-                                isMulticoinLocked && "opacity-60 grayscale-[0.5]"
+                                isMulticoinLocked && "opacity-60 grayscale-[0.5] !bg-black/20"
                               )}
                             >
-                              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                              <div className="relative z-10 flex items-center gap-4 w-full px-5 h-full">
-                                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-inner border", isActive ? "bg-primary text-black border-primary" : "bg-white/5 text-primary border-white/10")}>
-                                  {isMulticoinLocked ? <Lock className="w-5 h-5" /> : <Layers className="w-5 h-5" />}
+                              <div className="flex items-center gap-4">
+                                <div className={cn(
+                                  "w-12 h-12 rounded-xl flex items-center justify-center transition-all shadow-inner border", 
+                                  isActive ? "bg-white/10 text-white border-white/30" : "bg-white/5 text-primary border-white/10"
+                                )}>
+                                  {isMulticoinLocked ? <Lock className="w-6 h-6" /> : <Layers className="w-6 h-6" />}
                                 </div>
-                                <div className="flex flex-col flex-1">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-[0.6875rem] font-black uppercase tracking-[0.2em] text-white">{chain.name}</span>
-                                    <div className="flex items-center gap-2">
-                                      <span className={cn(
-                                        "text-[0.4375rem] font-black px-2 py-0.5 rounded-sm border uppercase tracking-tighter shadow-[0_0_10px_rgba(173,79,230,0.5)]",
-                                        isMulticoinLocked ? "bg-gray-800 text-gray-400 border-gray-700" : "bg-primary text-black border-primary/30 animate-pulse"
-                                      )}>
-                                        {isMulticoinLocked ? "LICENSE REQUIRED" : "ELITE MODULE"}
-                                      </span>
-                                      {!isMulticoinLocked && <ChevronRight className={cn("w-3 h-3 transition-all", isActive ? "text-primary translate-x-0" : "text-gray-700 -translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0")} />}
-                                    </div>
-                                  </div>
+                                <div>
+                                  <span className="text-sm font-black uppercase tracking-[0.2em] text-white">{chain.name}</span>
+                                  <p className="text-[0.625rem] text-primary/80 font-bold uppercase tracking-widest">{isMulticoinLocked ? "Requires Elite Tier" : "High-Density Interrogation"}</p>
                                 </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                {!isMulticoinLocked && (
+                                  <span className={cn(
+                                    "text-[0.5rem] font-black px-2.5 py-1 rounded-md border uppercase tracking-wider",
+                                    isActive ? "bg-white/20 text-white border-white/30" : "bg-primary text-black border-primary/30 shadow-glow"
+                                  )}>
+                                    ELITE
+                                  </span>
+                                )}
+                                {!isMulticoinLocked && <ChevronRight className={cn("w-5 h-5 transition-transform", isActive ? "text-white" : "text-gray-600 group-hover:translate-x-1")} />}
                               </div>
                             </div>
                           )
