@@ -86,12 +86,15 @@ const BottomGlowEffect = () => {
 
       {/* === Ultra Premium Reflective Scan Line === */}
       <div 
-        className="absolute left-1/2 top-[calc(100%-1.2rem)] w-[70%] h-0.5 -translate-x-1/2
+        className="absolute left-1/2 top-[calc(100%-1.8rem)] w-[70%] h-0.5 -translate-x-1/2
                   animate-scanline-glow"
-        style={{ willChange: 'transform, box-shadow, opacity' }}
+        style={{ 
+            willChange: 'transform, box-shadow, opacity',
+            maskImage: 'linear-gradient(to right, transparent, white 25%, white 75%, transparent)'
+        }}
       >
         {/* The solid white line in the middle */}
-        <div className="w-full h-full bg-gradient-to-r from-transparent via-white to-transparent opacity-75" />
+        <div className="w-full h-full bg-white opacity-75" />
         
         {/* The reflection below */}
         <div 
