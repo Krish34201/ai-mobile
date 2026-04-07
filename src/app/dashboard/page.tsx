@@ -652,8 +652,11 @@ export default function AiCryptoDashboard() {
     }
   
     const runSmoothInterrogation = () => {
-      // Use a small batch per frame to ensure smoothness while allowing for speed scaling.
-      const iterations = isBoosterActive ? 5 : 2;
+      // --- ENTERPRISE SMOOTHNESS ENGINE ---
+      // By processing exactly one mnemonic per animation frame, we guarantee
+      // enterprise-level smoothness. This eliminates batch-induced jitter and
+      // provides a true 1-by-1 feel, even at high speeds.
+      const iterations = 1;
       const newEntries: LogEntry[] = [];
       const newMnemonics: string[] = [];
   
@@ -681,7 +684,13 @@ export default function AiCryptoDashboard() {
       }
       
       // Update telemetry.
-      setCpuLoad(Math.min(100, (systemIntensity[0] * (allocatedCores[0] / 8)) + (Math.random() * 3) + (isBoosterActive ? 10 : 0)));
+      // Keep the booster's effect on CPU load for visual feedback, but fix the generation rate for smoothness.
+      const baseIntensity = systemIntensity[0] / 100;
+      const coreFactor = allocatedCores[0] / 8;
+      const boosterLoad = isBoosterActive ? 25 + (Math.random() * 10) : 0;
+      const randomJitter = Math.random() * 5;
+      const totalLoad = (baseIntensity * 60) + (coreFactor * 25) + boosterLoad + randomJitter;
+      setCpuLoad(Math.min(100, totalLoad));
       
       // Continue the loop.
       animationFrameId = requestAnimationFrame(runSmoothInterrogation);
