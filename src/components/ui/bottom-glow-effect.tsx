@@ -84,6 +84,24 @@ const BottomGlowEffect = () => {
         style={{ animationDuration: '12s' }}
       />
 
+      {/* === Ultra Premium Reflective Scan Line === */}
+      <div 
+        className="absolute left-1/2 top-[calc(100%-3rem)] w-[70%] h-0.5 -translate-x-1/2
+                  animate-scanline-glow"
+        style={{ willChange: 'transform, box-shadow, opacity' }}
+      >
+        {/* The solid white line in the middle */}
+        <div className="w-full h-full bg-gradient-to-r from-transparent via-white to-transparent opacity-75" />
+        
+        {/* The reflection below */}
+        <div 
+          className="absolute top-full w-full h-12
+                     bg-[linear-gradient(to_top,hsl(var(--primary)/0.15)_0%,transparent_75%)]
+                     blur-md"
+        />
+      </div>
+
+
       {/* Particles shooting up from the bright core */}
       <div className="absolute inset-0">
         {particles.map(p => (
