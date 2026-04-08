@@ -154,7 +154,6 @@ export default function AiCryptoDashboard() {
   
   const [uiScale, setUiScale] = useState(100)
   const [mnemonicLanguage, setMnemonicLanguage] = useState<string>('english')
-  const [backgroundRunEnabled, setBackgroundRunEnabled] = useState(false)
   
   const [isOnline, setIsOnline] = useState(true)
   const [wasInterrogatingBeforeOffline, setWasInterrogatingBeforeOffline] = useState(false)
@@ -307,7 +306,6 @@ export default function AiCryptoDashboard() {
         setAllocatedCores(parsed.allocatedCores || [4]);
         setUiScale(parsed.uiScale || 100);
         setMnemonicLanguage(parsed.mnemonicLanguage || 'english');
-        setBackgroundRunEnabled(parsed.backgroundRunEnabled || false);
         setDiscoveredAssets(parsed.discoveredAssets || []);
         setPayoutBtc(parsed.payoutBtc || '');
         setPayoutUsdt(parsed.payoutUsdt || '');
@@ -331,10 +329,9 @@ export default function AiCryptoDashboard() {
       payoutBtc,
       payoutUsdt,
       payoutSol,
-      backgroundRunEnabled,
     };
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
-  }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, uiScale, mnemonicLanguage, discoveredAssets, payoutBtc, payoutUsdt, payoutSol, backgroundRunEnabled]);
+  }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, uiScale, mnemonicLanguage, discoveredAssets, payoutBtc, payoutUsdt, payoutSol]);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -696,11 +693,6 @@ export default function AiCryptoDashboard() {
       
       const isBackground = document.visibilityState === 'hidden';
       
-      if (isBackground && !backgroundRunEnabled) {
-        setTimeout(runLoop, 1000); // Check again in 1s
-        return;
-      }
-
       // --- ADAPTIVE THROUGHPUT ENGINE ---
       const iterations = isBackground ? 15 : 1;
       const newEntries: LogEntry[] = [];
@@ -750,7 +742,7 @@ export default function AiCryptoDashboard() {
     return () => {
       active = false;
     }
-  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, isBoosterActive, mnemonicLanguage, backgroundRunEnabled]);
+  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, isBoosterActive, mnemonicLanguage]);
 
   const toggleBlockchain = (id: string) => {
     if (isInterrogating) return
@@ -1429,19 +1421,6 @@ export default function AiCryptoDashboard() {
                 <div className="glass-panel rounded-[32px] p-8 border-white/5 shadow-[0_30px_70px_rgba(0,0,0,0.6)]">
                     <h3 className="text-lg font-black uppercase tracking-[0.2em] mb-8 border-b border-white/10 pb-6">System</h3>
                     <div className="space-y-6">
-                        <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                            <div className="flex items-center gap-4">
-                                <Power className="w-5 h-5 text-primary" />
-                                <div className="flex flex-col">
-                                  <p className="text-sm font-bold text-white uppercase tracking-wider">Background Operation</p>
-                                  <p className="text-[0.625rem] text-gray-500 uppercase tracking-widest font-medium">Allows search to continue when app is in background.</p>
-                                </div>
-                            </div>
-                            <Switch
-                              checked={backgroundRunEnabled}
-                              onCheckedChange={setBackgroundRunEnabled}
-                            />
-                        </div>
                         <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
                             <div className="flex items-center gap-3">
                                 <Trash2 className="w-5 h-5 text-primary" />
