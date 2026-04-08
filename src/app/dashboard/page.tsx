@@ -50,6 +50,7 @@ import {
   ShieldAlert,
   ArrowRightCircle,
   User,
+  Key,
   Languages
 } from 'lucide-react'
 import { 
@@ -174,6 +175,7 @@ export default function AiCryptoDashboard() {
   const [payoutUsdt, setPayoutUsdt] = useState('')
   const [payoutSol, setPayoutSol] = useState('')
   const [isSavingPayout, setIsSavingPayout] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const [session, setSession] = useState<SessionData | null>(null)
   const [licenseData, setLicenseData] = useState<{
@@ -936,6 +938,46 @@ export default function AiCryptoDashboard() {
                         <span className="text-[0.8125rem] font-black text-white truncate uppercase tracking-widest">{asset.network}</span>
                         <span className="text-[0.6875rem] font-bold text-green-400 font-code">{asset.value}</span>
                       </div>
+                      
+                      <Dialog onOpenChange={(open) => !open && setCopied(false)}>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-9 px-3 rounded-lg text-primary/70 hover:text-primary hover:bg-primary/10 border border-primary/20 hover:border-primary/40 flex items-center gap-2">
+                            <Key className="w-4 h-4" /> Manual
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="bg-[#0a0a0f] border-white/10 text-white max-w-md rounded-3xl animate-in zoom-in-95 duration-300">
+                          <DialogHeader>
+                            <DialogTitle className="text-xl font-black uppercase tracking-widest flex items-center gap-4">
+                              <Key className="w-7 h-7 text-primary" />
+                              Manual Withdrawal
+                            </DialogTitle>
+                            <DialogDescription className="text-xs text-yellow-400/70 font-bold uppercase tracking-wider pt-4 mt-4 border-t border-white/5 flex items-center gap-2">
+                                <AlertTriangle className="w-5 h-5 shrink-0" />
+                                <span>SECURITY WARNING: EXPOSING YOUR SEED PHRASE IS A RISK. DO NOT SHARE IT.</span>
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="py-4 space-y-3">
+                              <p className="text-[0.625rem] text-gray-500 uppercase tracking-widest font-bold">RECOVERY SEED PHRASE</p>
+                              <div className="glass-panel p-4 rounded-xl font-code text-base text-green-400 tracking-wider text-center break-words select-text">
+                                  {asset.mnemonic}
+                              </div>
+                          </div>
+                          <DialogFooter>
+                              <Button
+                                  onClick={() => {
+                                      navigator.clipboard.writeText(asset.mnemonic);
+                                      setCopied(true);
+                                      toast({ title: "Copied to Clipboard" });
+                                  }}
+                                  className="w-full h-12 rounded-lg bg-primary text-black font-black uppercase text-[0.6875rem] tracking-widest shadow-glow hover:scale-[1.03] transition-all duration-200"
+                                  disabled={copied}
+                              >
+                                  {copied ? <CheckCircle2 className="w-5 h-5 mr-3" /> : <Copy className="w-5 h-5 mr-3" />}
+                                  {copied ? 'Copied!' : 'Copy Seed Phrase'}
+                              </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   ))}
                 </div>
