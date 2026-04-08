@@ -1,0 +1,30 @@
+Here is the technical specification for the animation and UI smoothness:
+
+### 1. High-Fidelity Bottom Glow Animation (`BottomGlowEffect.tsx` & `globals.css`)
+
+This effect is achieved by layering multiple animated `div` elements with CSS gradients, blurs, and custom keyframe animations.
+
+*   **Layered Radial Gradients**: The effect is built from multiple stacked `div` elements, each with a `radial-gradient` background to create a sense of depth and volume.
+    *   **Core:** A bright, white-hot inner core using `radial-gradient(ellipse at bottom, white 30%, hsl(var(--primary)) 50%, transparent 70%)` combined with a `blur-lg`.
+    *   **Primary Glow:** A larger, intense primary color glow using `radial-gradient(ellipse at bottom, hsl(var(--primary)) 20%, transparent 65%)` combined with a `blur-2xl`.
+    *   **Ambient Haze:** A very wide, soft accent color glow using `radial-gradient(ellipse at bottom, hsl(var(--accent))/0.3 20%, transparent 75%)` combined with a `blur-3xl`.
+*   **Pulsing Animations**: The layers are animated independently using CSS keyframes (`luxury-pulse`, `luxury-pulse-fast`) with different durations and `cubic-bezier` easing curves to create an organic, non-uniform pulsing effect.
+*   **Reflective Scan Line**: A thin `div` is animated with a `scanline-glow` keyframe animation. This animation uses a multi-layered `box-shadow` with varying sizes and opacities (using `hsl` with alpha) to create the bright, strobing glow. It also includes a subtle `scaleX` transform to add to the pulsing feel. A `mask-image` is used to fade the ends of the scan line gracefully.
+*   **Rising Particles**: The particle system is implemented within a React component. A `useEffect` hook generates an array of particle data on component mount. Each particle is a `div` styled with a randomized size, animation duration, and delay. They use a CSS keyframe animation (`impressive-particle-rise`) to float upwards with a horizontal "drift," which is controlled by a CSS custom property (`--particle-drift`) for variety.
+
+### 2. Forensic Seed Phrase Format (`AiCryptoDashboard.tsx`)
+
+The format for the scrolling seed phrases is simple but specific to achieve the "forensic terminal" look.
+
+*   **Structure**: Each log entry is a dynamically generated string within the main generation loop.
+*   **Format**: The precise string format is: `"Balance: 0 | Wallet check: {mnemonic}"` where `{mnemonic}` is the 12-word BIP39 phrase.
+*   **Styling**: The entry is rendered within a `div` that uses a monospace font (`font-code`). The text is broken into two parts: the static label (`Balance: 0 | Wallet check: `) and the dynamic mnemonic. This allows for specific styling if needed and ensures the mnemonic itself can be truncated with `truncate` to prevent line wrapping and maintain the clean, single-line format.
+
+### 3. Performance & UI Smoothness (`AiCryptoDashboard.tsx`)
+
+The smoothness of the animation and scrolling is achieved through two key techniques.
+
+*   **UI-Friendly Generation Loop**: The continuous generation of new seed phrases is handled inside a `requestAnimationFrame` loop. This is critical for performance because it ensures that the UI-blocking work (generating mnemonics, updating React state) only happens right before the browser's next paint. This prevents UI stuttering and keeps the entire application responsive, even during intense operation.
+*   **Smooth Log Scrolling**: The console log feed is a `div` with `overflow-y-auto`. A React `useRef` (`scrollRef`) is attached to this container. A `useEffect` hook, which runs every time the `logs` array is updated, programmatically sets the scroll position to the very bottom using the logic: `scrollRef.current.scrollTop = scrollRef.current.scrollHeight;`. This creates the seamless, automatic scrolling effect as new entries are rapidly added to the feed.
+
+This detailed breakdown should give you everything you need to replicate these core features with high fidelity.
