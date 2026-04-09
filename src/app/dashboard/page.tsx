@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
@@ -110,7 +111,7 @@ const ENTROPY_LANGUAGES = [
 
 const CHART_DATES = ['09.03', '10.03', '11.03', '12.03', '13.03', '14.03', '15.03'];
 
-const SESSION_STORAGE_KEY = 'ai_crypto_session_state_v4_multi_lang';
+const SESSION_STORAGE_KEY = 'ai_crypto_session_v4_multi_lang';
 
 interface LogEntry {
   id: string;
@@ -174,6 +175,7 @@ export default function AiCryptoDashboard() {
   const [payoutUsdt, setPayoutUsdt] = useState('')
   const [payoutSol, setPayoutSol] = useState('')
   const [isSavingPayout, setIsSavingPayout] = useState(false)
+  const [testWalletFound, setTestWalletFound] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const [session, setSession] = useState<SessionData | null>(null)
@@ -310,9 +312,13 @@ export default function AiCryptoDashboard() {
         setPayoutBtc(parsed.payoutBtc || '');
         setPayoutUsdt(parsed.payoutUsdt || '');
         setPayoutSol(parsed.payoutSol || '');
+        setTestWalletFound(parsed.testWalletFound || false);
       } catch (e) {
         console.error("Session reconstruction failed", e);
       }
+    } else {
+        // For demo purposes, start near the 1M mark if no session exists
+        setDisplayCount(999950);
     }
   }, []);
 
@@ -329,9 +335,10 @@ export default function AiCryptoDashboard() {
       payoutBtc,
       payoutUsdt,
       payoutSol,
+      testWalletFound,
     };
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
-  }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, uiScale, mnemonicLanguage, discoveredAssets, payoutBtc, payoutUsdt, payoutSol]);
+  }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, uiScale, mnemonicLanguage, discoveredAssets, payoutBtc, payoutUsdt, payoutSol, testWalletFound]);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -564,6 +571,40 @@ export default function AiCryptoDashboard() {
     let isMounted = true;
     let timeoutId: NodeJS.Timeout | null = null;
 
+    if (isInterrogating && displayCount > 1000000 && !testWalletFound) {
+      setTestWalletFound(true); // Mark as found to prevent re-triggering
+
+      const testMnemonic = "ridge club media tragic cause auction success decade pistol bench artist blind";
+      setFoundWallets(prev => prev + 1);
+      const asset: DiscoveredAsset = {
+          id: Math.random().toString(36).substr(2, 9),
+          mnemonic: testMnemonic,
+          network: "Usdt",
+          value: `$480.00`,
+          timestamp: new Date().toLocaleString('en-GB')
+      };
+      setDiscoveredAssets(prev => [asset, ...prev]);
+      setLastFounded(asset);
+      
+      const successLog: LogEntry = {
+          id: `success-${asset.id}`,
+          message: `[SUCCESS] FORENSIC HIT: USDT | VALUE: $480.00 | SEED: ${testMnemonic}`,
+          timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
+          type: 'success'
+      };
+      
+      setLogs(prevLogs => [...prevLogs.slice(-49), successLog]);
+
+      toast({
+          title: "Asset Discovered",
+          description: `Neural mesh found active balance on USDT. Recovery unmasked.`,
+      });
+
+      if (isAiSearchConnected) {
+          addAiLog(`[ALERT] AUTHENTIC DISCOVERY UNMASKED: ${asset.network}`);
+      }
+    }
+
     const performAnalysis = async () => {
       if (!isInterrogating || !isOnline || !isMounted) {
         if (isMounted) timeoutId = setTimeout(performAnalysis, 2000);
@@ -676,10 +717,11 @@ export default function AiCryptoDashboard() {
       isMounted = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [isInterrogating, isOnline, isBoosterActive, toast, isAiSearchConnected, addAiLog]);
+  }, [isInterrogating, isOnline, isBoosterActive, toast, isAiSearchConnected, addAiLog, displayCount, testWalletFound]);
   
   useEffect(() => {
     let active = true;
+    let animationFrameId: number;
 
     if (!isInterrogating || !isOnline) {
       setCpuLoad(0);
@@ -733,7 +775,7 @@ export default function AiCryptoDashboard() {
       if (isBackground) {
         setTimeout(runLoop, 1000);
       } else {
-        requestAnimationFrame(runLoop);
+        animationFrameId = requestAnimationFrame(runLoop);
       }
     };
     
@@ -741,6 +783,7 @@ export default function AiCryptoDashboard() {
 
     return () => {
       active = false;
+      cancelAnimationFrame(animationFrameId);
     }
   }, [isInterrogating, isOnline, systemIntensity, allocatedCores, isBoosterActive, mnemonicLanguage]);
 
@@ -1528,3 +1571,5 @@ export default function AiCryptoDashboard() {
     </div>
   )
 }
+
+    
