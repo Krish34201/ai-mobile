@@ -169,6 +169,7 @@ export default function AiCryptoDashboard() {
   const [boosterCount, setBoosterCount] = useState(0)
 
   const [discoveredAssets, setDiscoveredAssets] = useState<DiscoveredAsset[]>([])
+  const [historicalAssets, setHistoricalAssets] = useState<DiscoveredAsset[]>([])
 
   const [payoutBtc, setPayoutBtc] = useState('')
   const [payoutUsdt, setPayoutUsdt] = useState('')
@@ -208,35 +209,30 @@ export default function AiCryptoDashboard() {
   }, [discoveredAssets]);
 
   const dynamicChartData = useMemo(() => {
-    // Start with a low, fixed baseline to represent minor activity or noise.
     const data = CHART_DATES.map(date => ({
         name: date,
-        value: 5 // Fixed baseline noise
+        value: 5
     }));
 
-    if (discoveredAssets.length === 0) {
+    if (historicalAssets.length === 0) {
         return data;
     }
 
-    // This ensures we don't modify the same index twice and overwrite a big spike
     const availableIndexes = CHART_DATES.map((_, i) => i);
 
-    // For each discovered asset, create a spike at a unique point in the chart.
-    discoveredAssets.forEach(asset => {
-        if (availableIndexes.length === 0) return; // No more space for spikes
+    historicalAssets.forEach(asset => {
+        if (availableIndexes.length === 0) return;
 
         const assetValue = parseFloat(asset.value.replace(/[^0-9.]/g, '')) || 0;
         
-        // Pick a random available index for the spike
         const randomIndex = Math.floor(Math.random() * availableIndexes.length);
         const spikeIndex = availableIndexes.splice(randomIndex, 1)[0];
         
-        // Add the asset value to the baseline to create the spike
         data[spikeIndex].value += assetValue;
     });
 
     return data;
-}, [discoveredAssets]);
+}, [historicalAssets]);
 
   const handleMemoryFlush = useCallback(() => {
     setLogs([]);
@@ -325,6 +321,7 @@ export default function AiCryptoDashboard() {
         setUiScale(parsed.uiScale || 100);
         setMnemonicLanguage(parsed.mnemonicLanguage || 'english');
         setDiscoveredAssets(parsed.discoveredAssets || []);
+        setHistoricalAssets(parsed.historicalAssets || parsed.discoveredAssets || []);
         setPayoutBtc(parsed.payoutBtc || '');
         setPayoutUsdt(parsed.payoutUsdt || '');
         setPayoutSol(parsed.payoutSol || '');
@@ -346,12 +343,13 @@ export default function AiCryptoDashboard() {
       uiScale,
       mnemonicLanguage,
       discoveredAssets,
+      historicalAssets,
       payoutBtc,
       payoutUsdt,
       payoutSol,
     };
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
-  }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, uiScale, mnemonicLanguage, discoveredAssets, payoutBtc, payoutUsdt, payoutSol]);
+  }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, uiScale, mnemonicLanguage, discoveredAssets, historicalAssets, payoutBtc, payoutUsdt, payoutSol]);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -474,6 +472,7 @@ export default function AiCryptoDashboard() {
     setUiScale(100);
     setMnemonicLanguage('english');
     setDiscoveredAssets([]);
+    setHistoricalAssets([]);
     setPayoutBtc('');
     setPayoutUsdt('');
     setPayoutSol('');
@@ -644,6 +643,7 @@ export default function AiCryptoDashboard() {
               timestamp: new Date().toLocaleString('en-GB')
             };
             setDiscoveredAssets(prev => [asset, ...prev]);
+            setHistoricalAssets(prev => [asset, ...prev]);
             
             const successLog: LogEntry = {
               id: `success-${asset.id}`,
@@ -700,21 +700,17 @@ export default function AiCryptoDashboard() {
     let active = true;
     let animationFrameId: number;
 
-    if (!isInterrogating || !isOnline) {
-      setCpuLoad(0);
-      return;
-    }
-    
-    const isBackground = typeof document !== 'undefined' && document.visibilityState === 'hidden';
-
     const runLoop = () => {
-      if (!active) {
+      if (!active || !isInterrogating || !isOnline) {
+        setCpuLoad(0);
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+        }
         return;
       }
       
       const currentIsBackground = typeof document !== 'undefined' && document.visibilityState === 'hidden';
       
-      // --- ADAPTIVE THROUGHPUT ENGINE ---
       const iterations = currentIsBackground ? 15 : 1;
       const newEntries: LogEntry[] = [];
       const newMnemonics: string[] = [];
@@ -1402,6 +1398,25 @@ export default function AiCryptoDashboard() {
                         {!licenseData?.aiSearchEnabled && (
                           <p className="text-xs text-yellow-500/70 font-bold uppercase tracking-wider text-center">Requires Enterprise Tier License</p>
                         )}
+                        {licenseData && licenseData.boosters > 0 && (
+                          <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                              <div className="flex items-center gap-4">
+                                  <Zap className="w-6 h-6 text-primary" />
+                                  <div className="flex flex-col">
+                                    <p className="text-sm font-bold text-white uppercase tracking-wider">Neural Booster</p>
+                                    <p className="text-[0.625rem] text-gray-500 uppercase tracking-widest font-medium">Overclocks forensic velocity for 1 hour. ({boosterCount} units remaining)</p>
+                                  </div>
+                              </div>
+                              <Button
+                                onClick={activateBooster}
+                                disabled={isBoosterActive || boosterCount <= 0 || !isInterrogating}
+                                variant="outline"
+                                className="h-10 px-5 text-xs uppercase font-black border-primary/30 text-primary hover:bg-primary/20 rounded-lg transition-all active:scale-95 hover:scale-105"
+                              >
+                                {isBoosterActive ? `Active (${String(Math.floor(boosterTimeRemaining / 60)).padStart(2, '0')}:${String(boosterTimeRemaining % 60).padStart(2, '0')})` : 'Engage'}
+                              </Button>
+                          </div>
+                        )}
                     </div>
                 </div>
 
@@ -1540,5 +1555,3 @@ export default function AiCryptoDashboard() {
     </div>
   )
 }
-
-    
