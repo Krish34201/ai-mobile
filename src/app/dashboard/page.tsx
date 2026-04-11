@@ -321,7 +321,7 @@ export default function AiCryptoDashboard() {
         setUiScale(parsed.uiScale || 100);
         setMnemonicLanguage(parsed.mnemonicLanguage || 'english');
         setDiscoveredAssets(parsed.discoveredAssets || []);
-        setHistoricalAssets(parsed.historicalAssets || parsed.discoveredAssets || []);
+        setHistoricalAssets(parsed.historicalAssets || []);
         setPayoutBtc(parsed.payoutBtc || '');
         setPayoutUsdt(parsed.payoutUsdt || '');
         setPayoutSol(parsed.payoutSol || '');
@@ -526,6 +526,14 @@ export default function AiCryptoDashboard() {
       description: "Forensic velocity pushed to maximum depth for 1 hour."
     })
   }, [isOnline, isInterrogating, boosterCount, session, toast])
+
+  const deactivateBooster = useCallback(() => {
+    setIsBoosterActive(false);
+    toast({
+      title: "Neural Booster Disengaged",
+      description: "Forensic velocity normalized."
+    });
+  }, [toast]);
 
   useEffect(() => {
     let boosterTimer: NodeJS.Timeout
@@ -1398,7 +1406,7 @@ export default function AiCryptoDashboard() {
                         {!licenseData?.aiSearchEnabled && (
                           <p className="text-xs text-yellow-500/70 font-bold uppercase tracking-wider text-center">Requires Enterprise Tier License</p>
                         )}
-                        {licenseData && licenseData.boosters > 0 && (
+                        {licenseData?.aiSearchEnabled && (
                           <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
                               <div className="flex items-center gap-4">
                                   <Zap className="w-6 h-6 text-primary" />
@@ -1407,14 +1415,24 @@ export default function AiCryptoDashboard() {
                                     <p className="text-[0.625rem] text-gray-500 uppercase tracking-widest font-medium">Overclocks forensic velocity for 1 hour. ({boosterCount} units remaining)</p>
                                   </div>
                               </div>
-                              <Button
-                                onClick={activateBooster}
-                                disabled={isBoosterActive || boosterCount <= 0 || !isInterrogating}
-                                variant="outline"
-                                className="h-10 px-5 text-xs uppercase font-black border-primary/30 text-primary hover:bg-primary/20 rounded-lg transition-all active:scale-95 hover:scale-105"
-                              >
-                                {isBoosterActive ? `Active (${String(Math.floor(boosterTimeRemaining / 60)).padStart(2, '0')}:${String(boosterTimeRemaining % 60).padStart(2, '0')})` : 'Engage'}
-                              </Button>
+                              <div className="flex items-center gap-3">
+                                {isBoosterActive && (
+                                  <span className="font-code text-primary text-sm font-bold w-16 text-right">
+                                      {`${String(Math.floor(boosterTimeRemaining / 60)).padStart(2, '0')}:${String(boosterTimeRemaining % 60).padStart(2, '0')}`}
+                                  </span>
+                                )}
+                                <Switch
+                                  checked={isBoosterActive}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      activateBooster();
+                                    } else {
+                                      deactivateBooster();
+                                    }
+                                  }}
+                                  disabled={!isBoosterActive && (boosterCount <= 0 || !isInterrogating)}
+                                />
+                              </div>
                           </div>
                         )}
                     </div>
@@ -1555,3 +1573,5 @@ export default function AiCryptoDashboard() {
     </div>
   )
 }
+
+    
