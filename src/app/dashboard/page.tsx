@@ -1012,7 +1012,7 @@ export default function AiCryptoDashboard() {
         </div>
       )}
 
-      <main className="flex-1 overflow-y-auto p-4 pb-36 min-h-0">
+      <main className="flex-1 overflow-y-auto p-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(9rem+env(safe-area-inset-bottom))] min-h-0">
           <div className="w-full flex-1 flex flex-col min-h-0 animate-in fade-in duration-300 h-full">
             
             {!isOnline && (
@@ -1513,13 +1513,13 @@ export default function AiCryptoDashboard() {
           </div>
       </main>
       
-      <div className="fixed bottom-20 left-0 right-0 z-[51] flex justify-center items-center px-4">
+      <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-0 right-0 z-[51] flex justify-center items-center px-4">
         <div className="w-full bg-black/20 backdrop-blur-xl border border-white/10 rounded-3xl">
             <ActionButtons />
         </div>
       </div>
       
-      <nav className="fixed bottom-0 left-0 right-0 h-20 bg-black/50 backdrop-blur-2xl border-t border-white/10 z-[52] flex justify-around items-center">
+      <nav className="fixed bottom-0 left-0 right-0 h-20 bg-black/50 backdrop-blur-2xl border-t border-white/10 z-[52] flex justify-around items-center pb-[env(safe-area-inset-bottom)]">
         {navItems.map((item) => (
           <button
             key={item.id}
@@ -1537,4 +1537,5 @@ export default function AiCryptoDashboard() {
     </div>
   )
 }
+
 
