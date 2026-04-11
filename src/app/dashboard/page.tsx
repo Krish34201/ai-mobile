@@ -990,7 +990,7 @@ export default function AiCryptoDashboard() {
 
 
   return (
-    <div className="flex flex-col h-screen bg-[#050507] text-foreground font-body select-none relative transition-all duration-300 ease-in-out">
+    <div className="flex flex-col h-screen bg-[#050507] text-foreground font-body relative transition-all duration-300 ease-in-out">
       {isAuthenticating && (
         <div className="fixed inset-0 z-[100] bg-[#050507] flex flex-col items-center justify-center p-8 animate-out fade-out duration-500 fill-mode-forwards">
           <div className="relative w-64 h-64 mb-12">
@@ -1537,5 +1537,3 @@ export default function AiCryptoDashboard() {
     </div>
   )
 }
-
-
