@@ -14,7 +14,9 @@ import {
   User,
   Loader2,
   Key,
-  ShieldAlert
+  ShieldAlert,
+  Eye,
+  EyeOff
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,6 +37,7 @@ export default function LoginPage() {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [latency, setLatency] = useState(14)
+  const [showLicenseKey, setShowLicenseKey] = useState(false)
 
   // Real-time Latency Telemetry
   useEffect(() => {
@@ -63,7 +66,8 @@ export default function LoginPage() {
 
       if (result.success) {
         toast({
-          title: "Logged in successfully",
+          title: "Uplink Established",
+          description: "Access credentials verified. Welcome, Operator.",
         });
         window.location.href = '/dashboard';
       } else {
@@ -123,10 +127,22 @@ export default function LoginPage() {
                   <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-primary transition-colors" />
                   <Input 
                     {...register('licenseKey')}
-                    type="text" 
+                    type={showLicenseKey ? 'text' : 'password'}
                     placeholder="enter your license"
-                    className="bg-[#0b0b12] border-white/5 h-12 pl-12 rounded-xl focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all text-white font-code uppercase"
+                    className="bg-[#0b0b12] border-white/5 h-12 px-12 rounded-xl focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all text-white font-code uppercase"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowLicenseKey((prev) => !prev)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-primary transition-colors"
+                    aria-label="Toggle license key visibility"
+                  >
+                    {showLicenseKey ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
                 {errors.licenseKey && <p className="text-[9px] text-red-500 font-bold uppercase pl-1">{errors.licenseKey.message}</p>}
               </div>
