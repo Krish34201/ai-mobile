@@ -1457,13 +1457,13 @@ export default function AiCryptoDashboard() {
                           onClick={() => !isLocked && setSelectedServer(server.id)}
                           className={cn(
                             "glass-panel rounded-2xl p-6 border transition-all duration-300 cursor-pointer",
-                            isSelected ? "border-primary shadow-glow" : "border-white/5 hover:border-primary/30",
+                            isSelected ? "border-primary shadow-glow bg-primary/10" : "border-white/5 hover:border-primary/30",
                             isLocked && "opacity-50 cursor-not-allowed grayscale"
                           )}
                         >
                           <div className="flex justify-between items-start">
                             <div className="flex items-center gap-4">
-                              <div className={cn("w-12 h-12 rounded-lg flex items-center justify-center", isSelected ? "bg-primary/10" : "bg-white/5")}>
+                              <div className={cn("w-12 h-12 rounded-lg flex items-center justify-center", isSelected ? "bg-black/20" : "bg-white/5")}>
                                 <Server className={cn("w-6 h-6", isSelected ? "text-primary" : "text-white/60")} />
                               </div>
                               <div>
