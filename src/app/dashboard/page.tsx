@@ -1160,7 +1160,7 @@ export default function AiCryptoDashboard() {
                           </div>
                         )}
                         {logs.map((log) => (
-                          <div key={log.id} className="console-line animate-in fade-in duration-300">
+                          <div key={log.id} className="console-line">
                             {log.type === 'ai' ? (
                               <div className="flex items-baseline font-code text-xs whitespace-nowrap overflow-hidden">
                                 <span className="text-white">Balance: 0 | Wallet check: </span>
