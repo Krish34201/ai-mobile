@@ -53,7 +53,8 @@ import {
   ArrowRightCircle,
   User,
   Key,
-  Languages
+  Languages,
+  Server
 } from 'lucide-react'
 import { 
   Area, 
@@ -112,6 +113,14 @@ const ENTROPY_LANGUAGES = [
 
 const CHART_DATES = ['09.03', '10.03', '11.03', '12.03', '13.03', '14.03', '15.03'];
 
+const SERVERS = [
+  { id: 'geneva', name: 'Neural Core Prime', location: 'Geneva Hub', tier: 'ELITE-CORE', ip: '45.13.252.1', velocity: 2.4, isElite: true },
+  { id: 'luxembourg', name: 'Luxembourg Uplink', location: 'Luxembourg Hub', tier: 'STANDARD', ip: '102.13.4.88', velocity: 5.2, isElite: false },
+  { id: 'virginia', name: 'Virginia Hub', location: 'N. America Hub', tier: 'BASIC', ip: '34.2.145.11', velocity: 28.1, isElite: false },
+  { id: 'singapore', name: 'Singapore Node', location: 'S.E. Asia Hub', tier: 'BASIC', ip: '172.10.45.9', velocity: 56.2, isElite: false },
+  { id: 'tokyo', name: 'Tokyo Cluster', location: 'N.E. Asia Hub', tier: 'BASIC', ip: '113.45.2.10', velocity: 62.4, isElite: false },
+];
+
 const SESSION_STORAGE_KEY = 'ai_crypto_session_v4_multi_lang';
 
 interface LogEntry {
@@ -156,6 +165,7 @@ export default function AiCryptoDashboard() {
   
   const [uiScale, setUiScale] = useState(100)
   const [mnemonicLanguage, setMnemonicLanguage] = useState<string>('english')
+  const [selectedServer, setSelectedServer] = useState('luxembourg');
   
   const [isOnline, setIsOnline] = useState(true)
   const [wasInterrogatingBeforeOffline, setWasInterrogatingBeforeOffline] = useState(false)
@@ -321,6 +331,7 @@ export default function AiCryptoDashboard() {
         setAllocatedCores(parsed.allocatedCores || [4]);
         setUiScale(parsed.uiScale || 100);
         setMnemonicLanguage(parsed.mnemonicLanguage || 'english');
+        setSelectedServer(parsed.selectedServer || 'luxembourg');
         setDiscoveredAssets(parsed.discoveredAssets || []);
         setHistoricalAssets(parsed.historicalAssets || []);
         setPayoutBtc(parsed.payoutBtc || '');
@@ -343,6 +354,7 @@ export default function AiCryptoDashboard() {
       allocatedCores,
       uiScale,
       mnemonicLanguage,
+      selectedServer,
       discoveredAssets,
       historicalAssets,
       payoutBtc,
@@ -350,7 +362,7 @@ export default function AiCryptoDashboard() {
       payoutSol,
     };
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
-  }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, uiScale, mnemonicLanguage, discoveredAssets, historicalAssets, payoutBtc, payoutUsdt, payoutSol]);
+  }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, uiScale, mnemonicLanguage, selectedServer, discoveredAssets, historicalAssets, payoutBtc, payoutUsdt, payoutSol]);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -460,6 +472,7 @@ export default function AiCryptoDashboard() {
     setAllocatedCores([4]);
     setUiScale(100);
     setMnemonicLanguage('english');
+    setSelectedServer('luxembourg');
     setDiscoveredAssets([]);
     setHistoricalAssets([]);
     setPayoutBtc('');
@@ -1402,6 +1415,74 @@ export default function AiCryptoDashboard() {
                     </div>
                 </div>
 
+                <div className="glass-panel rounded-[32px] p-8 border-white/5 shadow-[0_30px_70px_rgba(0,0,0,0.6)]">
+                  <h3 className="text-lg font-black uppercase tracking-[0.2em] mb-8 border-b border-white/10 pb-6 flex items-center gap-3">
+                    <Network className="w-6 h-6 text-primary" />
+                    Network Cluster
+                  </h3>
+                  <div className="space-y-4">
+                    {SERVERS.map((server) => {
+                      const isSelected = selectedServer === server.id;
+                      const isLocked = server.isElite && !licenseData?.aiSearchEnabled;
+                      return (
+                        <div
+                          key={server.id}
+                          onClick={() => !isLocked && setSelectedServer(server.id)}
+                          className={cn(
+                            "glass-panel rounded-2xl p-6 border transition-all duration-300 cursor-pointer",
+                            isSelected ? "border-primary shadow-glow" : "border-white/5 hover:border-primary/30",
+                            isLocked && "opacity-50 cursor-not-allowed grayscale"
+                          )}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-4">
+                              <div className={cn("w-12 h-12 rounded-lg flex items-center justify-center", isSelected ? "bg-primary/10" : "bg-white/5")}>
+                                <Server className={cn("w-6 h-6", isSelected ? "text-primary" : "text-white/60")} />
+                              </div>
+                              <div>
+                                <p className="font-bold text-white uppercase tracking-wider">{server.name}</p>
+                                <p className="text-[0.625rem] text-gray-500 uppercase tracking-widest font-medium">{server.location}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <span className={cn(
+                                "text-[0.625rem] font-black px-3 py-1 rounded-md border uppercase tracking-wider",
+                                server.tier === 'ELITE-CORE' && "bg-green-500/10 text-green-400 border-green-500/20",
+                                server.tier === 'STANDARD' && "bg-primary/10 text-primary border-primary/20",
+                                server.tier === 'BASIC' && "bg-white/10 text-white/70 border-white/20",
+                              )}>
+                                {server.tier}
+                              </span>
+                              <p className="text-[0.625rem] text-gray-500 uppercase tracking-widest font-medium mt-2 font-code">IP: {server.ip}</p>
+                            </div>
+                          </div>
+                          {isLocked && (
+                            <div className="mt-4 text-center">
+                              <p className="text-xs text-yellow-500/70 font-bold uppercase tracking-wider">Requires Enterprise Tier License</p>
+                            </div>
+                          )}
+                          <div className="mt-6 space-y-3">
+                            <div>
+                              <div className="flex justify-between items-center text-[0.625rem] uppercase font-bold tracking-widest text-gray-500 mb-1">
+                                <span>Peak Velocity</span>
+                                <span className="text-green-400 font-code">{server.velocity}ms</span>
+                              </div>
+                              <Progress value={(100 - server.velocity)} className="h-1 bg-green-500/10 [&>div]:bg-green-500" />
+                            </div>
+                            <div>
+                              <div className="flex justify-between items-center text-[0.625rem] uppercase font-bold tracking-widest text-gray-500 mb-1">
+                                <span>Mesh Health</span>
+                                <span className="text-primary font-code">Optimal</span>
+                              </div>
+                              <Progress value={95} className="h-1 bg-primary/10 [&>div]:bg-primary" />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <div className="glass-panel rounded-[32px] p-8 border-white/5 shadow-[0_30px_70px_rgba(0,0,0,0.6)] hover:border-primary/10 transition-all duration-300">
                    <h3 className="text-lg font-black uppercase tracking-[0.2em] mb-8 border-b border-white/10 pb-6">Neural Entropy</h3>
                     <div className="space-y-4">
@@ -1537,3 +1618,5 @@ export default function AiCryptoDashboard() {
     </div>
   )
 }
+
+    
