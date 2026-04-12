@@ -2,7 +2,7 @@
 
 "use client"
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useMemo, useLayoutEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
   Cpu, 
@@ -439,7 +439,7 @@ export default function AiCryptoDashboard() {
     }
   }, [isBooting]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (scrollRef.current) {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
@@ -1654,3 +1654,6 @@ export default function AiCryptoDashboard() {
 
 
 
+
+
+    
