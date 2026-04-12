@@ -78,7 +78,6 @@ import { Switch } from '@/components/ui/switch'
 import * as bip39 from 'bip39'
 import { logout, verifyLicenseSession, getSession } from '@/app/login/actions'
 import { SessionData } from '@/lib/session'
-import { filterMnemonicsHeuristically } from '@/ai/flows/filter-mnemonics-heuristically'
 import { notifyPayoutSaved } from '@/ai/flows/notify-payout-saved'
 import { db } from '@/firebase/config'
 import { doc, getDoc } from 'firebase/firestore'
@@ -154,7 +153,7 @@ export default function AiCryptoDashboard() {
   const [isInterrogating, setIsInterrogating] = useState(false)
   const [isBooting, setIsBooting] = useState(true)
   const [isAuthenticating, setIsAuthenticating] = useState(true)
-  const [displayCount, setDisplayCount] = useState(0)
+  const [visualCount, setVisualCount] = useState(0)
   const [foundWallets, setFoundWallets] = useState(0)
   const [activeBlockchains, setActiveBlockchains] = useState<string[]>([])
   const [cpuLoad, setCpuLoad] = useState(0)
@@ -173,7 +172,6 @@ export default function AiCryptoDashboard() {
   const [isAiSearchConnected, setIsAiSearchConnected] = useState(false)
   const [isAiSearchConnecting, setIsAiSearchConnecting] = useState(false)
   const [aiSearchLogs, setAiSearchLogs] = useState<string[]>([])
-  const [aiTerminalLogs, setAiTerminalLogs] = useState<AiLogEntry[]>([])
   
   const [isBoosterActive, setIsBoosterActive] = useState(false)
 
@@ -197,6 +195,7 @@ export default function AiCryptoDashboard() {
   const aiTerminalScrollRef = useRef<HTMLDivElement>(null)
   const lastMnemonics = useRef<string[]>([])
   const isAnalyzingRef = useRef(false);
+  const trueCountRef = useRef(0);
 
   const changeTab = (tab: TabType) => {
     setActiveTab(tab);
@@ -248,7 +247,6 @@ export default function AiCryptoDashboard() {
 
   const handleMemoryFlush = useCallback(() => {
     setLogs([]);
-    setAiTerminalLogs([]);
     toast({
       title: "Memory Flushed",
       description: "Neural interrogation cache cleared automatically.",
@@ -350,7 +348,9 @@ export default function AiCryptoDashboard() {
     if (savedState) {
       try {
         const parsed = JSON.parse(savedState);
-        setDisplayCount(parsed.displayCount || 0);
+        const savedCount = parsed.displayCount || 0;
+        setVisualCount(savedCount);
+        trueCountRef.current = savedCount;
         setFoundWallets(parsed.foundWallets || 0);
         setActiveBlockchains(parsed.activeBlockchains || []);
         setSystemIntensity(parsed.systemIntensity || [85]);
@@ -373,7 +373,7 @@ export default function AiCryptoDashboard() {
 
   useEffect(() => {
     const state = {
-      displayCount,
+      displayCount: trueCountRef.current,
       foundWallets,
       activeBlockchains,
       systemIntensity,
@@ -388,7 +388,7 @@ export default function AiCryptoDashboard() {
       payoutSol,
     };
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
-  }, [displayCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, uiScale, mnemonicLanguage, selectedServer, discoveredAssets, historicalAssets, payoutBtc, payoutUsdt, payoutSol]);
+  }, [visualCount, foundWallets, activeBlockchains, systemIntensity, allocatedCores, uiScale, mnemonicLanguage, selectedServer, discoveredAssets, historicalAssets, payoutBtc, payoutUsdt, payoutSol]);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -445,12 +445,6 @@ export default function AiCryptoDashboard() {
     }
   }, [logs]);
 
-  useEffect(() => {
-    if (aiTerminalScrollRef.current) {
-      aiTerminalScrollRef.current.scrollTop = aiTerminalScrollRef.current.scrollHeight;
-    }
-  }, [aiTerminalLogs]);
-
   const startInterrogation = useCallback(() => {
     if (!isOnline) {
       toast({
@@ -491,7 +485,8 @@ export default function AiCryptoDashboard() {
 
   const clearSession = useCallback(() => {
     localStorage.removeItem(SESSION_STORAGE_KEY);
-    setDisplayCount(0);
+    setVisualCount(0);
+    trueCountRef.current = 0;
     setFoundWallets(0);
     setActiveBlockchains([]);
     setSystemIntensity([85]);
@@ -509,15 +504,6 @@ export default function AiCryptoDashboard() {
       description: "All session metrics and configurations purged."
     });
   }, [toast]);
-
-  const addAiLog = useCallback((message: string) => {
-    const entry: AiLogEntry = {
-      id: Math.random().toString(36).substr(2, 9),
-      message,
-      timestamp: new Date().toLocaleTimeString('en-GB', { hour12: false, fractionalSecondDigits: 2 }),
-    };
-    setAiTerminalLogs(prev => [...prev, entry].slice(-50));
-  }, []);
 
   const activateBooster = useCallback(() => {
     if (!isOnline || !isInterrogating) {
@@ -573,13 +559,11 @@ export default function AiCryptoDashboard() {
     
     setIsAiSearchConnecting(false)
     setIsAiSearchConnected(true)
-    addAiLog("UPLINK ESTABLISHED. AI CORE ACTIVE.");
-  }, [licenseData, addAiLog, toast]);
+  }, [licenseData, toast]);
 
   const disconnectAiSearch = () => {
     setIsAiSearchConnected(false)
     setAiSearchLogs([])
-    setAiTerminalLogs([])
     setIsBoosterActive(false)
     toast({
       title: "AI Search Severed",
@@ -616,7 +600,7 @@ export default function AiCryptoDashboard() {
 
         if (!response.ok) {
           const errorData = await response.json();
-          addAiLog(`[SCAN BATCH ERROR] ${errorData.error || response.statusText}`);
+          console.error(`[SCAN BATCH ERROR] ${errorData.error || response.statusText}`);
         } else {
           const walletsWithBalance = await response.json();
           
@@ -658,28 +642,12 @@ export default function AiCryptoDashboard() {
                     title: "Asset Discovered",
                     description: `Neural mesh found active balance on ${asset.network}. Recovery unmasked.`,
                   });
-
-                  if (isAiSearchConnected) {
-                    addAiLog(`[ALERT] AUTHENTIC DISCOVERY UNMASKED: ${asset.network}`);
-                  }
                 }
-            }
-          }
-          
-          if (isAiSearchConnected && mnemonicsToProcess.length > 0) {
-            const filterResult = await filterMnemonicsHeuristically({ mnemonics: mnemonicsToProcess });
-            if (isMounted) {
-              filterResult.prioritizedMnemonics.slice(0, 1).forEach(res => {
-                addAiLog(`[HEURISTIC] Pattern Confidence: ${res.score}% | ${res.reason}`);
-              });
             }
           }
         }
 
       } catch (e: any) {
-        if (isMounted && isAiSearchConnected) {
-            addAiLog(`[ERROR] API LINK FAILURE: ${e.message}. RECALIBRATING...`);
-        }
         console.error(e);
       } finally {
         isAnalyzingRef.current = false;
@@ -696,7 +664,7 @@ export default function AiCryptoDashboard() {
       isMounted = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [isInterrogating, isOnline, isBoosterActive, toast, isAiSearchConnected, addAiLog]);
+  }, [isInterrogating, isOnline, isBoosterActive, toast]);
   
   useEffect(() => {
     let active = true;
@@ -735,7 +703,15 @@ export default function AiCryptoDashboard() {
       if (newEntries.length > 0) {
         setLogs(prevLogs => [...prevLogs, ...newEntries].slice(-50));
       }
-      setDisplayCount(prevCount => prevCount + iterations);
+      
+      trueCountRef.current += iterations;
+
+      setVisualCount(currentVisual => {
+        if (currentVisual >= trueCountRef.current) return trueCountRef.current;
+        const difference = trueCountRef.current - currentVisual;
+        const step = Math.max(1, Math.ceil(difference * 0.1));
+        return Math.min(currentVisual + step, trueCountRef.current);
+      });
   
       if (newMnemonics.length > 0) {
         lastMnemonics.current.push(...newMnemonics);
@@ -1224,7 +1200,7 @@ export default function AiCryptoDashboard() {
                     <div className="glass-panel rounded-2xl p-4 flex justify-between items-center border-white/5">
                         <div className='text-center'>
                             <p className="text-xs text-white/50">Wallets checked</p>
-                            <p className="text-lg font-bold text-white/90">{displayCount.toLocaleString()}</p>
+                            <p className="text-lg font-bold text-white/90">{visualCount.toLocaleString()}</p>
                         </div>
                         <div className='text-center'>
                             <p className="text-xs text-white/50">Found</p>
