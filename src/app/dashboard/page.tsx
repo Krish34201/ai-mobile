@@ -1159,6 +1159,11 @@ export default function AiCryptoDashboard() {
                             <p className="text-green-400">[READY] System online. Awaiting interrogation command.</p>
                           </div>
                         )}
+                        {isInterrogating && logs.length === 0 && !isBooting && (
+                            <div className="font-code text-xs text-center py-10">
+                                <p className="text-terminal-cyan animate-pulse">[CONNECTING] Synchronizing with neural forensic nodes...</p>
+                            </div>
+                        )}
                         {logs.map((log) => (
                           <div key={log.id} className="console-line">
                             {log.type === 'ai' ? (
@@ -1193,7 +1198,7 @@ export default function AiCryptoDashboard() {
                         )}
                       </div>
                     </div>
-                     {isInterrogating && <BottomGlowEffect />}
+                     {isInterrogating && <div className="animate-in fade-in duration-500"><BottomGlowEffect /></div>}
                   </div>
                   
                   <div className="shrink-0 mt-auto pt-2 space-y-4">
@@ -1412,7 +1417,7 @@ export default function AiCryptoDashboard() {
                     </div>
                 </div>
 
-                <div className="glass-panel rounded-[32px] p-8 border-white/5 shadow-[0_30px_70px_rgba(0,0,0,0.6)]">
+                <div className="glass-panel rounded-[32px] p-8 border-white/5 shadow-[0_30px_70px_rgba(0,0,0,0.6)] hover:border-primary/10 transition-all duration-300">
                   <h3 className="text-lg font-black uppercase tracking-[0.2em] mb-8 border-b border-white/10 pb-6 flex items-center gap-3">
                     <Network className="w-6 h-6 text-primary" />
                     Network Cluster
@@ -1633,3 +1638,4 @@ export default function AiCryptoDashboard() {
 
 
     
+
