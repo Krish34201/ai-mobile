@@ -1211,8 +1211,8 @@ export default function AiCryptoDashboard() {
                           <div key={log.id} className="console-line">
                             {log.type === 'ai' ? (
                               <div className="flex items-baseline font-code text-xs whitespace-nowrap overflow-hidden">
-                                <span className="text-white/80">Balance: 0 | Wallet check: </span>
-                                <span className="text-white/80 truncate">{log.message}</span>
+                                <span className="text-white">Balance: 0 | Wallet check: </span>
+                                <span className="text-white truncate">{log.message}</span>
                               </div>
                             ) : log.type === 'success' ? (
                               <div className="flex flex-col gap-2 font-code text-green-400 bg-green-500/10 p-4 rounded border border-green-500/20 shadow-[0_0_40px_rgba(34,197,94,0.4)] animate-in zoom-in-95 duration-300">
@@ -1676,21 +1676,5 @@ export default function AiCryptoDashboard() {
     </div>
   )
 }
-
     
-
     
-
-
-
-
-
-
-    
-
-
-
-    
-
-    
-
