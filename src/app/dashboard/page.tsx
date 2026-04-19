@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef, useMemo, useLayoutEffect } from 'react'
@@ -1244,10 +1245,23 @@ export default function AiCryptoDashboard() {
                          {logs.length === 0 && !isInterrogating && !isBooting && (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 pointer-events-none animate-in fade-in duration-1000">
                               <div className="relative w-48 h-48 mb-8">
-                                <div className="absolute inset-0 rounded-full border border-primary/10 animate-pulse" style={{ animationDuration: '3s' }}/>
-                                <div className="absolute inset-2 rounded-full border-2 border-primary/20 border-t-primary/50 animate-spin" style={{ animationDuration: '5s' }}/>
+                                {/* Outer soft pulse */}
+                                <div className="absolute inset-0 rounded-full bg-primary/5 animate-pulse" style={{ animationDuration: '4s' }} />
+                                
+                                {/* Main spinning ring */}
+                                <div className="absolute inset-0 rounded-full border-2 border-primary/30 border-t-primary/80 animate-spin" style={{ animationDuration: '4s' }} />
+
+                                {/* Inner counter-spinning dashed ring */}
+                                <div className="absolute inset-4 rounded-full border-2 border-dashed border-primary/20 animate-reverse-spin" style={{ animationDuration: '6s' }} />
+
+                                {/* Central Icon with its own glow */}
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                  <Search className="w-16 h-16 text-primary/30" />
+                                  <div className="relative w-24 h-24">
+                                      <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl animate-pulse" style={{ animationDuration: '2.5s' }} />
+                                      <div className="absolute inset-0 flex items-center justify-center">
+                                        <Search className="w-16 h-16 text-primary/50" />
+                                      </div>
+                                  </div>
                                 </div>
                               </div>
                               <p className="text-gray-700 font-code text-sm animate-pulse">Awaiting scan command...</p>
@@ -1693,5 +1707,7 @@ export default function AiCryptoDashboard() {
 
 
 
+
+    
 
     
