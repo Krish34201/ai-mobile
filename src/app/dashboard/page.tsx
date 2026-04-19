@@ -434,6 +434,7 @@ export default function AiCryptoDashboard() {
   }, [isInterrogating, wasInterrogatingBeforeOffline, toast]);
 
   useEffect(() => {
+    // Pre-warm the animation component, but keep it invisible.
     const timer = setTimeout(() => {
       setIsBooting(false);
     }, 200);
@@ -442,6 +443,8 @@ export default function AiCryptoDashboard() {
 
   useLayoutEffect(() => {
     if (scrollRef.current) {
+        // This ensures the scroll stays at the bottom.
+        // It's a key part of the "zero-jitter" forensic scrolling.
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [logs]);
@@ -467,7 +470,6 @@ export default function AiCryptoDashboard() {
     requestAnimationFrame(() => {
       setIsInterrogating(true);
       setScanStartTime(Date.now());
-      setIsBooting(false);
     });
   }, [activeBlockchains, isOnline, toast]);
 
@@ -721,19 +723,17 @@ export default function AiCryptoDashboard() {
       
       const currentIsBackground = typeof document !== 'undefined' && document.visibilityState === 'hidden';
       
-      // --- ULTRA-SMOOTH RAMP-UP LOGIC ---
       const elapsedTime = scanStartTime ? Date.now() - scanStartTime : Infinity;
       const rampUpDuration = 2000; // 2-second acceleration period
       let iterationMultiplier = 1.0;
       
       if (elapsedTime < rampUpDuration) {
-        // Use a cubic easing function (progress^3) for a very smooth acceleration from zero.
+        // Use a quintic easing function (progress^5) for an ultra-smooth, "water-flowing" acceleration.
         const progress = elapsedTime / rampUpDuration;
-        iterationMultiplier = progress * progress * progress;
+        iterationMultiplier = progress * progress * progress * progress * progress;
       }
 
       const baseIterations = currentIsBackground ? 100 : (isBoosterActive ? 20 : 10);
-      // Ensure at least 1 iteration to kickstart the process, then ramp up to full speed.
       const iterations = Math.max(1, Math.ceil(baseIterations * iterationMultiplier));
       
       const newMnemonics: string[] = [];
@@ -938,7 +938,7 @@ export default function AiCryptoDashboard() {
             STOP
           </Button>
         ) : (
-          <Button onClick={startInterrogation} disabled={activeBlockchains.length === 0 || isBooting || !isOnline} className={cn(`${commonClass} bg-gradient-to-b from-gray-200 to-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-lg`)}>
+          <Button onClick={startInterrogation} disabled={activeBlockchains.length === 0 || !isOnline} className={cn(`${commonClass} bg-gradient-to-b from-gray-200 to-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-lg`)}>
              START
           </Button>
         );
@@ -1194,7 +1194,7 @@ export default function AiCryptoDashboard() {
                   
                   <div className="flex-1 min-h-0 relative mb-4">
                     <div className="absolute inset-0 overflow-y-auto no-scrollbar flex flex-col-reverse" ref={scrollRef}>
-                      <div className="p-6 space-y-2">
+                      <div className="p-6 space-y-1">
                         {isBooting && !isInterrogating && (
                           <div className="font-code text-xs space-y-1">
                             <p className="text-terminal-cyan">[BOOT] Initializing AI Crypto Engine v4.0 Elite...</p>
@@ -1212,8 +1212,8 @@ export default function AiCryptoDashboard() {
                           <div key={log.id} className="console-line">
                             {log.type === 'ai' ? (
                               <div className="flex items-baseline font-code text-xs whitespace-nowrap overflow-hidden">
-                                <span className="text-white">Balance: 0 | Wallet check: </span>
-                                <span className="text-white truncate">{log.message}</span>
+                                <span className="text-white/40">Balance: 0 | Wallet check: </span>
+                                <span className="text-white/80 truncate">{log.message}</span>
                               </div>
                             ) : log.type === 'success' ? (
                               <div className="flex flex-col gap-2 font-code text-green-400 bg-green-500/10 p-4 rounded border border-green-500/20 shadow-[0_0_40px_rgba(34,197,94,0.4)] animate-in zoom-in-95 duration-300">
@@ -1235,14 +1235,18 @@ export default function AiCryptoDashboard() {
                             )}
                           </div>
                         ))}
-                         {logs.length === 0 && !isInterrogating && !isBooting && (
+                         {logs.length === 0 && !isInterrogating && isBooting && (
                             <div className="absolute inset-0 flex items-center justify-center text-center">
                                 <p className="text-gray-700 font-code text-sm animate-pulse">Awaiting scan command...</p>
                             </div>
                         )}
                       </div>
                     </div>
-                    <div className={cn('transition-opacity duration-500', isInterrogating ? 'opacity-100' : 'opacity-0 pointer-events-none')}>
+                    <div className={cn(
+                        'transition-opacity duration-500', 
+                        isInterrogating ? 'opacity-100' : 'opacity-0',
+                        isBooting && !isInterrogating && 'opacity-0'
+                      )}>
                       <BottomGlowEffect />
                     </div>
                   </div>
@@ -1690,3 +1694,4 @@ export default function AiCryptoDashboard() {
     
 
     
+
