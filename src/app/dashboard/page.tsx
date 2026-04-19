@@ -191,6 +191,8 @@ export default function AiCryptoDashboard() {
     boosterEnabled: boolean;
   } | null>(null)
 
+  const [scanStartTime, setScanStartTime] = useState<number | null>(null)
+
   const scrollRef = useRef<HTMLDivElement>(null)
   const aiTerminalScrollRef = useRef<HTMLDivElement>(null)
   const lastMnemonics = useRef<string[]>([])
@@ -464,12 +466,14 @@ export default function AiCryptoDashboard() {
 
     requestAnimationFrame(() => {
       setIsInterrogating(true);
+      setScanStartTime(Date.now());
       setIsBooting(false);
     });
   }, [activeBlockchains, isOnline, toast]);
 
   const stopInterrogation = useCallback(() => {
     setIsInterrogating(false)
+    setScanStartTime(null);
   }, [])
 
   const handleLogout = async () => {
@@ -717,7 +721,21 @@ export default function AiCryptoDashboard() {
       
       const currentIsBackground = typeof document !== 'undefined' && document.visibilityState === 'hidden';
       
-      const iterations = currentIsBackground ? 100 : (isBoosterActive ? 20 : 10);
+      // --- ULTRA-SMOOTH RAMP-UP LOGIC ---
+      const elapsedTime = scanStartTime ? Date.now() - scanStartTime : Infinity;
+      const rampUpDuration = 2000; // 2-second acceleration period
+      let iterationMultiplier = 1.0;
+      
+      if (elapsedTime < rampUpDuration) {
+        // Use a cubic easing function (progress^3) for a very smooth acceleration from zero.
+        const progress = elapsedTime / rampUpDuration;
+        iterationMultiplier = progress * progress * progress;
+      }
+
+      const baseIterations = currentIsBackground ? 100 : (isBoosterActive ? 20 : 10);
+      // Ensure at least 1 iteration to kickstart the process, then ramp up to full speed.
+      const iterations = Math.max(1, Math.ceil(baseIterations * iterationMultiplier));
+      
       const newMnemonics: string[] = [];
   
       for (let i = 0; i < iterations; i++) {
@@ -766,7 +784,7 @@ export default function AiCryptoDashboard() {
       active = false;
       if(animationFrameId) cancelAnimationFrame(animationFrameId);
     }
-  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, isBoosterActive, mnemonicLanguage]);
+  }, [isInterrogating, isOnline, systemIntensity, allocatedCores, isBoosterActive, mnemonicLanguage, scanStartTime]);
 
   const toggleBlockchain = (id: string) => {
     if (isInterrogating) return;
