@@ -24,6 +24,7 @@ import { SnakeBorderCard } from '@/components/ui/snake-border-card'
 import { useToast } from '@/hooks/use-toast'
 import { authenticateUser } from './actions'
 import { cn } from '@/lib/utils'
+import { ParticleBackground } from '@/components/ui/particle-background'
 
 const loginSchema = z.object({
   username: z.string().min(2, { message: "Username must be at least 2 characters." }),
@@ -90,6 +91,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-[#050507]">
+      <ParticleBackground />
       <div className="login-background z-0" />
 
       <div className="w-full max-w-md relative z-10 animate-in fade-in zoom-in-95 duration-1000">
