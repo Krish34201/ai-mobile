@@ -1198,7 +1198,9 @@ export default function AiCryptoDashboard() {
                         )}
                       </div>
                     </div>
-                     {isInterrogating && <BottomGlowEffect />}
+                    <div className={cn('transition-opacity duration-500', isInterrogating ? 'opacity-100' : 'opacity-0 pointer-events-none')}>
+                      <BottomGlowEffect />
+                    </div>
                   </div>
                   
                   <div className="shrink-0 mt-auto pt-2 space-y-4">
